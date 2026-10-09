@@ -1,0 +1,22 @@
+{
+  "name": "linewise",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "pnpm --filter @linewise/desktop dev",
+    "tauri": "pnpm --filter @linewise/desktop tauri",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage",
+    "build": "pnpm -r build",
+    "e2e": "pnpm --filter @linewise/desktop e2e",
+    "licenses:check": "node scripts/check-licenses.mjs",
+    "notices": "node scripts/third-party-notices.mjs",
+    "prepare": "husky"
+  }
+}
