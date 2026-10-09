@@ -1,0 +1,25 @@
+{
+  "name": "@linewise/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "schema": "node --experimental-strip-types scripts/generate-schema.ts"
+  },
+  "dependencies": {
+    "immer": "^11.1.21",
+    "ipaddr.js": "^2.5.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "fast-check": "^4.10.2"
+  }
+}

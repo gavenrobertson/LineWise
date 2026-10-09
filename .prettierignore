@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+dist
+coverage
+target
+apps/desktop/src-tauri/gen
+docs/SPEC.md
+docs/AGENT_PROMPT.md
+TRACEABILITY.md
+*.svg
