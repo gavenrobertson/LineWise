@@ -56,6 +56,7 @@ import {
   stabilize,
   type XY,
 } from './geometry.ts';
+import { assetDataUrl } from './icons.ts';
 import { buildPageModel } from './model.ts';
 import { anchorOf, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
@@ -177,7 +178,7 @@ export function Canvas() {
     }
     for (const a of model.annotations) {
       const o = drag?.[a.id];
-      const asset = a.assetId ? doc.assets[a.assetId] : undefined;
+      const assetUrl = assetDataUrl(a.assetId ? doc.assets[a.assetId] : undefined);
       out.push({
         id: a.id,
         type: 'annotation',
@@ -190,7 +191,7 @@ export function Canvas() {
         data: {
           annotation: a,
           pageId,
-          assetUrl: asset ? `data:${asset.mime};base64,${asset.base64}` : undefined,
+          assetUrl,
         },
       });
     }

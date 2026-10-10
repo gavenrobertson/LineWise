@@ -10,7 +10,7 @@ import { iconMarkup } from '@linewise/device-library';
 import { edgeGeometryPure } from '../canvas/edgeGeometry.ts';
 import { ICON, midDirection, type XY } from '../canvas/geometry.ts';
 import { buildPageModel, labelBox, offPageBox, pageBounds, type PageModel } from '../canvas/model.ts';
-import { customIconUrl, iconRole } from '../canvas/icons.ts';
+import { assetDataUrl, customIconUrl, iconRole } from '../canvas/icons.ts';
 
 export type ExportTheme = 'light' | 'dark';
 
@@ -173,10 +173,10 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
       );
     switch (a.kind) {
       case 'image': {
-        const asset = a.assetId ? doc.assets[a.assetId] : undefined;
-        if (asset)
+        const href = assetDataUrl(a.assetId ? doc.assets[a.assetId] : undefined);
+        if (href)
           out.push(
-            `<image x="${f(g.x)}" y="${f(g.y)}" width="${f(g.w)}" height="${f(g.h)}" preserveAspectRatio="xMidYMid meet" href="data:${asset.mime};base64,${asset.base64}"${rot}/>`,
+            `<image x="${f(g.x)}" y="${f(g.y)}" width="${f(g.w)}" height="${f(g.h)}" preserveAspectRatio="xMidYMid meet" href="${href}"${rot}/>`,
           );
         break;
       }

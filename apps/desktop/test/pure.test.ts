@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { labelBox, buildPageModel, pageBounds } from '../src/canvas/model.ts';
 import { distanceToPolyline, linkPoints, parallelOffset } from '../src/canvas/geometry.ts';
-import { customIconUrl, iconRole } from '../src/canvas/icons.ts';
+import { assetDataUrl, customIconUrl, iconRole } from '../src/canvas/icons.ts';
 import { renderPageSvg } from '../src/export/svg.ts';
 import { planPdf, PAPER } from '../src/export/pdf.ts';
 import { clampScale } from '../src/export/raster.ts';
@@ -139,6 +139,21 @@ describe('icons', () => {
     const asset = addAsset('image/png', 'AAAA');
     ed.execute(asset);
     expect(customIconUrl(ed.doc, `asset:${asset.assetId}`)).toBe('data:image/png;base64,AAAA');
+  });
+
+  it('NFR-SEC-03 never turns a hand-edited asset into markup', () => {
+    expect(assetDataUrl({ mime: 'image/svg+xml', base64: 'PHN2Zz4=' })).toBe(
+      'data:image/svg+xml;base64,PHN2Zz4=',
+    );
+    expect(assetDataUrl({ mime: 'image/png" onload="alert(1)', base64: 'AAAA' })).toBeUndefined();
+    expect(assetDataUrl({ mime: 'text/html', base64: 'AAAA' })).toBeUndefined();
+    expect(assetDataUrl({ mime: 'image/png', base64: 'AA"/><script>' })).toBeUndefined();
+    const { ed, a } = twoRouters();
+    const bad = addAsset('image/png" onload="alert(1)', 'AAAA');
+    ed.execute(bad);
+    ed.execute(updateDevices([a], { iconOverride: `asset:${bad.assetId}` }));
+    const { svg } = renderPageSvg(ed.doc, { pageId: ed.doc.pages[0]!.id });
+    expect(svg).not.toContain('onload');
   });
 });
 
