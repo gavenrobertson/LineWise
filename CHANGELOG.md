@@ -4,6 +4,20 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-10
+
+Import (milestone M4).
+
+### Added
+
+- Fuzz tests for every importer and for the `.lwise` loader, 10,000 inputs each, in every CI run (NFR-SEC-05).
+
+### Fixed
+
+- GNS3 import of a node without a name produced a device with no hostname.
+- Containerlab import crashed on a link endpoint that was not text.
+- YAML parser warnings no longer appear in the console.
+
 ## [0.3.0] - 2026-10-10
 
 Validation (milestone M3).
