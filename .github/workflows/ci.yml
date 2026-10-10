@@ -160,6 +160,7 @@ jobs:
         shell: bash
       - name: tauri-driver smoke test (Windows, Linux)
         if: runner.os != 'macOS'
+        timeout-minutes: 15
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then
@@ -169,9 +170,7 @@ jobs:
             pnpm --filter @linewise/desktop tauri build --debug --no-bundle --config src-tauri/tauri.smoke.conf.json
             cargo install --git https://github.com/chippers/msedgedriver-tool
             "$HOME/.cargo/bin/msedgedriver-tool.exe"
-            # A wrapper that keeps a verbose msedgedriver log for the diagnostics step.
-            printf '@"%%~dp0msedgedriver.exe" %%* --verbose --log-path="%%RUNNER_TEMP%%\\msedgedriver.log"\r\n' > msedgedriver-verbose.cmd
-            export LINEWISE_SMOKE_ATTACH=9222 LINEWISE_NATIVE_DRIVER="$(cygpath -w "$PWD/msedgedriver-verbose.cmd")"
+            export LINEWISE_SMOKE_ATTACH=9222 LINEWISE_NATIVE_DRIVER="$(cygpath -w "$PWD/msedgedriver.exe")"
             node --test apps/desktop/smoke/smoke.test.mjs
           else
             cargo install tauri-driver --locked

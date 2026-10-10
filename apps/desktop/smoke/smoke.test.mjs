@@ -17,7 +17,7 @@
  * attaches msedgedriver to it with `debuggerAddress` instead of going through tauri-driver.
  */
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -66,10 +66,17 @@ async function until(fn, what, timeout = 20_000) {
   throw new Error(`Timed out waiting for ${what}${last ? `: ${last.message}` : ''}`);
 }
 
+/** Kill a process and everything it started (WebView2 helpers, a driver's children). */
+function killTree(p) {
+  if (!p || p.exitCode !== null) return;
+  if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F']);
+  else p.kill();
+}
+
 async function stopApp() {
   if (!app || app.exitCode !== null) return;
   const exited = new Promise((r) => app.once('exit', r));
-  app.kill();
+  killTree(app);
   await exited;
 }
 
@@ -77,7 +84,8 @@ async function session(args = []) {
   if (ATTACH) {
     // Single instance: the previous launch must be gone before the next one starts.
     await stopApp();
-    app = spawn(APP, args, { stdio: 'inherit', env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir } });
+    // Own stdio, so leftover helper processes can never hold the test's output open.
+    app = spawn(APP, args, { stdio: 'ignore', env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir } });
     await until(
       () => fetch(`http://127.0.0.1:${ATTACH}/json/version`).then((r) => r.ok),
       `the app's debugging port ${ATTACH}`,
@@ -119,13 +127,14 @@ const script = (sid, fn) =>
 
 before(async () => {
   assert.ok(APP, 'Build the app first: pnpm tauri build --debug --no-bundle');
-  // LINEWISE_NATIVE_DRIVER points tauri-driver at a specific native driver (CI uses a logging wrapper).
+  // LINEWISE_NATIVE_DRIVER: the native driver executable (msedgedriver in attach mode).
   const native = process.env.LINEWISE_NATIVE_DRIVER;
+  // In CI, keep a verbose msedgedriver log for the diagnostics step.
+  const log = process.env.RUNNER_TEMP
+    ? ['--verbose', `--log-path=${join(process.env.RUNNER_TEMP, 'msedgedriver.log')}`]
+    : [];
   driver = ATTACH
-    ? spawn(native ?? 'msedgedriver', ['--port=4444'], {
-        stdio: 'inherit',
-        shell: /\.(cmd|bat)$/i.test(native ?? ''),
-      })
+    ? spawn(native ?? 'msedgedriver', ['--port=4444', ...log], { stdio: 'ignore' })
     : spawn('tauri-driver', native ? ['--native-driver', native] : [], {
         stdio: 'inherit',
         env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir },
@@ -135,7 +144,7 @@ before(async () => {
 
 after(async () => {
   await stopApp();
-  driver?.kill();
+  killTree(driver);
   rmSync(smokeDir, { recursive: true, force: true });
 });
 
