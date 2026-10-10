@@ -15,6 +15,20 @@ async function viewport(page: Page): Promise<{ x: number; y: number; zoom: numbe
   });
 }
 
+/** The viewport once it has stopped moving (the opening fit animates). */
+async function settledViewport(page: Page): Promise<{ x: number; y: number; zoom: number }> {
+  let last = await viewport(page);
+  await expect
+    .poll(async () => {
+      const v = await viewport(page);
+      const same = v.zoom === last.zoom && v.x === last.x && v.y === last.y;
+      last = v;
+      return same;
+    })
+    .toBe(true);
+  return last;
+}
+
 async function positionOf(page: Page, hostname: string) {
   const d = (await doc(page)) as unknown as Awaited<ReturnType<typeof doc>> & Positions;
   const id = d.devices.find((x) => x.hostname === hostname)?.id as string;
@@ -44,16 +58,7 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
   const c = await canvasCenter(page);
   await page.mouse.move(c.x, c.y);
 
-  // Let the opening fit animation finish before measuring.
-  let settled = await viewport(page);
-  await expect
-    .poll(async () => {
-      const v = await viewport(page);
-      const same = v.zoom === settled.zoom && v.x === settled.x && v.y === settled.y;
-      settled = v;
-      return same;
-    })
-    .toBe(true);
+  await settledViewport(page);
   const v0 = await viewport(page);
   await page.mouse.wheel(0, 200);
   await expect.poll(async () => (await viewport(page)).y).not.toBe(v0.y);
@@ -112,14 +117,14 @@ test('FR-CAN-01 Space+drag and middle-button drag pan the canvas', async ({ page
     await page.mouse.up({ button });
   };
 
-  let v = await viewport(page);
+  let v = await settledViewport(page);
   await page.keyboard.down('Space');
   await dragFrom('left');
   await page.keyboard.up('Space');
   await expect.poll(async () => (await viewport(page)).x).toBeCloseTo(v.x + 60, -1);
   expect((await doc(page)).devices).toHaveLength(5);
 
-  v = await viewport(page);
+  v = await settledViewport(page);
   await dragFrom('middle');
   await expect.poll(async () => (await viewport(page)).x).toBeCloseTo(v.x + 60, -1);
   expect((await viewport(page)).zoom).toBeCloseTo(v.zoom, 5);
