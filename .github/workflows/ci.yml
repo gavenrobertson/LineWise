@@ -171,6 +171,18 @@ jobs:
           else
             xvfb-run -a node --test apps/desktop/smoke/smoke.test.mjs
           fi
+      - name: Smoke diagnostics (Windows)
+        if: failure() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9333"
+          $p = Start-Process -FilePath apps/desktop/src-tauri/target/debug/linewise.exe -PassThru
+          Start-Sleep 12
+          "still running: $(-not $p.HasExited); exit code: $($p.ExitCode)"
+          try { (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9333/json/version).Content } catch { "no DevTools endpoint: $_" }
+          Get-ChildItem -Recurse "$env:LOCALAPPDATA\dev.gavenrobertson.linewise" -ErrorAction SilentlyContinue | Select-Object -First 40 FullName
+          Get-Content "$env:LOCALAPPDATA\dev.gavenrobertson.linewise\logs\linewise.log" -ErrorAction SilentlyContinue | Select-Object -Last 40
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id }
       - uses: actions/upload-artifact@v7
         with:
           name: debug-installers-${{ matrix.os }}
