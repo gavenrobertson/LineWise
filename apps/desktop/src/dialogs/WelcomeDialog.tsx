@@ -28,7 +28,7 @@ export function restoreRecovery(r: RecoveryEntry): void {
     return;
   }
   const ed = useEditor.getState();
-  ed.loadDocument(res.doc as NetworkDocument, {
+  ed.openTab(res.doc as NetworkDocument, {
     path: r.path,
     name: r.name,
     readOnly: res.status === 'newer',

@@ -104,6 +104,8 @@ export type MenuCommand =
   | 'network.ipam'
   | 'network.calculator'
   | 'network.validate'
+  | 'window.nextTab'
+  | 'window.prevTab'
   | 'help.shortcuts'
   | 'help.docs'
   | 'help.updates'

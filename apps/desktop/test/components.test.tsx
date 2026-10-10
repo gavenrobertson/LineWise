@@ -24,6 +24,7 @@ import { WelcomeDialog } from '../src/dialogs/WelcomeDialog.tsx';
 import { Inspector } from '../src/panels/Inspector.tsx';
 import { ProblemsPanel } from '../src/panels/ProblemsPanel.tsx';
 import { StatusBar } from '../src/panels/StatusBar.tsx';
+import { TabBar } from '../src/panels/TabBar.tsx';
 import { Toolbar } from '../src/panels/Toolbar.tsx';
 import { useKeyboard } from '../src/lib/keyboard.ts';
 import { platform, setPlatform } from '../src/platform/index.ts';
@@ -263,6 +264,23 @@ describe('Dialogs', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Review' }));
     expect(screen.getByText('R9')).toBeInTheDocument();
     await expectNoAxeViolations();
+  });
+});
+
+describe('TabBar', () => {
+  it('lists open diagrams with an unsaved marker and close buttons, without a11y violations (FR-APP-02)', async () => {
+    act(() => {
+      useEditor
+        .getState()
+        .openTab(starter('small-office'), { path: '/x/office.lwise', name: 'office.lwise' });
+    });
+    wrap(<TabBar />);
+    const nav = screen.getByRole('navigation', { name: 'Open diagrams' });
+    expect(within(nav).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(nav).getByRole('button', { name: 'office' })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('button', { name: 'Close office' })).toBeInTheDocument();
+    await expectNoAxeViolations();
+    for (const t of [...useEditor.getState().tabs].slice(1)) act(() => useEditor.getState().closeTab(t.id));
   });
 });
 

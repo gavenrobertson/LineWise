@@ -277,6 +277,19 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let window = SubmenuBuilder::new(app, "Window")
         .item(&PredefinedMenuItem::minimize(app, None)?)
         .item(&PredefinedMenuItem::maximize(app, None)?)
+        .separator()
+        .item(&item(
+            app,
+            "window.nextTab",
+            "Next Diagram",
+            Some("Ctrl+Tab"),
+        )?)
+        .item(&item(
+            app,
+            "window.prevTab",
+            "Previous Diagram",
+            Some("Ctrl+Shift+Tab"),
+        )?)
         .build()?;
 
     let help = SubmenuBuilder::new(app, "Help")

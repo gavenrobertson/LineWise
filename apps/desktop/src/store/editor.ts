@@ -32,7 +32,18 @@ export type HighlightSpec =
 
 type XY = { x: number; y: number };
 
+/** An open diagram tab (FR-APP-02). The active tab's live state is the store itself. */
+export interface TabInfo {
+  id: string;
+  fileName: string;
+  path: string | null;
+  dirty: boolean;
+}
+
 export interface EditorState {
+  /** Open diagrams in tab order, and which one is active. */
+  tabs: TabInfo[];
+  activeTabId: string;
   doc: NetworkDocument;
   /** Bumped on every model change; workers key results on it. */
   rev: number;
@@ -52,6 +63,8 @@ export interface EditorState {
   issues: Issue[];
   suppressed: Issue[];
   issuesRev: number;
+  /** Revision at which this document was loaded or its tab activated; older worker results are ignored. */
+  baseRev: number;
   /** Positions while a drag is in progress (not yet in history). */
   dragPositions: Record<string, XY> | null;
   lastError: string | null;
@@ -73,9 +86,67 @@ export interface EditorState {
   setIssues: (rev: number, issues: Issue[], suppressed: Issue[]) => void;
   setDragPositions: (p: Record<string, XY> | null) => void;
   clearError: () => void;
+  /**
+   * Open a diagram in a tab. An untouched blank tab is reused; otherwise a new tab opens and
+   * becomes active. Returns the tab id.
+   */
+  openTab: (doc: NetworkDocument, file?: { path: string | null; name: string; readOnly?: boolean }) => string;
+  switchTab: (id: string) => void;
+  /** Close a tab without asking (the caller confirms unsaved changes first). */
+  closeTab: (id: string) => void;
 }
 
 let editor = new Editor(createDocument());
+
+/** Revisions are unique across tabs, so worker results for one tab never apply to another. */
+let revCounter = 0;
+const nextRev = () => ++revCounter;
+
+/** The per-document part of the state, stashed while a tab is in the background. */
+const DOC_KEYS = [
+  'doc',
+  'rev',
+  'savedRev',
+  'filePath',
+  'fileName',
+  'readOnly',
+  'pageId',
+  'selection',
+  'layer',
+  'highlightSpec',
+  'highlight',
+  'issues',
+  'suppressed',
+  'issuesRev',
+] as const;
+type DocData = Pick<EditorState, (typeof DOC_KEYS)[number]>;
+
+/** Background tabs: their Editor (history included, FR-CAN-07) and document state. */
+const stash = new Map<string, { editor: Editor; data: DocData }>();
+let tabSeq = 0;
+const newTabId = () => `tab-${++tabSeq}`;
+
+function snapshot(s: EditorState): DocData {
+  const out = {} as Record<string, unknown>;
+  for (const k of DOC_KEYS) out[k] = s[k];
+  return out as DocData;
+}
+
+function infoOf(id: string, d: DocData): TabInfo {
+  return { id, fileName: d.fileName, path: d.filePath, dirty: d.rev !== d.savedRev };
+}
+
+/** A tab that can be replaced by the next opened diagram: never saved, unchanged, empty. */
+function isPristine(s: EditorState): boolean {
+  return (
+    s.filePath === null &&
+    s.rev === s.savedRev &&
+    !s.readOnly &&
+    s.doc.devices.length === 0 &&
+    s.doc.zones.length === 0 &&
+    s.doc.pages.every((p) => p.annotations.length === 0)
+  );
+}
 
 function computeHighlight(doc: NetworkDocument, spec: HighlightSpec): Highlight | null {
   if (!spec) return null;
@@ -104,7 +175,11 @@ function pruneSelection(doc: NetworkDocument, pageId: string, sel: Selection): S
   };
 }
 
+const firstTab = newTabId();
+
 export const useEditor = create<EditorState>((set, get) => ({
+  tabs: [{ id: firstTab, fileName: 'Untitled.lwise', path: null, dirty: false }],
+  activeTabId: firstTab,
   doc: editor.doc,
   rev: 0,
   savedRev: 0,
@@ -121,6 +196,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   issues: [],
   suppressed: [],
   issuesRev: -1,
+  baseRev: 0,
   dragPositions: null,
   lastError: null,
 
@@ -137,7 +213,7 @@ export const useEditor = create<EditorState>((set, get) => ({
       const pageId = doc.pages.some((p) => p.id === s.pageId) ? s.pageId : (doc.pages[0]?.id ?? '');
       set({
         doc,
-        rev: s.rev + 1,
+        rev: nextRev(),
         pageId,
         selection: pruneSelection(doc, pageId, s.selection),
         highlight: computeHighlight(doc, s.highlightSpec),
@@ -158,7 +234,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     const pageId = doc.pages.some((p) => p.id === s.pageId) ? s.pageId : (doc.pages[0]?.id ?? '');
     set({
       doc,
-      rev: s.rev + 1,
+      rev: nextRev(),
       pageId,
       selection: pruneSelection(doc, pageId, s.selection),
       highlight: computeHighlight(doc, s.highlightSpec),
@@ -174,7 +250,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     const pageId = doc.pages.some((p) => p.id === s.pageId) ? s.pageId : (doc.pages[0]?.id ?? '');
     set({
       doc,
-      rev: s.rev + 1,
+      rev: nextRev(),
       pageId,
       selection: pruneSelection(doc, pageId, s.selection),
       highlight: computeHighlight(doc, s.highlightSpec),
@@ -186,7 +262,7 @@ export const useEditor = create<EditorState>((set, get) => ({
 
   loadDocument: (doc, file) => {
     editor = new Editor(doc);
-    const rev = get().rev + 1;
+    const rev = nextRev();
     set({
       doc,
       rev,
@@ -201,6 +277,7 @@ export const useEditor = create<EditorState>((set, get) => ({
       issues: [],
       suppressed: [],
       issuesRev: -1,
+      baseRev: rev,
       dragPositions: null,
       ...historyFlags(),
     });
@@ -219,14 +296,99 @@ export const useEditor = create<EditorState>((set, get) => ({
   setHighlight: (spec) => set({ highlightSpec: spec, highlight: computeHighlight(get().doc, spec) }),
 
   setIssues: (rev, issues, suppressed) => {
-    if (rev < get().issuesRev) return;
+    if (rev < get().issuesRev || rev < get().baseRev) return;
     set({ issues, suppressed, issuesRev: rev });
   },
 
   setDragPositions: (p) => set({ dragPositions: p }),
 
   clearError: () => set({ lastError: null }),
+
+  openTab: (doc, file) => {
+    const s = get();
+    if (isPristine(s)) {
+      get().loadDocument(doc, file);
+      return s.activeTabId;
+    }
+    stash.set(s.activeTabId, { editor, data: snapshot(s) });
+    const id = newTabId();
+    set({
+      tabs: [
+        ...s.tabs.map((t) => (t.id === s.activeTabId ? infoOf(t.id, snapshot(s)) : t)),
+        { id, fileName: '', path: null, dirty: false },
+      ],
+      activeTabId: id,
+    });
+    get().loadDocument(doc, file);
+    return id;
+  },
+
+  switchTab: (id) => {
+    const s = get();
+    const target = stash.get(id);
+    if (id === s.activeTabId || !target) return;
+    stash.set(s.activeTabId, { editor, data: snapshot(s) });
+    stash.delete(id);
+    editor = target.editor;
+    const rev = nextRev();
+    const dirty = target.data.rev !== target.data.savedRev;
+    set({
+      ...target.data,
+      rev,
+      savedRev: dirty ? -1 : rev,
+      issuesRev: -1,
+      baseRev: rev,
+      dragPositions: null,
+      activeTabId: id,
+      tabs: s.tabs.map((t) => (t.id === s.activeTabId ? infoOf(t.id, snapshot(s)) : t)),
+      ...historyFlags(),
+    });
+  },
+
+  closeTab: (id) => {
+    const s = get();
+    const idx = s.tabs.findIndex((t) => t.id === id);
+    if (idx < 0) return;
+    if (id !== s.activeTabId) {
+      stash.delete(id);
+      set({ tabs: s.tabs.filter((t) => t.id !== id) });
+      return;
+    }
+    const rest = s.tabs.filter((t) => t.id !== id);
+    const next = rest[Math.min(idx, rest.length - 1)];
+    if (!next) {
+      // Closing the last tab leaves one blank diagram.
+      set({ tabs: [{ id, fileName: 'Untitled.lwise', path: null, dirty: false }] });
+      get().loadDocument(createDocument());
+      return;
+    }
+    get().switchTab(next.id);
+    stash.delete(id);
+    set({ tabs: get().tabs.filter((t) => t.id !== id) });
+  },
 }));
+
+// Keep the active tab's title and dirty flag in the tab list.
+useEditor.subscribe((s, prev) => {
+  if (
+    s.fileName === prev.fileName &&
+    s.filePath === prev.filePath &&
+    s.rev === prev.rev &&
+    s.savedRev === prev.savedRev &&
+    s.tabs === prev.tabs
+  )
+    return;
+  const info = infoOf(s.activeTabId, s);
+  const cur = s.tabs.find((t) => t.id === s.activeTabId);
+  if (cur && cur.fileName === info.fileName && cur.path === info.path && cur.dirty === info.dirty) return;
+  useEditor.setState({ tabs: s.tabs.map((t) => (t.id === s.activeTabId ? info : t)) });
+});
+
+/** Tabs with unsaved changes, active first (used before quitting). */
+export function dirtyTabIds(): string[] {
+  const s = useEditor.getState();
+  return s.tabs.filter((t) => (t.id === s.activeTabId ? selectDirty(s) : t.dirty)).map((t) => t.id);
+}
 
 /** True when the document has unsaved changes. */
 export const selectDirty = (s: EditorState) => s.rev !== s.savedRev;

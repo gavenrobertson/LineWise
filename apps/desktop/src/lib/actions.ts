@@ -40,7 +40,7 @@ import {
   ungroup,
   zoomToSelection,
 } from './arrange.ts';
-import { selectDirty, selectPage, useEditor } from '../store/editor.ts';
+import { dirtyTabIds, selectDirty, selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
 
@@ -64,30 +64,66 @@ export async function confirmDiscard(): Promise<boolean> {
 }
 
 export async function newDocument(doc?: NetworkDocument): Promise<void> {
-  if (!(await confirmDiscard())) return;
   let next = doc;
   if (!next) {
     next = createDocument(t('doc.untitled', 'Untitled diagram'));
     next.settings.defaultLinkRouting = usePrefs.getState().defaultRouting;
   }
-  useEditor.getState().loadDocument(next);
+  useEditor.getState().openTab(next);
   useUi.getState().close();
   requestAnimationFrame(() => canvasApi.fit());
 }
 
+/** Close the active diagram tab, asking about unsaved changes first (FR-APP-02). */
+export async function closeActiveTab(): Promise<boolean> {
+  if (!(await confirmDiscard())) return false;
+  const ed = useEditor.getState();
+  const last = ed.tabs.length === 1;
+  ed.closeTab(ed.activeTabId);
+  if (last) useUi.getState().open({ kind: 'welcome' });
+  else requestAnimationFrame(() => canvasApi.fit());
+  return true;
+}
+
+/** Before quitting: walk every tab with unsaved changes and ask about each. */
+export async function confirmCloseAll(): Promise<boolean> {
+  for (const id of dirtyTabIds()) {
+    useEditor.getState().switchTab(id);
+    if (!(await confirmDiscard())) return false;
+  }
+  return true;
+}
+
+export function cycleTab(step: 1 | -1): void {
+  const ed = useEditor.getState();
+  const i = ed.tabs.findIndex((t) => t.id === ed.activeTabId);
+  const next = ed.tabs[(i + step + ed.tabs.length) % ed.tabs.length];
+  if (next && next.id !== ed.activeTabId) {
+    void autosaveNow();
+    ed.switchTab(next.id);
+  }
+}
+
 export async function openText(text: string, path: string | null, name: string): Promise<boolean> {
-  const r = parseDocument(text);
   const ui = useUi.getState();
   const ed = useEditor.getState();
+  // Already open: switch to that tab instead of opening a second copy.
+  const open = path ? ed.tabs.find((tab) => tab.path === path) : undefined;
+  if (open) {
+    ed.switchTab(open.id);
+    ui.close();
+    return true;
+  }
+  const r = parseDocument(text);
   switch (r.status) {
     case 'ok':
-      ed.loadDocument(r.doc, { path, name });
+      ed.openTab(r.doc, { path, name });
       if (r.migratedFrom !== undefined)
         ui.toast(t('open.migrated', 'Upgraded from an older file format. Save to keep the new format.'));
       for (const w of r.warnings) ui.toast(w);
       break;
     case 'newer':
-      ed.loadDocument(r.doc, { path, name, readOnly: true });
+      ed.openTab(r.doc, { path, name, readOnly: true });
       ui.toast(r.warnings[0] ?? t('open.newer', 'Opened read-only.'), 'info');
       break;
     case 'invalid':
@@ -96,7 +132,7 @@ export async function openText(text: string, path: string | null, name: string):
         issues: r.issues,
         onRecover: r.recovered
           ? () => {
-              useEditor.getState().loadDocument(r.recovered as NetworkDocument, {
+              useEditor.getState().openTab(r.recovered as NetworkDocument, {
                 path: null,
                 name: `${name.replace(/\.lwise$/i, '')} (recovered).lwise`,
               });
@@ -116,7 +152,6 @@ export async function openText(text: string, path: string | null, name: string):
 }
 
 export async function openFile(path?: string): Promise<void> {
-  if (!(await confirmDiscard())) return;
   try {
     const f = path ? await platform().readPath(path) : await platform().openDiagram();
     if (f) await openText(f.text, f.path, f.name);
@@ -520,11 +555,7 @@ export function commandList(): CommandDef[] {
       group: 'File',
       label: L('close', 'Close diagram'),
       shortcut: 'mod+W',
-      run: async () => {
-        if (!(await confirmDiscard())) return;
-        useEditor.getState().loadDocument(createDocument());
-        ui.open({ kind: 'welcome' });
-      },
+      run: () => void closeActiveTab(),
     },
     { id: 'edit.undo', group: 'Edit', label: L('undo', 'Undo'), shortcut: 'mod+Z', run: () => ed().undo() },
     {
@@ -817,6 +848,20 @@ export function commandList(): CommandDef[] {
       group: 'Help',
       label: L('logs', 'Open logs folder'),
       run: () => platform().openLogsFolder(),
+    },
+    {
+      id: 'window.nextTab',
+      group: 'Window',
+      label: L('nextTab', 'Next diagram'),
+      shortcut: 'mod+Tab',
+      run: () => cycleTab(1),
+    },
+    {
+      id: 'window.prevTab',
+      group: 'Window',
+      label: L('prevTab', 'Previous diagram'),
+      shortcut: 'mod+shift+Tab',
+      run: () => cycleTab(-1),
     },
     {
       id: 'help.about',

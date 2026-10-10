@@ -31,11 +31,11 @@ import i18n from './i18n/index.ts';
 import {
   autosaveNow,
   checkUpdates,
+  confirmCloseAll,
   deleteItems,
   editTextField,
   openFile,
   runCommand,
-  save,
 } from './lib/actions.ts';
 import { useKeyboard } from './lib/keyboard.ts';
 import { platform } from './platform/index.ts';
@@ -44,8 +44,9 @@ import { PagesBar } from './panels/PagesBar.tsx';
 import { ProblemsPanel } from './panels/ProblemsPanel.tsx';
 import { SidePanel } from './panels/SidePanel.tsx';
 import { StatusBar } from './panels/StatusBar.tsx';
+import { TabBar } from './panels/TabBar.tsx';
 import { Toolbar } from './panels/Toolbar.tsx';
-import { selectDirty, useEditor } from './store/editor.ts';
+import { dirtyTabIds, selectDirty, useEditor } from './store/editor.ts';
 import { applyTheme, usePrefs } from './store/prefs.ts';
 import { useUi, type DialogState } from './store/ui.ts';
 import { onValidation, requestValidation } from './workers/client.ts';
@@ -225,25 +226,8 @@ function useAppEffects(): void {
       opened = true;
       void openFile(path);
     });
-    const offClose = p.onCloseRequested(
-      async () => {
-        const s = useEditor.getState();
-        if (!selectDirty(s)) return true;
-        const t = (k: string, d: string) => i18n.t(k, { defaultValue: d });
-        const choice = await p.askUnsaved(
-          t('close.message', 'Save changes to this diagram before closing?'),
-          {
-            save: t('close.save', 'Save'),
-            discard: t('close.discard', 'Don’t Save'),
-            cancel: t('common.cancel', 'Cancel'),
-          },
-        );
-        if (choice === 'save') return save(false);
-        if (choice === 'discard') await p.clearRecovery(s.doc.id);
-        return choice === 'discard';
-      },
-      () => selectDirty(useEditor.getState()),
-    );
+    // Quitting asks about every tab with unsaved changes (FR-APP-02).
+    const offClose = p.onCloseRequested(confirmCloseAll, () => dirtyTabIds().length > 0);
     // Show the welcome screen unless a file is being opened.
     const t = setTimeout(() => {
       if (!opened && !useUi.getState().dialog && useEditor.getState().doc.devices.length === 0)
@@ -312,6 +296,7 @@ export function App() {
               className="flex min-w-0 flex-1 flex-col"
               aria-label={t('app.main', 'Diagram')}
             >
+              {!presentation && <TabBar />}
               <div className="relative min-h-0 flex-1">
                 <Canvas />
                 {find && !presentation && <FindPanel />}
