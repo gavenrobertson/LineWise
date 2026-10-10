@@ -47,6 +47,11 @@ describe('FR-LNK-04 link styling by medium and role', () => {
     expect(views.get('virtual')!.dash).toBeTruthy();
     expect(views.get('console')!.width).toBeLessThan(views.get('copper')!.width);
     expect(new Set(media.map((m) => views.get(m)!.dash)).size).toBeGreaterThanOrEqual(3);
+    // Spec styles: wireless dashed, VPN/tunnel dotted, console thin dashed.
+    const seg = (m: LinkMedium) => Number(views.get(m)!.dash!.split(' ')[0]);
+    expect(seg('virtual')).toBeLessThanOrEqual(2);
+    expect(seg('wireless')).toBeGreaterThan(seg('virtual'));
+    expect(seg('console')).toBeGreaterThan(seg('virtual'));
   });
 
   it('draws trunks heavier than access links in L1 and L2', () => {

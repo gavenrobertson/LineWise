@@ -16,3 +16,10 @@ body:
       description: Describe the common diagram convention. Do not attach vendor icon files; LineWise icons are original drawings (FR-ICO-08).
     validations:
       required: true
+  - type: checkboxes
+    id: license
+    attributes:
+      label: Source and license (OSS-04)
+      options:
+        - label: Anything I contribute for this icon is my own work or under a license compatible with Apache-2.0, and I will state its source and license in the pull request. It contains no vendor icons, logos or trademarks.
+          required: true

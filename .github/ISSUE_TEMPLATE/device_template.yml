@@ -27,3 +27,10 @@ body:
     id: ru
     attributes:
       label: Rack units
+  - type: checkboxes
+    id: license
+    attributes:
+      label: Source and license (OSS-04)
+      options:
+        - label: Anything I contribute for this template is my own work or under a license compatible with Apache-2.0, and I will state its source and license in the pull request. It contains no vendor icons, logos or trademarks.
+          required: true

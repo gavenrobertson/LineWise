@@ -5,23 +5,23 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | Requirement | Priority | Module(s) | Test(s) | Status |
 | --- | --- | --- | --- | --- |
 | FR-APP-01 | MUST | `apps/desktop/src-tauri/src/menu.rs`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/config.test.ts`, `apps/desktop/test/pure.test.ts` | done |
-| FR-APP-02 | MUST | | | todo |
+| FR-APP-02 | MUST | `apps/desktop/src/store/editor.ts`, `apps/desktop/src/panels/TabBar.tsx`, `apps/desktop/src/lib/actions.ts` — tabs in one window on both OSes (decisions log) | `apps/desktop/test/tabs.test.ts`, `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/10-tabs.spec.ts` | done |
 | FR-APP-03 | MUST | | | todo |
 | FR-APP-04 | MUST | | | todo |
 | FR-APP-05 | MUST | | | todo |
 | FR-APP-06 | MUST | | | todo |
 | FR-APP-07 | MUST | | | todo |
 | FR-APP-08 | MUST | | | todo |
-| FR-APP-09 | MUST | | | todo |
-| FR-CAN-01 | MUST | | | todo |
-| FR-CAN-02 | MUST | | | todo |
-| FR-CAN-03 | MUST | | | todo |
-| FR-CAN-04 | MUST | | | todo |
-| FR-CAN-05 | MUST | | | todo |
-| FR-CAN-06 | MUST | | | todo |
-| FR-CAN-07 | MUST | | | todo |
-| FR-CAN-08 | MUST | | | todo |
-| FR-CAN-09 | MUST | | | todo |
+| FR-APP-09 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/src-tauri/src/lib.rs` — association and open-with done; .lwise document icon comes with BRD-03 (M6) | `apps/desktop/test/config.test.ts`, `apps/desktop/smoke/smoke.test.mjs` | partial |
+| FR-CAN-01 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-CAN-02 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/store/prefs.ts`, `apps/desktop/src/dialogs/PreferencesDialog.tsx` | `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
+| FR-CAN-03 | MUST | `apps/desktop/src/canvas/Canvas.tsx` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-CAN-04 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `packages/core/src/selectors.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-CAN-05 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/lib/keyboard.ts`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-CAN-06 | MUST | `apps/desktop/src/lib/actions.ts`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-CAN-07 | MUST | `packages/core/src/history.ts`, `apps/desktop/src/store/editor.ts` — includes the undo/redo property test | `packages/core/test/commands.test.ts`, `apps/desktop/test/tabs.test.ts`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-CAN-08 | MUST | `packages/core/src/commands.ts`, `packages/core/src/document.ts`, `apps/desktop/src/lib/actions.ts` | `packages/core/test/commands.test.ts`, `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
+| FR-CAN-09 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `packages/core/test/commands.test.ts` | done |
 | FR-CAN-10 | MUST | | | todo |
 | FR-CAN-11 | MUST | | | todo |
 | FR-CAN-12 | MUST | | | todo |
@@ -31,21 +31,21 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-CAN-15 | MUST | | | todo |
 | FR-CAN-16 | SHOULD | | | todo |
 | FR-CAN-17 | SHOULD | | | todo |
-| FR-LNK-01 | MUST | | | todo |
-| FR-LNK-02 | MUST | | | todo |
-| FR-LNK-03 | MUST | | | todo |
-| FR-LNK-04 | MUST | | | todo |
-| FR-LNK-05 | MUST | | | todo |
-| FR-LNK-06 | MUST | | | todo |
-| FR-INS-01 | MUST | | | todo |
-| FR-INS-02 | MUST | | | todo |
-| FR-INS-03 | MUST | | | todo |
-| FR-INS-04 | MUST | | | todo |
+| FR-LNK-01 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/dialogs/ConnectDialog.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/test/routing.test.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-LNK-02 | MUST | `apps/desktop/src/canvas/geometry.ts`, `apps/desktop/src/canvas/NetworkEdge.tsx`, `apps/desktop/src/canvas/model.ts` | `apps/desktop/test/routing.test.ts`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-LNK-03 | MUST | `packages/core/src/selectors.ts`, `apps/desktop/src/canvas/model.ts` | `packages/core/test/selectors.test.ts`, `apps/desktop/test/routing.test.ts` | done |
+| FR-LNK-04 | MUST | `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/canvas/NetworkEdge.tsx` | `apps/desktop/test/linkstyle.test.ts` | done |
+| FR-LNK-05 | MUST | `apps/desktop/src/canvas/model.ts` | `apps/desktop/test/linkstyle.test.ts` | done |
+| FR-LNK-06 | MUST | `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/canvas/NetworkEdge.tsx` | `apps/desktop/test/linkstyle.test.ts` | done |
+| FR-INS-01 | MUST | `apps/desktop/src/panels/Inspector.tsx` | `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
+| FR-INS-02 | MUST | `apps/desktop/src/panels/Inspector.tsx`, `packages/core/src/commands.ts` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
+| FR-INS-03 | MUST | `apps/desktop/src/panels/InterfaceTable.tsx` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
+| FR-INS-04 | MUST | `apps/desktop/src/panels/Inspector.tsx` | `apps/desktop/test/components.test.tsx` | done |
 | FR-KEY-01 | MUST | | | todo |
 | FR-KEY-02 | MUST | | | todo |
-| FR-NET-01 | MUST | | | todo |
-| FR-NET-02 | MUST | | | todo |
-| FR-NET-03 | MUST | | | todo |
+| FR-NET-01 | MUST | `packages/core/src/commands.ts`, `packages/core/src/templates.ts` | `packages/core/test/commands.test.ts` | done |
+| FR-NET-02 | MUST | `packages/core/src/naming.ts`, `packages/core/src/commands.ts`, `apps/desktop/src/panels/InterfaceTable.tsx` | `packages/core/test/naming.test.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-NET-03 | MUST | `packages/core/src/naming.ts` | `packages/core/test/naming.test.ts` | done |
 | FR-NET-04 | MUST | | | todo |
 | FR-NET-05 | MUST | | | todo |
 | FR-NET-06 | MUST | | | todo |
@@ -59,28 +59,28 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-NET-31 | MUST | | | todo |
 | FR-NET-32 | SHOULD | | | todo |
 | FR-NET-33 | SHOULD | | | todo |
-| FR-ICO-01 | MUST | | | todo |
-| FR-ICO-02 | MUST | | | todo |
-| FR-ICO-03 | MUST | | | todo |
+| FR-ICO-01 | MUST | `packages/device-library/icons`, `packages/device-library/scripts/build-icons.ts` | `packages/device-library/test/library.test.ts` | done |
+| FR-ICO-02 | MUST | `packages/device-library/icons` | `packages/device-library/test/library.test.ts` | done |
+| FR-ICO-03 | MUST | `packages/device-library/icons`, `apps/desktop/src/panels/Inspector.tsx` | `packages/device-library/test/library.test.ts` | done |
 | FR-ICO-04 | MUST | | | todo |
 | FR-ICO-05 | MUST | | | todo |
 | FR-ICO-06 | MUST | | | todo |
 | FR-ICO-07 | MUST | | | todo |
 | FR-ICO-08 | MUST | | | todo |
-| FR-TPL-01 | MUST | | | todo |
-| FR-TPL-02 | MUST | | | todo |
+| FR-TPL-01 | MUST | `packages/core/src/templates.ts` | `packages/core/test/misc.test.ts`, `packages/device-library/test/library.test.ts` | done |
+| FR-TPL-02 | MUST | `packages/device-library/templates/generic` | `packages/device-library/test/library.test.ts` | done |
 | FR-TPL-03 | MUST | | | todo |
 | FR-TPL-04 | MUST | | | todo |
-| FR-TPL-05 | MUST | | | todo |
+| FR-TPL-05 | MUST | `apps/desktop/src/panels/LibraryPanel.tsx` | `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-TPL-06 | SHOULD | | | todo |
 | FR-TPL-07 | SHOULD | | | todo |
-| FR-FMT-01 | MUST | | | todo |
-| FR-FMT-02 | MUST | | | todo |
-| FR-FMT-03 | MUST | | | todo |
-| FR-FMT-04 | MUST | | | todo |
-| FR-FMT-05 | MUST | | | todo |
-| FR-FMT-06 | MUST | | | todo |
-| FR-FMT-07 | MUST | | | todo |
+| FR-FMT-01 | MUST | `packages/core/src/serialize.ts` | `packages/core/test/serialize.test.ts` | done |
+| FR-FMT-02 | MUST | `packages/core/src/serialize.ts`, `packages/core/src/jsonSchema.ts`, `schema/v1.json` | `packages/core/test/serialize.test.ts`, `packages/core/test/jsonSchema.test.ts` | done |
+| FR-FMT-03 | MUST | `packages/core/src/serialize.ts`, `apps/desktop/src/lib/actions.ts` — migration scaffold; v1 is the only version so far | `packages/core/test/serialize.test.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
+| FR-FMT-04 | MUST | `packages/core/src/serialize.ts`, `packages/core/src/commands.ts`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/components.test.tsx` | done |
+| FR-FMT-05 | MUST | `packages/core/src/serialize.ts`, `apps/desktop/src/dialogs/LoadIssuesDialog.tsx` | `packages/core/test/serialize.test.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
+| FR-FMT-06 | MUST | `apps/desktop/src-tauri/src/files.rs` — cargo test in the same file | `apps/desktop/src-tauri/src/files.rs` | done |
+| FR-FMT-07 | MUST | `apps/desktop/src/App.tsx`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/e2e/08-crash-recovery.spec.ts`, `apps/desktop/e2e/11-files.spec.ts`, `apps/desktop/src-tauri/src/recovery.rs` | done |
 | FR-IMP-01 | MUST | | | todo |
 | FR-IMP-02 | MUST | | | todo |
 | FR-IMP-03 | MUST | | | todo |
@@ -138,7 +138,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-PERF-04 | MUST | | | todo |
 | NFR-PERF-05 | MUST | | | todo |
 | NFR-PERF-06 | MUST | | | todo |
-| NFR-PERF-07 | MUST | | | todo |
+| NFR-PERF-07 | MUST | `bench/src/generate.ts`, `bench/perf.spec.ts`, `.github/workflows/nightly.yml` — fixtures and gates exist; the 20% regression gate needs a baseline recorded on the CI runner (M5) | `bench/test/generate.test.ts`, `bench/perf.spec.ts` | partial |
 | NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
 | NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts`, `apps/desktop/src/canvas/icons.ts` — SVG sanitized on import; assets shown only as images; audit in M5 | `apps/desktop/test/pure.test.ts` | partial |
@@ -176,7 +176,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | OSS-01 | MUST | `LICENSE` | `scripts/repo-rules.test.mjs` | done |
 | OSS-02 | MUST | `scripts/check-licenses.mjs`, `scripts/licenses.mjs`, `apps/desktop/src-tauri/deny.toml`, `.github/workflows/ci.yml` | `scripts/licenses.test.mjs` | done |
 | OSS-03 | MUST | `scripts/third-party-notices.mjs`, `apps/desktop/src/dialogs/AboutDialog.tsx` | `apps/desktop/test/components.test.tsx` | done |
-| OSS-04 | MUST | | | todo |
+| OSS-04 | MUST | `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/icon_request.yml`, `.github/ISSUE_TEMPLATE/device_template.yml`, `packages/device-library/icons`, `packages/device-library/templates` | `scripts/repo-docs.test.mjs`, `packages/device-library/test/library.test.ts` | done |
 | OSS-05 | MUST | `CONTRIBUTING.md`, `.github/pull_request_template.md` — Sign-off is documented; the DCO GitHub app must be installed by the owner (docs/HUMAN-TODO.md). |  | partial |
 | OSS-10 | MUST | `README.md` | `scripts/repo-docs.test.mjs` | done |
 | OSS-11 | MUST | `CONTRIBUTING.md` | `scripts/repo-docs.test.mjs` | done |

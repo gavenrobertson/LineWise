@@ -151,3 +151,29 @@ test('DOC-01, DOC-02, DOC-03: user guide, developer guide and file-format spec e
   // Every docs link in the README resolves.
   for (const [, p] of read('README.md').matchAll(/\]\((docs\/[^)#]+)\)/g)) assert.ok(has(p), p);
 });
+
+test('OSS-04: icons and templates are project-original; contributions state source and license', () => {
+  assert.match(
+    read('CONTRIBUTING.md'),
+    /## Licensing of icons and templates \(OSS-04\)[\s\S]*Apache-2\.0[\s\S]*source/,
+  );
+  for (const t of ['icon_request.yml', 'device_template.yml'])
+    assert.match(read(`.github/ISSUE_TEMPLATE/${t}`), /id: license[\s\S]*required: true/, t);
+  const dir = 'packages/device-library/templates';
+  for (const vendor of readdirSync(join(ROOT, dir)))
+    for (const f of readdirSync(join(ROOT, dir, vendor))) {
+      const t = JSON.parse(read(`${dir}/${vendor}/${f}`));
+      assert.ok(t.contributor, `${f} names its contributor`);
+      if (!t.generic)
+        assert.ok(t.sourceUrl || t.verified === false, `${f} cites a datasheet or is unverified`);
+    }
+  for (const style of ['classic', 'line'])
+    for (const f of readdirSync(join(ROOT, 'packages/device-library/icons', style))) {
+      const svg = read(`packages/device-library/icons/${style}/${f}`);
+      assert.doesNotMatch(
+        svg,
+        /<image|href=|<script|cisco/i,
+        `${style}/${f} is a self-contained original drawing`,
+      );
+    }
+});

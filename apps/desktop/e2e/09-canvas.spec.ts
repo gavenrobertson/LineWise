@@ -97,6 +97,34 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
   await expect(node(page, 'R3')).toBeInViewport();
 });
 
+test('FR-CAN-01 Space+drag and middle-button drag pan the canvas', async ({ page }) => {
+  await openApp(page);
+  await startFrom(page, /CCNA lab/);
+  await expect(node(page, 'R1')).toBeVisible();
+  const c = await canvasCenter(page);
+  // Start on empty canvas near the top-left corner, clear of devices and the zoom controls.
+  const x = c.box.x + 40;
+  const y = c.box.y + 60;
+  const dragFrom = async (button: 'left' | 'middle') => {
+    await page.mouse.move(x, y);
+    await page.mouse.down({ button });
+    await page.mouse.move(x + 60, y + 40, { steps: 8 });
+    await page.mouse.up({ button });
+  };
+
+  let v = await viewport(page);
+  await page.keyboard.down('Space');
+  await dragFrom('left');
+  await page.keyboard.up('Space');
+  await expect.poll(async () => (await viewport(page)).x).toBeCloseTo(v.x + 60, -1);
+  expect((await doc(page)).devices).toHaveLength(5);
+
+  v = await viewport(page);
+  await dragFrom('middle');
+  await expect.poll(async () => (await viewport(page)).x).toBeCloseTo(v.x + 60, -1);
+  expect((await viewport(page)).zoom).toBeCloseTo(v.zoom, 5);
+});
+
 test('FR-CAN-02, FR-CAN-03 grid snap, alignment guide while dragging, minimap toggle', async ({ page }) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
@@ -189,6 +217,37 @@ test('FR-CAN-05, FR-CAN-07 nudge with arrows (Shift = 10×) and a drag is one un
   await page.locator('.react-flow__pane').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press(`${MOD}+z`);
   await expect.poll(async () => positionOf(page, 'R2')).toEqual(before);
+});
+
+test('FR-CAN-05 resize a shape by its corner and rotate it from the inspector', async ({ page }) => {
+  await openApp(page);
+  await startBlank(page);
+  await palette(page, 'Insert rectangle');
+  type Shape = { geometry: { w: number; h: number; rotation: number } };
+  const shape = async () =>
+    ((await doc(page)) as unknown as { pages: { annotations: Shape[] }[] }).pages[0]!.annotations[0]!;
+  await expect.poll(async () => (await shape())?.geometry.w).toBeGreaterThan(0);
+  const g0 = (await shape()).geometry;
+  const box = page.locator('.react-flow__node-annotation').first();
+  await box.click();
+  const corner = page.locator('.react-flow__resize-control.handle.bottom.right').first();
+  await expect(corner).toBeVisible();
+  const c = (await corner.boundingBox())!;
+  await page.mouse.move(c.x + c.width / 2, c.y + c.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(c.x + c.width / 2 + 60, c.y + c.height / 2 + 40, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => (await shape()).geometry.w).toBeGreaterThan(g0.w + 40);
+  expect((await shape()).geometry.h).toBeGreaterThan(g0.h + 20);
+
+  const rotation = page.getByRole('complementary', { name: 'Inspector' }).getByLabel('Rotation (°)');
+  await rotation.fill('30');
+  await rotation.press('Enter');
+  await expect.poll(async () => (await shape()).geometry.rotation).toBe(30);
+  await expect(box.locator('[style*="rotate(30deg)"]')).toHaveCount(1);
+  await page.locator('.react-flow__pane').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press(`${MOD}+z`);
+  await expect.poll(async () => (await shape()).geometry.rotation).toBe(0);
 });
 
 test('FR-CAN-06 align, distribute, group, lock and stacking from the Arrange commands', async ({ page }) => {

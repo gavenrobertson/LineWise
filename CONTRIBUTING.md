@@ -99,6 +99,10 @@ Regenerate the JSON Schema after changing a Zod schema: `pnpm schema`.
 
 Icons are original drawings in `packages/device-library/icons/{classic,line}/<role>.svg`: a 64×64 viewBox, 2 px strokes, `currentColor` only, no scripts, links or embedded raster images. Follow the conventions in spec section 5 (router = round body with four arrows, switch = flat box with parallel arrows, and so on). **Never trace or copy vendor icon files or logos.** Run `pnpm --filter @linewise/device-library icons` and the library tests.
 
+## Licensing of icons and templates (OSS-04)
+
+LineWise's icons and device templates are project-original and licensed under Apache-2.0 with the rest of the code. If you contribute an icon, template or other asset, it must be your own work or under a license compatible with Apache-2.0, and your pull request must state where it came from and its license. Datasheets are cited as sources of facts (port counts, rack units); never copy their images or text. Vendor icons, logos and trademarks are never accepted.
+
 ## Adding a validation rule (FR-VAL-04)
 
 Rules live in `packages/core/src/validation.ts` and are registered with `registerRule`. A rule is `{ id, severity, title, run }` where `run(ctx)` is a pure function of the document (plus precomputed link lookups) that returns issues with a message, the affected object ids and optional quick fixes (which are commands). Add a positive and a negative test in `packages/core/test/validation.test.ts`, then list the rule in `TRACEABILITY.md` and the user guide.

@@ -118,6 +118,7 @@ describe('remaining commands', () => {
     expect(nextFreeInterface(ed.doc, s.deviceId)?.shortName).toBe('Gi1/0/1');
     expect(nextHostname(ed.doc, 'SW')).toBe('SW2');
     expect(copyHostname(ed.doc, 'SW1')).toBe('SW1-copy');
+    expect(copyHostname(ed.doc, 'R9')).toBe('R9'); // free in this diagram: kept (FR-CAN-08)
     const members = ed.doc.devices[0]?.interfaces.slice(0, 2).map((i) => i.id) as string[];
     ed.execute(createPortChannel(s.deviceId, 2, members, 'on'));
     ed.execute(createPortChannel(s.deviceId, 2, [], 'on'));

@@ -201,9 +201,11 @@ export function nextHostname(doc: Pick<NetworkDocument, 'devices'>, prefix: stri
   }
 }
 
-/** Unique copy name for pasted devices: R1 → R1-copy, R1-copy2, … */
+/** Unique name for a pasted device: its own name if free, else R1 → R1-copy, R1-copy2, … (FR-CAN-08) */
 export function copyHostname(doc: Pick<NetworkDocument, 'devices'>, hostname: string): string {
   const taken = new Set(doc.devices.map((d) => d.hostname.toLowerCase()));
+  // Pasting into another diagram keeps a hostname that is still free there.
+  if (!taken.has(hostname.toLowerCase())) return hostname;
   if (!taken.has(`${hostname}-copy`.toLowerCase())) return `${hostname}-copy`;
   for (let i = 2; ; i++) {
     const h = `${hostname}-copy${i}`;
