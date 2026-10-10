@@ -17,6 +17,7 @@ import {
 import { updateLinkStyle } from '@linewise/core';
 import { memo, useState, type PointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { useEditor } from '../store/editor.ts';
 import { edgeGeometryPure as edgeGeometry } from './edgeGeometry.ts';
 import { midDirection, nodeCenter, type XY } from './geometry.ts';
@@ -41,6 +42,7 @@ function Waypoints({
   onPreview: (p: XY[] | null) => void;
 }) {
   const rf = useReactFlow();
+  const { t } = useTranslation();
   const execute = useEditor((s) => s.execute);
   const [drag, setDrag] = useState<{ index: number; pts: XY[] } | null>(null);
   const current = drag?.pts ?? points;
@@ -69,7 +71,7 @@ function Waypoints({
           key={i}
           role="button"
           tabIndex={-1}
-          aria-label="Bend point"
+          aria-label={t('link.bendPoint', 'Bend point')}
           className="nodrag nopan cursor-move"
           cx={p.x}
           cy={p.y}
@@ -86,7 +88,7 @@ function Waypoints({
             execute(updateLinkStyle([linkId], { waypoints: points.filter((_, j) => j !== i) }));
           }}
         >
-          <title>Drag to move; double-click to remove</title>
+          <title>{t('link.bendHint', 'Drag to move; double-click to remove')}</title>
         </circle>
       ))}
     </>

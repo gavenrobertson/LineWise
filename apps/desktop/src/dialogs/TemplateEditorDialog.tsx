@@ -12,7 +12,7 @@ import {
   type DeviceRole,
   type DeviceTemplate,
 } from '@linewise/core';
-import { getTemplate, ROLE_LABELS, TEMPLATES } from '@linewise/device-library';
+import { getTemplate, TEMPLATES } from '@linewise/device-library';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { Button, Dialog, Field, IconButton, Select, TextInput } from '../compone
 import { platform } from '../platform/index.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { roleLabel } from '../lib/labels.ts';
 
 type Row = {
   range: string;
@@ -225,7 +226,7 @@ export function TemplateEditorDialog({ templateId }: { templateId?: string }) {
                 id={id}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Branch switch 24×GE"
+                placeholder={t('tpl.namePlaceholder', 'Branch switch 24×GE')}
               />
             )}
           </Field>
@@ -255,7 +256,7 @@ export function TemplateEditorDialog({ templateId }: { templateId?: string }) {
               <Select id={id} value={role} onChange={(e) => setRole(e.target.value as DeviceRole)}>
                 {DEVICE_ROLES.map((r) => (
                   <option key={r} value={r}>
-                    {ROLE_LABELS[r]}
+                    {roleLabel(r)}
                   </option>
                 ))}
               </Select>
@@ -327,7 +328,7 @@ export function TemplateEditorDialog({ templateId }: { templateId?: string }) {
                   PoE
                 </th>
                 <th scope="col" className="w-8">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('common.actions', 'Actions')}</span>
                 </th>
               </tr>
             </thead>

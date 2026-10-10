@@ -2,7 +2,7 @@
 /** Choose a device's icon: its role icon, another role's icon, or one from an imported pack (FR-ICO-05/06). */
 import * as Popover from '@radix-ui/react-popover';
 import { addAsset, batch, updateDevices, type Device, type DeviceRole } from '@linewise/core';
-import { ICON_ROLES, ROLE_LABELS } from '@linewise/device-library';
+import { ICON_ROLES } from '@linewise/device-library';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { customIconUrl, iconRole } from '../canvas/icons.ts';
@@ -10,6 +10,7 @@ import { DeviceIcon } from '../canvas/nodes.tsx';
 import { listPacks, type IconPack, type PackIcon } from '../lib/iconPacks.ts';
 import { useEditor } from '../store/editor.ts';
 import { cx } from './ui.tsx';
+import { roleLabel } from '../lib/labels.ts';
 
 export function IconPicker({ devices }: { devices: Device[] }) {
   const { t } = useTranslation();
@@ -61,7 +62,7 @@ export function IconPicker({ devices }: { devices: Device[] }) {
             <span className="truncate">
               {first.iconOverride?.startsWith('asset:')
                 ? t('field.customIcon', 'Custom icon')
-                : ROLE_LABELS[iconRole(first.role, first.iconOverride)]}
+                : roleLabel(iconRole(first.role, first.iconOverride))}
             </span>
           </button>
         </Popover.Trigger>
@@ -95,8 +96,8 @@ export function IconPicker({ devices }: { devices: Device[] }) {
                     iconRole(first.role, first.iconOverride) === r &&
                     !first.iconOverride?.startsWith('asset:')
                   }
-                  title={ROLE_LABELS[r]}
-                  aria-label={ROLE_LABELS[r]}
+                  title={roleLabel(r)}
+                  aria-label={roleLabel(r)}
                   className={cx(cell)}
                   onClick={() => applyRole(r)}
                 >

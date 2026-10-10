@@ -321,7 +321,7 @@ function VlsmTab() {
               {t('ipam.result', 'Subnet')}
             </th>
             <th scope="col" className="w-8">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('common.actions', 'Actions')}</span>
             </th>
           </tr>
         </thead>
@@ -575,7 +575,7 @@ export function IpamDialog() {
             {t('ipam.p2p', 'Point-to-point')}
           </Tabs.Trigger>
           <Tabs.Trigger value="vrf" className={tabCls}>
-            VRFs
+            {t('ipam.vrfs', 'VRFs')}
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="subnets">

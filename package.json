@@ -25,7 +25,8 @@
     "traceability": "node scripts/traceability.mjs --summary",
     "version:check": "node scripts/version.mjs check",
     "bench": "pnpm --filter @linewise/bench bench",
-    "fuzz": "pnpm --filter @linewise/parsers --filter @linewise/core exec vitest run -t fuzz"
+    "fuzz": "pnpm --filter @linewise/parsers --filter @linewise/core exec vitest run -t fuzz",
+    "i18n": "node --experimental-transform-types --no-warnings scripts/i18n.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

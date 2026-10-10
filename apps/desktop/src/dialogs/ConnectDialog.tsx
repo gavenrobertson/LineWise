@@ -15,12 +15,13 @@ import {
   type Device,
   type LinkMedium,
 } from '@linewise/core';
-import { ROLE_LABELS } from '@linewise/device-library';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, Field, Select, TextInput } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { roleLabel } from '../lib/labels.ts';
+import { mediumLabel } from '../lib/labels.ts';
 
 const NEW = '__new';
 
@@ -60,7 +61,7 @@ function InterfacePicker({
       <div>
         <div className="text-[13px] font-semibold text-ink">{device.hostname}</div>
         <div className="text-[11.5px] text-muted">
-          {[ROLE_LABELS[device.role], device.model].filter(Boolean).join(' · ')}
+          {[roleLabel(device.role), device.model].filter(Boolean).join(' · ')}
         </div>
       </div>
       <TextInput
@@ -189,7 +190,7 @@ function PeerPicker({ sourceId, onPick }: { sourceId: string; onPick: (id: strin
               onClick={() => onPick(d.id)}
             >
               <span className="font-medium text-ink">{d.hostname}</span>
-              <span className="text-[11.5px] text-muted">{ROLE_LABELS[d.role]}</span>
+              <span className="text-[11.5px] text-muted">{roleLabel(d.role)}</span>
             </button>
           </li>
         ))}
@@ -357,11 +358,11 @@ export function ConnectDialog({
                 className="w-60"
               >
                 <option value="">
-                  {t('connect.suggested', 'Suggested: {{m}}', { m: t(`medium.${suggested}`, suggested) })}
+                  {t('connect.suggested', 'Suggested: {{m}}', { m: mediumLabel(suggested) })}
                 </option>
                 {LINK_MEDIA.map((m) => (
                   <option key={m} value={m}>
-                    {t(`medium.${m}`, m)}
+                    {mediumLabel(m)}
                   </option>
                 ))}
               </Select>

@@ -198,7 +198,7 @@ export function VlanDialog() {
           {t('vlan.idOrRange', 'VLAN ID or range')}
           <TextInput
             className="w-40 font-mono"
-            placeholder="10 or 100-110,200"
+            placeholder={t('vlan.idPlaceholder', '10 or 100-110,200')}
             value={num}
             onChange={(e) => setNum(e.target.value)}
             aria-invalid={!!err}

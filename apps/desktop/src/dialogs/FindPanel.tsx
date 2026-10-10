@@ -3,6 +3,7 @@
 import { Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { cx, IconButton } from '../components/ui.tsx';
 import { searchDocument, type Hit } from '../lib/search.ts';
@@ -27,14 +28,23 @@ export function revealHit(h: Hit): void {
   );
 }
 
-const KIND_LABEL: Record<Hit['kind'], string> = {
-  device: 'Device',
-  interface: 'Interface',
-  link: 'Link',
-  vlan: 'VLAN',
-  zone: 'Zone',
-  annotation: 'Note',
-};
+/** The label for each kind of search hit (literal keys for the i18n extractor). */
+function kindLabel(t: TFunction, kind: Hit['kind']): string {
+  switch (kind) {
+    case 'device':
+      return t('find.kind.device', 'Device');
+    case 'interface':
+      return t('find.kind.interface', 'Interface');
+    case 'link':
+      return t('find.kind.link', 'Link');
+    case 'vlan':
+      return t('find.kind.vlan', 'VLAN');
+    case 'zone':
+      return t('find.kind.zone', 'Zone');
+    case 'annotation':
+      return t('find.kind.annotation', 'Note');
+  }
+}
 
 export function FindPanel() {
   const { t } = useTranslation();
@@ -104,7 +114,7 @@ export function FindPanel() {
               >
                 <span className="flex items-center gap-2 text-[12.5px] text-ink">
                   <span className="rounded bg-surface-3 px-1 text-[10px] uppercase tracking-wide text-muted">
-                    {t(`find.kind.${h.kind}`, KIND_LABEL[h.kind])}
+                    {kindLabel(t, h.kind)}
                   </span>
                   <span className="truncate">{h.title}</span>
                 </span>

@@ -5,13 +5,13 @@
  * reveals the device.
  */
 import { addOffPageRef, removeOffPageRef } from '@linewise/core';
-import { ROLE_LABELS } from '@linewise/device-library';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
 import { cx } from '../components/ui.tsx';
 import { selectPage, useEditor } from '../store/editor.ts';
+import { roleLabel } from '../lib/labels.ts';
 
 export function OutlinePanel() {
   const { t } = useTranslation();
@@ -105,7 +105,7 @@ export function OutlinePanel() {
                           {d.hostname}
                         </span>
                         <span className="block truncate text-[11px] text-subtle">
-                          {[ROLE_LABELS[d.role], d.mgmtIp].filter(Boolean).join(' · ')}
+                          {[roleLabel(d.role), d.mgmtIp].filter(Boolean).join(' · ')}
                         </span>
                       </span>
                     </button>

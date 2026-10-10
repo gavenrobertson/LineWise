@@ -12,6 +12,7 @@ import { canvasApi } from '../canvas/Canvas.tsx';
 import { Button, cx, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { severityLabel } from '../lib/labels.ts';
 
 const ICON = {
   error: <CircleAlert size={14} className="shrink-0 text-danger" aria-hidden="true" />,
@@ -125,7 +126,7 @@ export function ProblemsPanel() {
             >
               {ICON[s]}
               {counts[s]}
-              <span className="sr-only">{t(`severity.${s}`, s)}</span>
+              <span className="sr-only">{severityLabel(s)}</span>
             </button>
           ))}
         </div>

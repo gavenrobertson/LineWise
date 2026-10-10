@@ -86,7 +86,8 @@ function restoreFocus(): void {
       : target.nodeId
         ? document.querySelector(`.react-flow__node[data-id="${CSS.escape(target.nodeId)}"]`)
         : null;
-    (el as HTMLElement | null)?.focus?.();
+    // Canvas nodes are placed by transforms; scrolling them into view would shift the whole layout.
+    (el as HTMLElement | null)?.focus?.({ preventScroll: true });
   }, 0);
 }
 

@@ -693,7 +693,7 @@ export function Canvas() {
           {pathStart
             ? t('canvas.pathEnd', 'Click the second device')
             : t('canvas.pathStart', 'Click the first device of the path')}{' '}
-          · Esc
+          · {t('canvas.escToCancel', 'Esc to cancel')}
         </div>
       )}
       {doc.devices.length === 0 && page.annotations.length === 0 && (

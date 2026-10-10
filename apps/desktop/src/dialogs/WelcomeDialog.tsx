@@ -15,6 +15,7 @@ import { newDocument, openFile } from '../lib/actions.ts';
 import { platform, type RecentFile, type RecoveryEntry } from '../platform/index.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { starterText } from '../lib/labels.ts';
 
 export function restoreRecovery(r: RecoveryEntry): void {
   const res = parseDocument(r.text);
@@ -131,10 +132,10 @@ export function WelcomeDialog() {
                     className="flex h-full w-full flex-col items-start rounded-lg border border-line bg-surface p-3 text-left transition-colors hover:border-accent hover:bg-accent-soft"
                   >
                     <span className="text-[13px] font-semibold text-ink">
-                      {t(`starter.${s.id}.name`, s.name)}
+                      {starterText(s.id, 'name', s.name)}
                     </span>
                     <span className="mt-0.5 text-xs text-muted">
-                      {t(`starter.${s.id}.desc`, s.description)}
+                      {starterText(s.id, 'desc', s.description)}
                     </span>
                   </button>
                 </li>

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Custom React Flow nodes: devices, zones, annotations and off-page references. */
 import { Handle, NodeResizer, Position, type Node, type NodeProps } from '@xyflow/react';
-import { iconMarkup, ROLE_LABELS, type IconStyle } from '@linewise/device-library';
+import { iconMarkup, type IconStyle } from '@linewise/device-library';
 import { memo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeZone, updateAnnotation, type Annotation, type DeviceRole } from '@linewise/core';
@@ -13,6 +13,7 @@ import { cx } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { DEVICE_W, ICON } from './geometry.ts';
 import type { DeviceView, ZoneView } from './model.ts';
+import { roleLabel } from '../lib/labels.ts';
 
 export function DeviceIcon({
   role,
@@ -84,7 +85,7 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
     <div
       className={cx('group relative flex flex-col items-center', view.dimmed && 'lw-dim')}
       style={{ width: DEVICE_W, height: ICON }}
-      aria-label={`${ROLE_LABELS[d.role]} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
+      aria-label={`${roleLabel(d.role)} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
       title={summary}
     >
       <div

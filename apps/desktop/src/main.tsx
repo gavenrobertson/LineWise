@@ -2,7 +2,7 @@
 import '@xyflow/react/dist/base.css';
 import '@linewise/brand/fonts/fonts.css';
 import './styles.css';
-import './i18n/index.ts';
+import i18n from './i18n/index.ts';
 import { Component, StrictMode, type ErrorInfo, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
@@ -12,8 +12,13 @@ import { autosaveNow } from './lib/actions.ts';
  * Last-resort error screen (NFR-REL-02): a rendering crash never loses work —
  * a recovery copy is written first and the user can reload into it.
  */
-class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  override state = { error: null as Error | null };
+const t = (key: string, defaultValue: string) => i18n.t(key, { defaultValue });
+
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null; stack: string; copied: boolean }
+> {
+  override state = { error: null as Error | null, stack: '', copied: false };
 
   static getDerivedStateFromError(error: Error) {
     return { error };
@@ -21,6 +26,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('LineWise crashed', error, info.componentStack);
+    this.setState({ stack: info.componentStack ?? '' });
     void autosaveNow();
   }
 
@@ -39,11 +45,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
       >
         <div style={{ maxWidth: 480 }}>
           <h1 style={{ fontFamily: 'var(--font-brand)', fontSize: 18, margin: '0 0 8px' }}>
-            Something went wrong
+            {t('crash.title', 'Something went wrong')}
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '0 0 12px' }}>
-            LineWise saved a recovery copy of your diagram. Reload to continue; the copy is offered on the
-            welcome screen.
+            {t(
+              'crash.body',
+              'LineWise saved a recovery copy of your diagram. Reload to continue; the copy is offered on the welcome screen.',
+            )}
           </p>
           <pre
             style={{
@@ -58,21 +66,54 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
           >
             {this.state.error.message}
           </pre>
-          <button
-            type="button"
-            onClick={() => location.reload()}
-            style={{
-              marginTop: 12,
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: 0,
-              background: 'var(--accent)',
-              color: 'var(--accent-contrast)',
-              cursor: 'pointer',
-            }}
-          >
-            Reload
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button
+              type="button"
+              onClick={() => location.reload()}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: 0,
+                background: 'var(--accent-fill)',
+                color: 'var(--accent-contrast)',
+                cursor: 'pointer',
+              }}
+            >
+              {t('crash.reload', 'Reload')}
+            </button>
+            {/* Diagnostics stay on this machine: they are copied for the user to share, never sent. */}
+            <button
+              type="button"
+              onClick={() => {
+                const e = this.state.error;
+                const text = [
+                  `LineWise ${import.meta.env.VITE_APP_VERSION ?? ''}`.trim(),
+                  `User agent: ${navigator.userAgent}`,
+                  `Error: ${e?.name ?? ''}: ${e?.message ?? ''}`,
+                  e?.stack ?? '',
+                  this.state.stack ? `Component stack:${this.state.stack}` : '',
+                ]
+                  .filter(Boolean)
+                  .join('\n');
+                void navigator.clipboard?.writeText(text).then(
+                  () => this.setState({ copied: true }),
+                  () => this.setState({ copied: false }),
+                );
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: '1px solid var(--border-strong)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
+                cursor: 'pointer',
+              }}
+            >
+              {this.state.copied
+                ? t('crash.copied', 'Diagnostics copied')
+                : t('crash.copyDiagnostics', 'Copy diagnostics')}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -87,6 +128,34 @@ if (!('__TAURI_INTERNALS__' in window) && (import.meta.env.DEV || navigator.webd
       issues: () => useEditor.getState().issues,
       serialize: () => core.serializeDocument(useEditor.getState().doc),
       dirty: () => useEditor.getState().rev !== useEditor.getState().savedRev,
+      /**
+       * Switch to a pseudo-locale with every string 40% longer and accented (NFR-I18N-02), added
+       * at run time like any new language file, to check the layout and that no text bypasses i18n.
+       */
+      pseudoLocale: async () => {
+        const en = i18n.getResourceBundle('en', 'translation') as Record<string, string>;
+        const accent: Record<string, string> = {
+          a: 'á',
+          e: 'é',
+          i: 'í',
+          o: 'ó',
+          u: 'ú',
+          A: 'Á',
+          E: 'É',
+          O: 'Ó',
+        };
+        const pseudo = Object.fromEntries(
+          Object.entries(en).map(([k, v]) => {
+            const parts = v.split(/(\{\{[^}]+\}\})/);
+            const body = parts
+              .map((p) => (p.startsWith('{{') ? p : p.replace(/[aeiouAEO]/g, (c) => accent[c] ?? c)))
+              .join('');
+            return [k, `${body}${'~'.repeat(Math.ceil(v.length * 0.4))}`];
+          }),
+        );
+        i18n.addResourceBundle('en-XA', 'translation', pseudo, true, true);
+        await i18n.changeLanguage('en-XA');
+      },
     };
   });
 }

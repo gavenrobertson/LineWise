@@ -361,7 +361,9 @@ export function focusNearest(dir: 'up' | 'down' | 'left' | 'right'): void {
     ed.setSelection({ devices: [id] });
     canvasApi.focusOn([id]);
     requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(id)}"]`)?.focus(),
+      document
+        .querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(id)}"]`)
+        ?.focus({ preventScroll: true }),
     );
   };
   // Start from the device with keyboard focus, else the selected one.

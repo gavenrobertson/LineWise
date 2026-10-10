@@ -5,13 +5,7 @@
  * Enter on an item to place it at the center of the view (NFR-A11Y-01).
  */
 import { addDevice, type DeviceTemplate } from '@linewise/core';
-import {
-  ROLE_CATEGORY,
-  ROLE_LABELS,
-  searchTemplates,
-  TEMPLATES,
-  type RoleCategory,
-} from '@linewise/device-library';
+import { ROLE_CATEGORY, searchTemplates, TEMPLATES, type RoleCategory } from '@linewise/device-library';
 import { ChevronRight, Pencil, Plus, Search, Star } from 'lucide-react';
 import { useMemo, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +15,8 @@ import { cx, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { roleLabel } from '../lib/labels.ts';
+import { categoryLabel } from '../lib/labels.ts';
 
 const CATEGORY_ORDER: RoleCategory[] = [
   'Routing & switching',
@@ -36,7 +32,7 @@ const CATEGORY_ORDER: RoleCategory[] = [
 export function focusNode(id: string, tries = 30): void {
   const el = document.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`);
   // React Flow keeps new nodes hidden until measured; focus only sticks once visible.
-  el?.focus();
+  el?.focus({ preventScroll: true });
   if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1));
 }
 
@@ -78,7 +74,7 @@ function Item({
   };
   const portCount = tpl.interfaces.length;
   const subtitle = [
-    tpl.generic ? ROLE_LABELS[tpl.role] : `${tpl.vendor} · ${tpl.model}`,
+    tpl.generic ? roleLabel(tpl.role) : `${tpl.vendor} · ${tpl.model}`,
     portCount > 0 ? t('library.portGroups', '{{n}} port groups', { n: portCount }) : '',
     custom ? t('library.custom', 'custom') : '',
   ]
@@ -92,7 +88,7 @@ function Item({
         data-lw-library-item=""
         onDragStart={onDragStart}
         onClick={() => placeTemplate(tpl)}
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left"
+        className="relative flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left"
         title={`${tpl.name}${tpl.sourceUrl ? `\n${tpl.sourceUrl}` : ''}\n${t('library.dragHint', 'Drag onto the canvas, or press Enter to place it.')}`}
       >
         <span className="shrink-0">
@@ -240,7 +236,7 @@ export function LibraryBody() {
           </Section>
         )}
         {CATEGORY_ORDER.filter((c) => grouped.has(c)).map((c) => (
-          <Section key={c} title={t(`category.${c}`, c)} count={grouped.get(c)?.length ?? 0}>
+          <Section key={c} title={categoryLabel(c)} count={grouped.get(c)?.length ?? 0}>
             {(grouped.get(c) ?? []).map((tpl) => (
               <Item key={tpl.id} tpl={tpl} favorite={fav.has(tpl.id)} iconStyle={iconStyle} />
             ))}

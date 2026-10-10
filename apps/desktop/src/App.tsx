@@ -91,6 +91,7 @@ function ActiveDialog({ dialog }: { dialog: DialogState }): ReactNode {
 function Toasts() {
   const toasts = useUi((s) => s.toasts);
   const dismiss = useUi((s) => s.dismiss);
+  const { t: tr } = useTranslation();
   return (
     <div
       className="lw-no-print pointer-events-none fixed bottom-10 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2"
@@ -116,7 +117,7 @@ function Toasts() {
           <span className="min-w-0 flex-1 break-words">{t.message}</span>
           <button
             type="button"
-            aria-label="Dismiss"
+            aria-label={tr('toast.dismiss', 'Dismiss')}
             className="shrink-0 rounded p-0.5 text-subtle hover:text-ink"
             onClick={() => dismiss(t.id)}
           >

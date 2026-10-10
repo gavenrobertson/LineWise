@@ -21,7 +21,6 @@ import {
   type Link,
   type Zone,
 } from '@linewise/core';
-import { ROLE_LABELS } from '@linewise/device-library';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +30,8 @@ import { p2pCommand } from '../lib/ipam.ts';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { IconPicker } from '../components/IconPicker.tsx';
 import { InterfaceTable } from './InterfaceTable.tsx';
+import { roleLabel } from '../lib/labels.ts';
+import { mediumLabel } from '../lib/labels.ts';
 
 function Group({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
   return (
@@ -90,7 +91,7 @@ function DeviceFields({ devices }: { devices: Device[] }) {
         <SelectField
           label={t('field.role', 'Role')}
           value={shared(devices, (d) => d.role)}
-          options={DEVICE_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+          options={DEVICE_ROLES.map((r) => ({ value: r, label: roleLabel(r) }))}
           onCommit={(v) => v && set({ role: v })}
         />
         {text(t('field.vendor', 'Vendor'), 'vendor')}
@@ -125,7 +126,7 @@ function DeviceFields({ devices }: { devices: Device[] }) {
         <TextField
           label={t('field.tags', 'Tags')}
           value={shared(devices, (d) => d.tags.join(', '))}
-          placeholder="core, prod"
+          placeholder={t('field.tagsPlaceholder', 'core, prod')}
           onCommit={(v) =>
             set({
               tags: v
@@ -274,7 +275,7 @@ function LinkFields({ links }: { links: Link[] }) {
       <SelectField
         label={t('field.medium', 'Medium')}
         value={shared(links, (l) => l.medium)}
-        options={LINK_MEDIA.map((m) => ({ value: m, label: t(`medium.${m}`, m) }))}
+        options={LINK_MEDIA.map((m) => ({ value: m, label: mediumLabel(m) }))}
         onCommit={(v) => v && set({ medium: v })}
       />
       <NumberField

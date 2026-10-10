@@ -68,7 +68,7 @@ test('FR-VAL-02, FR-VAL-03 filter problems by severity and rule; canvas badges c
   const [sev, n] = [...severities.entries()][0]!;
   await panel
     .getByRole('group', { name: 'Severity filter' })
-    .getByRole('button', { name: new RegExp(sev) })
+    .getByRole('button', { name: new RegExp(sev, 'i') })
     .click();
   await expect(items).toHaveCount(all.length - n);
 

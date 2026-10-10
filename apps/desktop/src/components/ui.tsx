@@ -6,6 +6,7 @@
 import * as RDialog from '@radix-ui/react-dialog';
 import * as RTooltip from '@radix-ui/react-tooltip';
 import { X } from 'lucide-react';
+import i18n from '../i18n/index.ts';
 import {
   forwardRef,
   useEffect,
@@ -299,7 +300,7 @@ export function Dialog({
             <RDialog.Close asChild>
               <button
                 type="button"
-                aria-label="Close"
+                aria-label={i18n.t('common.close', { defaultValue: 'Close' })}
                 className="rounded-md p-1 text-muted hover:bg-surface-3 hover:text-ink"
               >
                 <X size={16} />

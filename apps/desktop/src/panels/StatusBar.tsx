@@ -6,8 +6,7 @@ import { formatDate } from '../i18n/index.ts';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { selectDirty, useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
-
-const LAYER_NAMES = { l1: 'Physical (L1)', l2: 'Data link (L2)', l3: 'Network (L3)' } as const;
+import { layerLabel } from '../lib/labels.ts';
 
 export function StatusBar() {
   const { t } = useTranslation();
@@ -58,7 +57,7 @@ export function StatusBar() {
       <div className="flex-1" />
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded px-1 hover:bg-surface-3 hover:text-ink"
+        className="relative inline-flex items-center gap-2 rounded px-1 hover:bg-surface-3 hover:text-ink"
         onClick={() => toggle('problemsOpen')}
       >
         {/* The visible counts are part of the accessible name (WCAG 2.5.3). */}
@@ -73,7 +72,7 @@ export function StatusBar() {
           <span className="sr-only">{t('status.warningsWord', ' warnings. Toggle problems panel.')}</span>
         </span>
       </button>
-      <span>{t(`layer.${layer}`, LAYER_NAMES[layer])}</span>
+      <span>{layerLabel(layer)}</span>
       <button
         type="button"
         className="w-12 rounded px-1 text-right font-mono hover:bg-surface-3 hover:text-ink"

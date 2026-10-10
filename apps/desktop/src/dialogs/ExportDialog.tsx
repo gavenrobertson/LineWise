@@ -15,6 +15,7 @@ import {
 } from '@linewise/core';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button, Checkbox, Dialog, Field, Segmented, Select, TextInput } from '../components/ui.tsx';
 import { PAPER, type PaperSize } from '../export/paper.ts';
 import { renderPageSvg } from '../export/svg.ts';
@@ -48,6 +49,32 @@ const FORMATS: { id: Format; label: string; ext: string; filter: FileFilter }[] 
   { id: 'mermaid', label: 'Mermaid', ext: 'mmd', filter: { name: 'Mermaid', extensions: ['mmd', 'md'] } },
   { id: 'dot', label: 'Graphviz DOT', ext: 'dot', filter: { name: 'DOT', extensions: ['dot', 'gv'] } },
 ];
+
+/** The label for each export format (literal keys for the i18n extractor). */
+function formatLabel(t: TFunction, id: Format): string {
+  switch (id) {
+    case 'png':
+      return t('export.fmt.png', 'PNG image');
+    case 'svg':
+      return t('export.fmt.svg', 'SVG image');
+    case 'pdf':
+      return t('export.fmt.pdf', 'PDF document');
+    case 'csv':
+      return t('export.fmt.csv', 'CSV table');
+    case 'html':
+      return t('export.fmt.html', 'HTML report');
+    case 'md':
+      return t('export.fmt.md', 'Markdown report');
+    case 'drawio':
+      return t('export.fmt.drawio', 'draw.io diagram');
+    case 'clab':
+      return t('export.fmt.clab', 'Containerlab topology');
+    case 'mermaid':
+      return t('export.fmt.mermaid', 'Mermaid');
+    case 'dot':
+      return t('export.fmt.dot', 'Graphviz DOT');
+  }
+}
 
 export function safeFileName(s: string): string {
   const cleaned = [...s].map((c) => (c.charCodeAt(0) < 32 || '\\/:*?"<>|'.includes(c) ? '-' : c)).join('');
@@ -173,7 +200,7 @@ export function ExportDialog() {
           data = exportDot(doc);
           break;
       }
-      const ok = await platform().exportFile(data, name, [fmt.filter]);
+      const ok = await platform().exportFile(data, name, [{ ...fmt.filter, name: formatLabel(t, fmt.id) }]);
       if (ok) {
         toast(t('export.done', 'Exported {{name}}', { name }), 'success');
         close();
@@ -211,7 +238,7 @@ export function ExportDialog() {
               onClick={() => setFormat(f.id)}
               className={`rounded-md px-2 py-1.5 text-left text-[13px] ${format === f.id ? 'bg-accent-soft font-medium text-accent-ink' : 'text-ink hover:bg-surface-3'}`}
             >
-              {t(`export.fmt.${f.id}`, f.label)}
+              {formatLabel(t, f.id)}
             </button>
           ))}
         </div>

@@ -23,6 +23,7 @@ This guide covers how the code fits together and how to build a feature end to e
 | Repository rules and script tests                        | `pnpm test:scripts`                                                                                        |
 | Traceability check                                       | `pnpm traceability`                                                                                        |
 | Regenerate the JSON Schema after a schema change         | `pnpm schema`                                                                                              |
+| Regenerate the English strings after UI text changes     | `pnpm i18n`                                                                                                |
 | Parser and loader fuzzing (set `FUZZ_RUNS`)              | `pnpm fuzz`                                                                                                |
 | Performance benchmarks                                   | `pnpm bench`                                                                                               |
 | Native smoke test (needs a debug build and tauri-driver) | `node --test apps/desktop/smoke/smoke.test.mjs`                                                            |
