@@ -147,13 +147,20 @@ function PeerPicker({ sourceId, onPick }: { sourceId: string; onPick: (id: strin
   const pageId = useEditor((s) => s.pageId);
   const [q, setQ] = useState('');
   const page = doc.pages.find((p) => p.id === pageId);
+  const needle = q.trim().toLowerCase();
+  // An exact hostname first, then names that start with the text, then the rest, so typing
+  // "SW1" and Enter picks SW1 rather than SW10.
+  const rank = (h: string) => (h === needle ? 0 : h.startsWith(needle) ? 1 : 2);
   const list = doc.devices
     .filter(
       (d) =>
         d.id !== sourceId &&
         page?.nodePositions[d.id] &&
-        `${d.hostname} ${d.mgmtIp}`.toLowerCase().includes(q.trim().toLowerCase()),
+        `${d.hostname} ${d.mgmtIp}`.toLowerCase().includes(needle),
     )
+    .map((d, i) => ({ d, i, r: needle ? rank(d.hostname.toLowerCase()) : 0 }))
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map((x) => x.d)
     .slice(0, 50);
   return (
     <div className="flex flex-col gap-2">

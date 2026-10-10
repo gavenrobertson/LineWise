@@ -58,6 +58,38 @@ interface UiState {
 
 let toastId = 0;
 
+/**
+ * Where keyboard focus goes back to when the last dialog closes. Dialogs can replace each other
+ * (the link flow picks a peer, then ports), so the browser's own focus return would land on an
+ * element that no longer exists. A canvas node is found again by its id if it re-rendered.
+ */
+let focusReturn: { el: Element; nodeId: string | null } | null = null;
+
+function rememberFocus(): void {
+  if (typeof document === 'undefined') return;
+  const el = document.activeElement;
+  focusReturn =
+    el && el !== document.body
+      ? { el, nodeId: el.closest?.('.react-flow__node')?.getAttribute('data-id') ?? null }
+      : null;
+}
+
+function restoreFocus(): void {
+  const target = focusReturn;
+  focusReturn = null;
+  if (!target || typeof window === 'undefined') return;
+  // After the dialog's own focus handling has run.
+  window.setTimeout(() => {
+    if (document.activeElement && document.activeElement !== document.body) return;
+    const el = target.el.isConnected
+      ? target.el
+      : target.nodeId
+        ? document.querySelector(`.react-flow__node[data-id="${CSS.escape(target.nodeId)}"]`)
+        : null;
+    (el as HTMLElement | null)?.focus?.();
+  }, 0);
+}
+
 export const useUi = create<UiState>((set, get) => ({
   dialog: null,
   palette: false,
@@ -72,8 +104,14 @@ export const useUi = create<UiState>((set, get) => ({
   pathStart: null,
   autosavedAt: null,
 
-  open: (dialog) => set({ dialog, palette: false }),
-  close: () => set({ dialog: null }),
+  open: (dialog) => {
+    if (!get().dialog) rememberFocus();
+    set({ dialog, palette: false });
+  },
+  close: () => {
+    set({ dialog: null });
+    restoreFocus();
+  },
   setPalette: (palette) => set({ palette }),
   setFind: (find) => set({ find }),
   setPresentation: (presentation) => set({ presentation }),

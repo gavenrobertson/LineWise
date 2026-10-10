@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
-/** VLAN manager (FR-NET-05): define VLANs with names and colors, see where they are carried, highlight a VLAN. */
-import { batch, interfaceVlans, removeVlans, upsertVlan, vlanDomain, type Vlan } from '@linewise/core';
+/**
+ * VLAN manager (FR-NET-05): add VLANs one at a time or as a range ("100-110,200"), name and color
+ * them, see which interfaces carry each one, and highlight a VLAN on the canvas.
+ */
+import {
+  batch,
+  interfaceVlans,
+  parseVlanList,
+  removeVlans,
+  upsertVlan,
+  vlanDomain,
+  type Vlan,
+} from '@linewise/core';
 import { Eye, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +38,14 @@ function VlanRow({ v }: { v: Vlan }) {
   const execute = useEditor((s) => s.execute);
   const setHighlight = useEditor((s) => s.setHighlight);
   const close = useUi((s) => s.close);
-  const carriers = useMemo(() => vlanDomain(doc, v.number).deviceIds.size, [doc, v.number]);
+  // Interfaces that carry this VLAN, as "hostname port".
+  const carriers = useMemo(() => {
+    const dom = vlanDomain(doc, v.number);
+    const out: string[] = [];
+    for (const d of doc.devices)
+      for (const i of d.interfaces) if (dom.interfaceIds.has(i.id)) out.push(`${d.hostname} ${i.shortName}`);
+    return { devices: dom.deviceIds.size, interfaces: out };
+  }, [doc, v.number]);
   const set = (patch: Partial<Vlan>) =>
     execute(upsertVlan({ ...patch, id: v.id, number: patch.number ?? v.number }));
   return (
@@ -60,7 +78,28 @@ function VlanRow({ v }: { v: Vlan }) {
           className="h-7 w-full rounded border border-transparent bg-transparent px-1 hover:border-line focus:border-accent"
         />
       </td>
-      <td className="py-1 pr-2 text-right text-[12px] text-muted">{carriers}</td>
+      <td className="py-1 pr-2 text-[12px] text-muted">
+        {carriers.interfaces.length === 0 ? (
+          t('vlan.unused', 'Not used')
+        ) : (
+          <details>
+            <summary className="cursor-pointer">
+              {t('vlan.usedOn', '{{n}} ports on {{d}} devices', {
+                n: carriers.interfaces.length,
+                d: carriers.devices,
+              })}
+            </summary>
+            <ul
+              aria-label={t('vlan.usedOnX', 'Ports carrying VLAN {{n}}', { n: v.number })}
+              className="mt-1 max-h-32 overflow-auto font-mono text-[11.5px] text-ink"
+            >
+              {carriers.interfaces.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </td>
       <td className="py-1 text-right">
         <IconButton
           label={t('vlan.highlight', 'Highlight VLAN {{n}} on the canvas', { n: v.number })}
@@ -106,11 +145,34 @@ export function VlanDialog() {
   }, [doc]);
 
   const add = () => {
-    const n = Number(num);
-    if (!Number.isInteger(n) || n < 1 || n > 4094) return setErr(t('vlan.range', 'VLAN IDs are 1–4094'));
-    if (doc.vlans.some((v) => v.number === n))
-      return setErr(t('vlan.exists', 'VLAN {{n}} already exists', { n }));
-    execute(upsertVlan({ number: n, name, color: PALETTE[doc.vlans.length % PALETTE.length] as string }));
+    let nums: number[];
+    try {
+      nums = parseVlanList(num);
+    } catch {
+      return setErr(t('vlan.range', 'VLAN IDs are 1–4094'));
+    }
+    if (nums.length === 0 || /^all$/i.test(num.trim())) return setErr(t('vlan.range', 'VLAN IDs are 1–4094'));
+    if (nums.length > 512) return setErr(t('vlan.tooMany', 'Add at most 512 VLANs at a time'));
+    const fresh = nums.filter((n) => !doc.vlans.some((v) => v.number === n));
+    if (fresh.length === 0)
+      return setErr(
+        nums.length === 1
+          ? t('vlan.exists', 'VLAN {{n}} already exists', { n: nums[0] })
+          : t('vlan.allExist', 'All of those VLANs already exist'),
+      );
+    // A range is one undo step; a name on a range becomes a prefix ("Users 101").
+    execute(
+      batch(
+        fresh.length === 1 ? 'Add VLAN' : 'Add VLANs',
+        fresh.map((n, i) =>
+          upsertVlan({
+            number: n,
+            name: fresh.length === 1 ? name : name && `${name} ${n}`,
+            color: PALETTE[(doc.vlans.length + i) % PALETTE.length] as string,
+          }),
+        ),
+      ),
+    );
     setNum('');
     setName('');
     setErr(null);
@@ -133,10 +195,10 @@ export function VlanDialog() {
         }}
       >
         <label className="flex flex-col text-xs text-muted">
-          {t('vlan.id', 'VLAN ID')}
+          {t('vlan.idOrRange', 'VLAN ID or range')}
           <TextInput
-            className="w-24 font-mono"
-            inputMode="numeric"
+            className="w-40 font-mono"
+            placeholder="10 or 100-110,200"
             value={num}
             onChange={(e) => setNum(e.target.value)}
             aria-invalid={!!err}
@@ -201,8 +263,8 @@ export function VlanDialog() {
               <th scope="col" className="py-1 font-semibold">
                 {t('vlan.description', 'Description')}
               </th>
-              <th scope="col" className="w-20 py-1 text-right font-semibold">
-                {t('vlan.devices', 'Devices')}
+              <th scope="col" className="w-44 py-1 font-semibold">
+                {t('vlan.usedOnCol', 'Used on')}
               </th>
               <th scope="col" className="w-20 py-1">
                 <span className="sr-only">{t('common.actions', 'Actions')}</span>

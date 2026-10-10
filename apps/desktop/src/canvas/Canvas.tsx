@@ -296,10 +296,32 @@ export function Canvas() {
           if (g.x >= box.x && g.y >= box.y && g.x + g.w <= box.x + box.w && g.y + g.h <= box.y + box.h)
             carried.set(a.id, { x: g.x, y: g.y });
         }
+        // Nested zones move with their parent: children by parentZoneId (at any depth) and zones drawn inside.
+        const isDescendant = (zoneId: string): boolean => {
+          const seen = new Set<string>();
+          let z = doc.zones.find((x) => x.id === zoneId);
+          while (z?.parentZoneId && !seen.has(z.id)) {
+            if (z.parentZoneId === n.id) return true;
+            seen.add(z.id);
+            z = doc.zones.find((x) => x.id === z?.parentZoneId);
+          }
+          return false;
+        };
+        for (const [id, b] of Object.entries(page.zoneBoxes)) {
+          if (id === n.id || dragged.some((d) => d.id === id)) continue;
+          const inside =
+            b.x >= box.x && b.y >= box.y && b.x + b.w <= box.x + box.w && b.y + b.h <= box.y + box.h;
+          if (inside || isDescendant(id)) {
+            carried.set(id, { x: b.x, y: b.y });
+            // Devices inside a carried zone come too, even where it sticks out of the parent.
+            for (const [did, c] of Object.entries(page.nodePositions))
+              if (c.x >= b.x && c.x <= b.x + b.w && c.y >= b.y && c.y <= b.y + b.h) carried.set(did, c);
+          }
+        }
       }
       dragCtx.current = { key: `drag-${Date.now()}-${node.id}`, carried, origin };
     },
-    [page],
+    [page, doc.zones],
   );
 
   const applySelect = useCallback(

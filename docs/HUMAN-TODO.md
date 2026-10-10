@@ -12,4 +12,5 @@ The build continues with placeholders for each item; nothing here blocks local d
 - [ ] Enable GitHub Pages with source "GitHub Actions" for the docs site; optionally register a domain (for example `linewise.dev`) and set it as the Pages custom domain (DOC-01).
 - [ ] Choose a contact email for Code of Conduct reports and add it to `CODE_OF_CONDUCT.md`.
 - [ ] Install the Renovate GitHub app on the repository.
+- [ ] **Vendor datasheets (FR-TPL-03):** this cloud environment's network policy blocks the vendor sites, so no vendor-model templates could be checked against datasheets. Either allow these hosts in the environment's Network access settings (`www.cisco.com`, `documentation.meraki.com`, `www.juniper.net`, `www.arista.com`, `www.fortinet.com`, `www.paloaltonetworks.com`, `docs.paloaltonetworks.com`, `techspecs.ui.com`) so the agent can verify and add them, or add templates yourself following CONTRIBUTING.md. Until then only the generic templates ship.
 - [ ] Run the manual release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon, including the v0.9 → v1.0 auto-update check (M6 acceptance).

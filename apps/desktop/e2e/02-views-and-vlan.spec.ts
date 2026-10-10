@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Journey 2: three-tier campus template, L1 → L2 → L3 views, highlight VLAN 10.
 import { expect, test } from '@playwright/test';
-import { node, openApp, startFrom } from './helpers.ts';
+import { node, openApp, serialized, startFrom } from './helpers.ts';
 
 test('switch network views and highlight a VLAN', async ({ page }) => {
   await openApp(page);
   await startFrom(page, /Three-tier campus/);
   await expect(node(page, 'CORE1')).toBeVisible();
+  // FR-NET-31: views change rendering only, never the document.
+  const before = await serialized(page);
   const labels = page.locator('.lw-edge-label');
 
   // L1: interface names on every link end.
@@ -35,4 +37,5 @@ test('switch network views and highlight a VLAN', async ({ page }) => {
   ).toBeAttached();
   await page.keyboard.press('Escape');
   await expect(page.getByText('Highlighting VLAN 10')).toHaveCount(0);
+  expect(await serialized(page)).toBe(before);
 });

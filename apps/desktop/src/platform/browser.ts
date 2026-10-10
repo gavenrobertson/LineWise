@@ -18,6 +18,8 @@ interface TestHooks {
   files: Map<string, string | Uint8Array>;
   /** Queue the next answers to file pickers / save dialogs. */
   nextOpen: OpenedFile[][];
+  /** Queue answers to binary pickers (images, icon packs). */
+  nextBinary: { name: string; bytes: Uint8Array }[][];
   nextSavePath: (string | null)[];
   nextConfirm: boolean[];
   exports: { name: string; data: string | Uint8Array }[];
@@ -86,6 +88,7 @@ export function createBrowserPlatform(): PlatformAdapter {
   const hooks: TestHooks = {
     files: new Map(),
     nextOpen: [],
+    nextBinary: [],
     nextSavePath: [],
     nextConfirm: [],
     exports: [],
@@ -143,12 +146,16 @@ export function createBrowserPlatform(): PlatformAdapter {
     },
 
     async pickBinaryFile(filters) {
+      const queued = hooks.nextBinary.shift();
+      if (queued) return queued[0] ?? null;
       if (automated) return null;
       const [f] = await pickWithInput(accept(filters), false);
       return f ? { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) } : null;
     },
 
     async pickBinaryFiles(filters) {
+      const queued = hooks.nextBinary.shift();
+      if (queued) return queued;
       if (automated) return [];
       const files = await pickWithInput(accept(filters), true);
       return Promise.all(

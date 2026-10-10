@@ -4,8 +4,15 @@ import * as RTooltip from '@radix-ui/react-tooltip';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axe from 'axe-core';
-import { applyFix, assignIp, validate, type NetworkDocument } from '@linewise/core';
-import { STARTERS } from '@linewise/device-library';
+import {
+  addDevice,
+  applyFix,
+  assignIp,
+  updateInterface,
+  validate,
+  type NetworkDocument,
+} from '@linewise/core';
+import { getTemplate, STARTERS } from '@linewise/device-library';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AboutDialog } from '../src/dialogs/AboutDialog.tsx';
@@ -325,14 +332,56 @@ describe('Dialogs', () => {
 
   it('VLAN manager adds a VLAN and rejects duplicates', async () => {
     wrap(<VlanDialog />);
-    const id = screen.getByLabelText('VLAN ID');
+    const id = screen.getByLabelText('VLAN ID or range');
     await userEvent.type(id, '300');
     await userEvent.type(screen.getAllByLabelText('Name')[0]!, 'Guests');
     await userEvent.click(screen.getByRole('button', { name: 'Add VLAN' }));
     expect(useEditor.getState().doc.vlans.some((v) => v.number === 300 && v.name === 'Guests')).toBe(true);
-    await userEvent.type(screen.getByLabelText('VLAN ID'), '300');
+    await userEvent.type(screen.getByLabelText('VLAN ID or range'), '300');
     await userEvent.click(screen.getByRole('button', { name: 'Add VLAN' }));
     expect(screen.getByRole('alert')).toHaveTextContent('already exists');
+  });
+
+  it('FR-NET-05 VLAN manager adds a range in one step and lists the ports carrying each VLAN', async () => {
+    const ed = useEditor.getState();
+    const pageId = ed.doc.pages[0]!.id;
+    const sw = addDevice({
+      role: 'l2-switch',
+      pageId,
+      position: { x: 0, y: 0 },
+      hostname: 'SW9',
+      template: getTemplate('generic/access-switch-24ge-4sfp'),
+    });
+    act(() => {
+      ed.execute(sw);
+    });
+    const port = useEditor.getState().doc.devices.find((d) => d.id === sw.deviceId)!.interfaces[0]!;
+    act(() => {
+      useEditor
+        .getState()
+        .execute(updateInterface(sw.deviceId, port.id, { mode: 'access', accessVlan: 102 }));
+    });
+    wrap(<VlanDialog />);
+    const before = useEditor.getState().doc.vlans.length;
+    await userEvent.type(screen.getByLabelText('VLAN ID or range'), '101-103,110');
+    await userEvent.type(screen.getAllByLabelText('Name')[0]!, 'Lab');
+    await userEvent.click(screen.getByRole('button', { name: 'Add VLAN' }));
+    const added = useEditor.getState().doc.vlans.filter((v) => v.number >= 101 && v.number <= 110);
+    expect(added.map((v) => [v.number, v.name])).toEqual([
+      [101, 'Lab 101'],
+      [102, 'Lab 102'],
+      [103, 'Lab 103'],
+      [110, 'Lab 110'],
+    ]);
+    expect(useEditor.getState().doc.vlans).toHaveLength(before + 4);
+    // One undo step removes the whole range.
+    act(() => useEditor.getState().undo());
+    expect(useEditor.getState().doc.vlans).toHaveLength(before);
+    act(() => useEditor.getState().redo());
+    expect(
+      within(screen.getByLabelText('Ports carrying VLAN 102')).getByText(`SW9 ${port.shortName}`),
+    ).toBeInTheDocument();
+    await expectNoAxeViolations();
   });
 
   it('import dialog detects pasted CLI output and previews the merge', async () => {

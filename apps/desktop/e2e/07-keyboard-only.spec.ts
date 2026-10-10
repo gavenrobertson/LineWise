@@ -47,9 +47,11 @@ test('build and edit a diagram with the keyboard alone', async ({ page, browserN
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect.poll(async () => (await doc(page)).links.length).toBe(1);
 
-  // Enter edits the hostname of the selected device.
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Alt+ArrowRight');
+  // Focus is back on R2, where the link was drawn from, so the keyboard user carries on there.
+  await expect(page.locator('.react-flow__node-device:focus')).toContainText('R2');
+  // Alt+Arrow moves between devices; Enter edits the hostname of the focused one.
+  await page.keyboard.press('Alt+ArrowLeft');
+  await expect(page.locator('.react-flow__node-device:focus')).toContainText('R1');
   await page.keyboard.press('Enter');
   await expect(page.locator('#inspector-hostname')).toBeFocused();
   await page.keyboard.press(`${MOD}+a`);

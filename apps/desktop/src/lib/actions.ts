@@ -357,11 +357,23 @@ export function focusNearest(dir: 'up' | 'down' | 'left' | 'right'): void {
   if (!page) return;
   const entries = Object.entries(page.nodePositions);
   if (!entries.length) return;
-  const curId = ed.selection.devices[0];
+  const focusDevice = (id: string) => {
+    ed.setSelection({ devices: [id] });
+    canvasApi.focusOn([id]);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(id)}"]`)?.focus(),
+    );
+  };
+  // Start from the device with keyboard focus, else the selected one.
+  const focused =
+    typeof document !== 'undefined'
+      ? document.activeElement?.closest?.('.react-flow__node-device')?.getAttribute('data-id')
+      : null;
+  const curId = focused && page.nodePositions[focused] ? focused : ed.selection.devices[0];
   const cur = curId ? page.nodePositions[curId] : undefined;
   if (!cur) {
     const first = entries.sort((a, b) => a[1].y - b[1].y || a[1].x - b[1].x)[0];
-    if (first) ed.setSelection({ devices: [first[0]] });
+    if (first) focusDevice(first[0]);
     return;
   }
   let best: { id: string; score: number } | null = null;
@@ -375,13 +387,7 @@ export function focusNearest(dir: 'up' | 'down' | 'left' | 'right'): void {
     const score = along + across * 2;
     if (!best || score < best.score) best = { id, score };
   }
-  if (best) {
-    ed.setSelection({ devices: [best.id] });
-    canvasApi.focusOn([best.id]);
-    requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>(`.react-flow__node[data-id="${best?.id}"]`)?.focus(),
-    );
-  }
+  if (best) focusDevice(best.id);
 }
 
 // ---------------------------------------------------------------- insert
