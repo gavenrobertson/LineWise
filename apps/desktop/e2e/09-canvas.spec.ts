@@ -64,21 +64,28 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
   await page.keyboard.up('Control');
   await expect.poll(async () => (await viewport(page)).zoom).toBeGreaterThan(v0.zoom);
 
-  // Each zoom step animates; wait for it before the next press.
-  const stepZoom = async (key: string, times: number) => {
-    for (let i = 0; i < times; i++) {
+  // Each zoom step animates; let it finish before the next press. Keep stepping until the limit
+  // holds (a slow runner may land a step short), with a cap so a broken limit still fails.
+  const settledZoom = async () => {
+    let last = (await viewport(page)).zoom;
+    for (;;) {
+      await page.waitForTimeout(80);
       const z = (await viewport(page)).zoom;
-      await page.keyboard.press(key);
-      await expect
-        .poll(async () => (await viewport(page)).zoom, { timeout: 2000 })
-        .not.toBe(z)
-        .catch(() => {});
+      if (z === last) return z;
+      last = z;
     }
   };
-  await stepZoom(`${MOD}+=`, 12);
-  await expect.poll(async () => (await viewport(page)).zoom).toBeCloseTo(4, 1);
-  await stepZoom(`${MOD}+-`, 25);
-  await expect.poll(async () => (await viewport(page)).zoom).toBeCloseTo(0.1, 1);
+  const zoomTo = async (key: string, limit: number) => {
+    for (let i = 0; i < 40; i++) {
+      const before = await settledZoom();
+      if (Math.abs(before - limit) < 0.005) break;
+      await page.keyboard.press(key);
+      if ((await settledZoom()) === before) break;
+    }
+    expect(await settledZoom()).toBeCloseTo(limit, 2);
+  };
+  await zoomTo(`${MOD}+=`, 4);
+  await zoomTo(`${MOD}+-`, 0.1);
 
   await page.keyboard.press(`${MOD}+0`);
   await expect(node(page, 'R1')).toBeInViewport();
