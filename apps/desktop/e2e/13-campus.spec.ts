@@ -32,7 +32,7 @@ async function linkTo(page: Page, from: string, peer: string) {
   await expect.poll(async () => (await doc(page)).links.length).toBe(links + 1);
 }
 
-test('a 50-device campus can be drawn with keyboard and mouse', async ({ page }) => {
+test('FR-KEY-02 a 50-device campus can be drawn with keyboard and mouse', async ({ page }) => {
   test.setTimeout(600_000);
   await openApp(page);
   await startBlank(page);

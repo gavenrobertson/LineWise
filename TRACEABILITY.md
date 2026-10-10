@@ -22,11 +22,11 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-CAN-07 | MUST | `packages/core/src/history.ts`, `apps/desktop/src/store/editor.ts` — includes the undo/redo property test | `packages/core/test/commands.test.ts`, `apps/desktop/test/tabs.test.ts`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-CAN-08 | MUST | `packages/core/src/commands.ts`, `packages/core/src/document.ts`, `apps/desktop/src/lib/actions.ts` | `packages/core/test/commands.test.ts`, `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
 | FR-CAN-09 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `packages/core/test/commands.test.ts` | done |
-| FR-CAN-10 | MUST | | | todo |
-| FR-CAN-11 | MUST | | | todo |
-| FR-CAN-12 | MUST | | | todo |
-| FR-CAN-13 | MUST | | | todo |
-| FR-NET-30 | MUST | | | todo |
+| FR-CAN-10 | MUST | `apps/desktop/src/lib/actions.ts`, `apps/desktop/src/canvas/nodes.tsx` | `apps/desktop/e2e/12-network.spec.ts` | done |
+| FR-CAN-11 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/12-network.spec.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-CAN-12 | MUST | `apps/desktop/src/panels/PagesBar.tsx`, `apps/desktop/src/panels/OutlinePanel.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/12-network.spec.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-CAN-13 | MUST | `apps/desktop/src/panels/LayersPanel.tsx` | `apps/desktop/e2e/12-network.spec.ts` | done |
+| FR-NET-30 | MUST | `packages/core/src/selectors.ts`, `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/panels/Toolbar.tsx` | `packages/core/test/selectors.test.ts`, `apps/desktop/e2e/02-views-and-vlan.spec.ts` | done |
 | FR-CAN-14 | MUST | | | todo |
 | FR-CAN-15 | MUST | | | todo |
 | FR-CAN-16 | SHOULD | | | todo |
@@ -42,23 +42,23 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-INS-03 | MUST | `apps/desktop/src/panels/InterfaceTable.tsx` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
 | FR-INS-04 | MUST | `apps/desktop/src/panels/Inspector.tsx` | `apps/desktop/test/components.test.tsx` | done |
 | FR-KEY-01 | MUST | | | todo |
-| FR-KEY-02 | MUST | | | todo |
+| FR-KEY-02 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/store/ui.ts`, `apps/desktop/src/lib/actions.ts` — place, nudge, link, rename and every command via the palette; full audit of canvas actions in M5 | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/13-campus.spec.ts` | partial |
 | FR-NET-01 | MUST | `packages/core/src/commands.ts`, `packages/core/src/templates.ts` | `packages/core/test/commands.test.ts` | done |
 | FR-NET-02 | MUST | `packages/core/src/naming.ts`, `packages/core/src/commands.ts`, `apps/desktop/src/panels/InterfaceTable.tsx` | `packages/core/test/naming.test.ts`, `packages/core/test/commands.test.ts` | done |
 | FR-NET-03 | MUST | `packages/core/src/naming.ts` | `packages/core/test/naming.test.ts` | done |
-| FR-NET-04 | MUST | | | todo |
-| FR-NET-05 | MUST | | | todo |
-| FR-NET-06 | MUST | | | todo |
-| FR-NET-07 | MUST | | | todo |
-| FR-NET-08 | MUST | | | todo |
-| FR-NET-09 | MUST | | | todo |
-| FR-NET-10 | MUST | | | todo |
+| FR-NET-04 | MUST | `packages/core/src/naming.ts`, `packages/core/src/commands.ts`, `packages/core/src/document.ts` | `packages/core/test/naming.test.ts`, `packages/core/test/commands.test.ts` | done |
+| FR-NET-05 | MUST | `apps/desktop/src/dialogs/VlanDialog.tsx`, `packages/core/src/commands.ts` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
+| FR-NET-06 | MUST | `apps/desktop/src/dialogs/IpamDialog.tsx`, `apps/desktop/src/lib/ipam.ts`, `apps/desktop/src/panels/InterfaceTable.tsx`, `packages/core/src/ip.ts` | `packages/core/test/ip.test.ts`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/12-network.spec.ts` | done |
+| FR-NET-07 | MUST | `apps/desktop/src/dialogs/CalculatorDialog.tsx`, `packages/core/src/ip.ts` — IPv4 and IPv6, VLSM; property tests in ip.test.ts | `packages/core/test/ip.test.ts`, `apps/desktop/test/components.test.tsx` | done |
+| FR-NET-08 | MUST | `apps/desktop/src/panels/Inspector.tsx`, `apps/desktop/src/lib/ipam.ts` | `packages/core/test/ip.test.ts`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/12-network.spec.ts` | done |
+| FR-NET-09 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `packages/core/src/selectors.ts` | `packages/core/test/selectors.test.ts`, `apps/desktop/e2e/12-network.spec.ts` | done |
+| FR-NET-10 | MUST | `packages/core/src/document.ts`, `apps/desktop/src/panels/Inspector.tsx` | `packages/core/test/commands.test.ts` | done |
 | FR-NET-11 | SHOULD | | | todo |
 | FR-NET-12 | SHOULD | | | todo |
 | FR-NET-13 | SHOULD | | | todo |
-| FR-NET-31 | MUST | | | todo |
-| FR-NET-32 | SHOULD | | | todo |
-| FR-NET-33 | SHOULD | | | todo |
+| FR-NET-31 | MUST | `packages/core/src/selectors.ts`, `apps/desktop/src/store/editor.ts` | `apps/desktop/e2e/02-views-and-vlan.spec.ts` | done |
+| FR-NET-32 | SHOULD | `packages/core/src/selectors.ts`, `apps/desktop/src/dialogs/VlanDialog.tsx` | `packages/core/test/selectors.test.ts`, `apps/desktop/e2e/02-views-and-vlan.spec.ts` | done |
+| FR-NET-33 | SHOULD | `packages/core/src/selectors.ts` | `packages/core/test/selectors.test.ts` | done |
 | FR-ICO-01 | MUST | `packages/device-library/icons`, `packages/device-library/scripts/build-icons.ts` | `packages/device-library/test/library.test.ts` | done |
 | FR-ICO-02 | MUST | `packages/device-library/icons` | `packages/device-library/test/library.test.ts` | done |
 | FR-ICO-03 | MUST | `packages/device-library/icons`, `apps/desktop/src/panels/Inspector.tsx` | `packages/device-library/test/library.test.ts` | done |
@@ -69,8 +69,8 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-ICO-08 | MUST | | | todo |
 | FR-TPL-01 | MUST | `packages/core/src/templates.ts` | `packages/core/test/misc.test.ts`, `packages/device-library/test/library.test.ts` | done |
 | FR-TPL-02 | MUST | `packages/device-library/templates/generic` | `packages/device-library/test/library.test.ts` | done |
-| FR-TPL-03 | MUST | | | todo |
-| FR-TPL-04 | MUST | | | todo |
+| FR-TPL-03 | MUST | `packages/device-library/templates` — blocked: vendor datasheet hosts are denied by this environment's network policy (docs/HUMAN-TODO.md) | `packages/device-library/test/library.test.ts` | todo |
+| FR-TPL-04 | MUST | `apps/desktop/src/dialogs/TemplateEditorDialog.tsx`, `apps/desktop/src/panels/LibraryPanel.tsx` | `apps/desktop/e2e/12-network.spec.ts` | done |
 | FR-TPL-05 | MUST | `apps/desktop/src/panels/LibraryPanel.tsx` | `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-TPL-06 | SHOULD | | | todo |
 | FR-TPL-07 | SHOULD | | | todo |

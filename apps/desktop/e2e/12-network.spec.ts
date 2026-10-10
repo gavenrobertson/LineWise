@@ -2,7 +2,7 @@
 // Network features in the UI (M2): point-to-point addressing, IPAM, hover cards, the template
 // editor, annotations, zones, pages with off-page references and layers.
 import { expect, test, type Page } from '@playwright/test';
-import { doc, MOD, node, openApp, startBlank, startFrom } from './helpers.ts';
+import { doc, exportsList, MOD, node, openApp, startBlank, startFrom } from './helpers.ts';
 
 async function palette(page: Page, command: string) {
   await page.keyboard.press(`${MOD}+k`);
@@ -78,6 +78,26 @@ test('FR-TPL-04 build a template from scratch with a range, save it and place it
   await editor.getByLabel('Vendor').fill('Lab');
   await editor.getByLabel('Model').fill('LS-12');
   await editor.getByLabel('Name or range').first().fill('Gi0/1-12');
+  await expect(editor.getByText('Interfaces (12 ports)')).toBeVisible();
+
+  // Export as JSON, then import an edited copy back into the editor.
+  await editor.getByRole('button', { name: 'Export JSON…' }).click();
+  await expect.poll(async () => (await exportsList(page)).length).toBe(1);
+  const exported = JSON.parse((await exportsList(page))[0]!.text!) as {
+    name: string;
+    vendor: string;
+    interfaces: { range?: string }[];
+  };
+  expect(exported).toMatchObject({ name: 'Lab switch 12', vendor: 'Lab' });
+  expect(exported.interfaces[0]!.range).toBe('Gi0/1-12');
+  const edited = { ...exported, name: 'Lab switch 12', model: 'LS-12B' };
+  await page.evaluate((text) => {
+    (
+      window as unknown as { __linewise: { nextOpen: { path: string; name: string; text: string }[][] } }
+    ).__linewise.nextOpen.push([{ path: 'ls-12b.json', name: 'ls-12b.json', text }]);
+  }, JSON.stringify(edited));
+  await editor.getByRole('button', { name: 'Import JSON…' }).click();
+  await expect(editor.getByLabel('Model')).toHaveValue('LS-12B');
   await expect(editor.getByText('Interfaces (12 ports)')).toBeVisible();
   await editor.getByRole('button', { name: 'Save to library' }).click();
   await expect(editor).toHaveCount(0);

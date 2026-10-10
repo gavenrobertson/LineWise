@@ -391,6 +391,32 @@ describe('multipoint tunnels', () => {
     ed.execute(s3);
     expect(() =>
       ed.execute(connect({ deviceId: hub.deviceId, interfaceId: tun }, { deviceId: s3.deviceId }, 'copper')),
-    ).toThrow(/already linked/);
+    ).toThrow(/cannot be cabled/);
+  });
+
+  it('FR-NET-04 loopbacks, SVIs and sub-interfaces are first-class but never cabled', () => {
+    const { ed, pageId } = newEditor();
+    const r = addDevice({ role: 'router', pageId, position: { x: 0, y: 0 } });
+    const s = addDevice({ role: 'router', pageId, position: { x: 0, y: 0 } });
+    ed.execute(r);
+    ed.execute(s);
+    ed.execute(addInterfaces(r.deviceId, 'Loopback0'));
+    ed.execute(addInterfaces(r.deviceId, 'Vlan10'));
+    ed.execute(addInterfaces(r.deviceId, 'Gi0/0.20'));
+    const ifs = ed.doc.devices.find((d) => d.id === r.deviceId)!.interfaces;
+    expect(ifs.map((i) => i.type)).toEqual(['loopback', 'vlan', 'subinterface']);
+    for (const i of ifs)
+      for (const medium of ['copper', 'virtual'] as const)
+        expect(() =>
+          ed.execute(connect({ deviceId: r.deviceId, interfaceId: i.id }, { deviceId: s.deviceId }, medium)),
+        ).toThrow(/cannot be cabled/);
+    expect(ed.doc.links).toHaveLength(0);
+    // "Next free port" never picks a logical interface: it adds a physical port instead.
+    ed.execute(connect({ deviceId: r.deviceId }, { deviceId: s.deviceId }));
+    const l = ed.doc.links[0]!;
+    const end = ed.doc.devices
+      .find((d) => d.id === r.deviceId)!
+      .interfaces.find((i) => i.id === l.endpointA.interfaceId)!;
+    expect(end.type).toBe('ethernet');
   });
 });

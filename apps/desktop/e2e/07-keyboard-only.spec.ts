@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test';
 import { doc, MOD, openApp, tabKey } from './helpers.ts';
 
-test('build and edit a diagram with the keyboard alone', async ({ page, browserName }) => {
+test('FR-KEY-02 build and edit a diagram with the keyboard alone', async ({ page, browserName }) => {
   await openApp(page);
   const welcome = page.getByRole('dialog', { name: 'Welcome to LineWise' });
   // Tab to "New blank diagram".

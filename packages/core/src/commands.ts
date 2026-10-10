@@ -332,6 +332,13 @@ function resolveEnd(d: D, end: ConnectEnd, used: Set<string>, medium: LinkMedium
     if (!dev.interfaces.some((i) => i.id === end.interfaceId))
       throw new Error(`Interface ${end.interfaceId} not on ${dev.hostname}`);
     const chosen = dev.interfaces.find((i) => i.id === end.interfaceId);
+    // Loopbacks, SVIs and sub-interfaces are logical: they never take a cable (FR-NET-04).
+    // Tunnels carry virtual links only.
+    if (chosen && !isPhysical(chosen as Interface)) {
+      const virtualOk = chosen.type === 'tunnel' && medium === 'virtual';
+      if (!virtualOk)
+        throw new Error(`${chosen.name} on ${dev.hostname} is a logical interface and cannot be cabled`);
+    }
     // A multipoint tunnel (mGRE/DMVPN) legitimately has many virtual peers.
     const multipoint = medium === 'virtual' && chosen?.type === 'tunnel';
     if (used.has(end.interfaceId) && !multipoint)
