@@ -23,8 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
-      "freezePrototype": true
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
     }
   },
   "bundle": {
@@ -38,7 +37,13 @@
     "longDescription": "Draw Cisco-style network architecture diagrams where every icon is a real device with interfaces, IPs and VLANs.",
     "license": "Apache-2.0",
     "licenseFile": "../../../LICENSE",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
     "fileAssociations": [
       {
         "ext": ["lwise"],
@@ -49,7 +54,11 @@
       }
     ],
     "windows": {
-      "nsis": { "installMode": "currentUser", "displayLanguageSelector": false, "installerIcon": "icons/icon.ico" },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico"
+      },
       "wix": { "language": "en-US" },
       "webviewInstallMode": { "type": "embedBootstrapper" }
     },

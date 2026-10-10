@@ -132,6 +132,8 @@ export function createTauriPlatform(): PlatformAdapter {
     },
 
     async setTitle(title) {
+      // The document title is what assistive tech and WebDriver read; the native one is the title bar.
+      document.title = title;
       await getCurrentWindow().setTitle(title);
     },
 

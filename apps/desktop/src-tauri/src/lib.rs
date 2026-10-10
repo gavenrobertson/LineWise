@@ -37,7 +37,9 @@ fn open_external(app: tauri::AppHandle, url: String) -> Result<(), String> {
     if !(url.starts_with("https://") || url.starts_with("mailto:")) {
         return Err("Only https and mailto links can be opened".into());
     }
-    app.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -114,7 +116,10 @@ pub fn run() {
         .manage(CloseGate::default())
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                let open = !window.state::<CloseGate>().0.load(std::sync::atomic::Ordering::SeqCst);
+                let open = !window
+                    .state::<CloseGate>()
+                    .0
+                    .load(std::sync::atomic::Ordering::SeqCst);
                 if open {
                     api.prevent_close();
                     let _ = window.emit("close-requested", ());
@@ -163,7 +168,10 @@ pub fn run() {
     app.run(|_app, _event| {
         // Cmd+Q and the app menu's Quit ask the UI first, like closing the window.
         if let tauri::RunEvent::ExitRequested { api, code, .. } = &_event {
-            let allowed = _app.state::<CloseGate>().0.load(std::sync::atomic::Ordering::SeqCst);
+            let allowed = _app
+                .state::<CloseGate>()
+                .0
+                .load(std::sync::atomic::Ordering::SeqCst);
             if !allowed && code.is_none() {
                 api.prevent_exit();
                 let _ = _app.emit("close-requested", ());
@@ -196,7 +204,15 @@ mod tests {
 
     #[test]
     fn only_lwise_args_are_opened() {
-        let args = vec!["--flag".to_string(), "/tmp/a.lwise".into(), "C:\\B.LWISE".into(), "x.json".into()];
-        assert_eq!(diagram_paths_from_args(args), vec!["/tmp/a.lwise", "C:\\B.LWISE"]);
+        let args = vec![
+            "--flag".to_string(),
+            "/tmp/a.lwise".into(),
+            "C:\\B.LWISE".into(),
+            "x.json".into(),
+        ];
+        assert_eq!(
+            diagram_paths_from_args(args),
+            vec!["/tmp/a.lwise", "C:\\B.LWISE"]
+        );
     }
 }

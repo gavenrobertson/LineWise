@@ -21,7 +21,12 @@ pub struct RecoveryEntry {
 
 /// Only simple IDs become file names, so a crafted ID cannot escape the folder.
 pub fn safe_id(id: &str) -> Result<&str, String> {
-    if !id.is_empty() && id.len() <= 64 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+    if !id.is_empty()
+        && id.len() <= 64
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
         Ok(id)
     } else {
         Err("Invalid document id".into())
@@ -29,7 +34,11 @@ pub fn safe_id(id: &str) -> Result<&str, String> {
 }
 
 fn dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let d = app.path().app_data_dir().map_err(|e| e.to_string())?.join("recovery");
+    let d = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("recovery");
     fs::create_dir_all(&d).map_err(|e| e.to_string())?;
     Ok(d)
 }
@@ -45,9 +54,15 @@ pub fn recovery_write(app: AppHandle, mut entry: RecoveryEntry) -> Result<(), St
 #[tauri::command]
 pub fn recovery_list(app: AppHandle) -> Result<Vec<RecoveryEntry>, String> {
     let mut out = vec![];
-    for e in fs::read_dir(dir(&app)?).map_err(|e| e.to_string())?.flatten() {
+    for e in fs::read_dir(dir(&app)?)
+        .map_err(|e| e.to_string())?
+        .flatten()
+    {
         if e.path().extension().is_some_and(|x| x == "json") {
-            if let Some(entry) = fs::read(e.path()).ok().and_then(|b| serde_json::from_slice::<RecoveryEntry>(&b).ok()) {
+            if let Some(entry) = fs::read(e.path())
+                .ok()
+                .and_then(|b| serde_json::from_slice::<RecoveryEntry>(&b).ok())
+            {
                 out.push(entry);
             }
         }

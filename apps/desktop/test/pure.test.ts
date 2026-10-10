@@ -365,7 +365,7 @@ describe('keyboard', () => {
 describe('native menu', () => {
   it('only sends commands the app knows, and every app command is in the menu or the palette', () => {
     const rs = readFileSync(resolve(__dirname, '../src-tauri/src/menu.rs'), 'utf8');
-    const ids = [...rs.matchAll(/item\(app, "([a-zA-Z]+\.[a-zA-Z]+)"/g)].map((m) => m[1]);
+    const ids = [...rs.matchAll(/item\(\s*app,\s*"([a-zA-Z]+\.[a-zA-Z]+)"/g)].map((m) => m[1]);
     const known = new Set(commandList().map((c) => c.id));
     for (const id of ids) expect(known.has(id as never), id).toBe(true);
     expect(ids.length).toBeGreaterThan(40);

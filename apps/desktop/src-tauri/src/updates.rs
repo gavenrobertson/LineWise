@@ -22,8 +22,13 @@ pub struct UpdateMeta {
     notes: String,
 }
 
-async fn find(app: &AppHandle, channel: &str) -> Result<Option<tauri_plugin_updater::Update>, String> {
-    let url = endpoint(channel).parse().map_err(|e: url::ParseError| e.to_string())?;
+async fn find(
+    app: &AppHandle,
+    channel: &str,
+) -> Result<Option<tauri_plugin_updater::Update>, String> {
+    let url = endpoint(channel)
+        .parse()
+        .map_err(|e: url::ParseError| e.to_string())?;
     app.updater_builder()
         .endpoints(vec![url])
         .map_err(|e| e.to_string())?
@@ -37,7 +42,10 @@ async fn find(app: &AppHandle, channel: &str) -> Result<Option<tauri_plugin_upda
 #[tauri::command]
 pub async fn check_update(app: AppHandle, channel: String) -> Result<Option<UpdateMeta>, String> {
     let update = find(&app, &channel).await?;
-    Ok(update.map(|u| UpdateMeta { version: u.version.clone(), notes: u.body.clone().unwrap_or_default() }))
+    Ok(update.map(|u| UpdateMeta {
+        version: u.version.clone(),
+        notes: u.body.clone().unwrap_or_default(),
+    }))
 }
 
 #[tauri::command]

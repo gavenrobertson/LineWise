@@ -8,14 +8,14 @@ Milestones M0–M2 are essentially complete, M3–M5 are mostly done, M6 (releas
 
 **Verified green in the build sandbox**
 
-| Check | Result |
-| --- | --- |
-| `pnpm lint`, `pnpm typecheck` | clean |
-| Unit/property/golden/component tests (`pnpm test`) | 282 passing (core 122, parsers 97, device-library 14, desktop 49) |
-| Component a11y (axe-core, jsdom) | zero violations on inspector, toolbar, status bar, problems panel, 13 dialogs |
-| E2E journeys 1–8 (`pnpm e2e`, Chromium) | 8/8 passing |
-| Rust (`cargo clippy --all-targets -D warnings`, `cargo test`) | clean / passing |
-| Frontend production build (`vite build`) | builds |
+| Check                                                         | Result                                                                        |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `pnpm lint`, `pnpm typecheck`                                 | clean                                                                         |
+| Unit/property/golden/component tests (`pnpm test`)            | 282 passing (core 122, parsers 97, device-library 14, desktop 49)             |
+| Component a11y (axe-core, jsdom)                              | zero violations on inspector, toolbar, status bar, problems panel, 13 dialogs |
+| E2E journeys 1–8 (`pnpm e2e`, Chromium)                       | 8/8 passing                                                                   |
+| Rust (`cargo clippy --all-targets -D warnings`, `cargo test`) | clean / passing                                                               |
+| Frontend production build (`vite build`)                      | builds                                                                        |
 
 **Not verified here** (the sandbox has no WebKit, no macOS/Windows, no GitHub push):
 WebKit E2E project, native Tauri bundles (`pnpm tauri build`), installers, signing, notarization, auto-update, `tauri-driver` smoke test, real WKWebView/WebView2 behavior (menus, print, close prompt).

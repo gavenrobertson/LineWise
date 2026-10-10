@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-/** About LineWise: version, license, credits (NFR-LIC-03). */
+/** About LineWise: version, license, credits and bundled third-party notices (OSS-03, BRD-04). */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark, Wordmark } from '../components/BrandMark.tsx';
@@ -13,9 +13,20 @@ export function AboutDialog() {
   const { t } = useTranslation();
   const close = useUi((s) => s.close);
   const [version, setVersion] = useState('');
+  const [notices, setNotices] = useState<string | null>(null);
   useEffect(() => {
     void platform().appVersion().then(setVersion);
   }, []);
+  // The notices file is generated at build time and bundled next to index.html (no network).
+  const showLicenses = () => {
+    setNotices(t('about.loading', 'Loading…'));
+    fetch('./THIRD_PARTY_NOTICES.md')
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then(setNotices)
+      .catch(() =>
+        setNotices(t('about.noticesMissing', 'The third-party notices file is missing from this build.')),
+      );
+  };
   const link = (href: string, text: string) => (
     <button
       type="button"
@@ -46,8 +57,24 @@ export function AboutDialog() {
         <p className="text-xs text-muted">
           {t('about.license', 'Licensed under the Apache License 2.0.')}{' '}
           {link(`${REPO}/blob/main/LICENSE`, t('about.licenseLink', 'Read the license'))} ·{' '}
-          {link(`${REPO}/blob/main/THIRD_PARTY_NOTICES.md`, t('about.notices', 'Third-party notices'))}
+          <button
+            type="button"
+            className="text-accent underline"
+            onClick={showLicenses}
+            aria-expanded={notices !== null}
+          >
+            {t('about.notices', 'Licenses')}
+          </button>
         </p>
+        {notices !== null && (
+          <pre
+            tabIndex={0}
+            aria-label={t('about.noticesLabel', 'Third-party notices')}
+            className="max-h-64 w-full overflow-auto whitespace-pre-wrap rounded border border-line bg-surface-2 p-2 text-left font-mono text-[11px] text-ink"
+          >
+            {notices}
+          </pre>
+        )}
         <p className="text-xs text-muted">
           {t(
             'about.trademarks',

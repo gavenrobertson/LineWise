@@ -19,6 +19,20 @@ test('restore work after a crash', async ({ page }) => {
   await place(page, 'Server – 2×GE');
   await expect.poll(async () => (await doc(page)).devices.length).toBe(2);
   await expect(page.getByText(/recovery copy/)).toBeVisible({ timeout: 5_000 });
+  // Wait until an autosave has captured both devices (the first autosave may only hold one).
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const entries = JSON.parse(localStorage.getItem('linewise.recovery') ?? '[]') as { text: string }[];
+          return Math.max(
+            0,
+            ...entries.map((e) => (JSON.parse(e.text) as { devices: unknown[] }).devices.length),
+          );
+        }),
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThanOrEqual(2);
 
   // "Crash": the page goes away without saving.
   await page.reload();

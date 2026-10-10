@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node ../../scripts/third-party-notices.mjs && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",

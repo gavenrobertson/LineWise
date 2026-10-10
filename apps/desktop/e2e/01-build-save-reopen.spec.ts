@@ -12,13 +12,7 @@ async function selectInOutline(page: Page, hostname: string) {
     .click();
 }
 
-async function connect(
-  page: Page,
-  from: string,
-  to: string,
-  portA: string,
-  portB: string,
-) {
+async function connect(page: Page, from: string, to: string, portA: string, portB: string) {
   await selectInOutline(page, from);
   await page.locator('body').press('l');
   const dialog = page.getByRole('dialog');

@@ -210,6 +210,24 @@ describe('Dialogs', () => {
     });
   }
 
+  it('about dialog shows the bundled third-party notices offline (OSS-03)', async () => {
+    const original = globalThis.fetch;
+    const requested: string[] = [];
+    globalThis.fetch = ((url: string) => {
+      requested.push(url);
+      return Promise.resolve(new Response('# Third-party notices\n- react 19 — MIT'));
+    }) as typeof fetch;
+    try {
+      wrap(<AboutDialog />);
+      await userEvent.click(screen.getByRole('button', { name: 'Licenses' }));
+      expect(await screen.findByLabelText('Third-party notices')).toHaveTextContent('react 19 — MIT');
+      expect(requested).toEqual(['./THIRD_PARTY_NOTICES.md']);
+      await expectNoAxeViolations();
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
   it('calculator answers subnet questions', async () => {
     wrap(<CalculatorDialog />);
     const input = screen.getByLabelText('Address and prefix or mask');
