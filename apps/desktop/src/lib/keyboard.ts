@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 import { platform, type MenuCommand } from '../platform/index.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
-import { commandList, focusNearest, nudge, runCommand } from './actions.ts';
+import { commandList, focusNearest, installClipboardHandlers, nudge, runCommand } from './actions.ts';
 
 export { isTyping };
 
@@ -77,6 +77,8 @@ export const WHILE_TYPING = new Set([
   'edit.find',
   'help.shortcuts',
 ]);
+
+const CLIPBOARD_KEYS = new Set(['edit.copy', 'edit.cut', 'edit.paste']);
 
 const MAC_EDIT_KEYS = new Set([
   'edit.undo',
@@ -183,6 +185,8 @@ export function useKeyboard(): void {
         if (
           c.shortcut &&
           c.id !== 'edit.delete' &&
+          // Copy, cut and paste run from the native clipboard events (installClipboardHandlers).
+          !CLIPBOARD_KEYS.has(c.id) &&
           handlesShortcut(c.id, kind, os) &&
           matches(e, c.shortcut)
         ) {
@@ -197,6 +201,10 @@ export function useKeyboard(): void {
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const uninstallClipboard = installClipboardHandlers();
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      uninstallClipboard();
+    };
   }, []);
 }

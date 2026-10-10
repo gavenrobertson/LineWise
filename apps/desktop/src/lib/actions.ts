@@ -9,15 +9,18 @@ import {
   addAsset,
   addPage,
   addZone,
+  alignNodes,
   batch,
   copySelection,
   createDocument,
+  distributeNodes,
   nudgeNodes,
   parseDocument,
   paste,
   removeItems,
   serializeDocument,
   LARGE_FILE_BYTES,
+  type AlignMode,
   type ClipboardPayload,
   type NetworkDocument,
 } from '@linewise/core';
@@ -175,43 +178,106 @@ export async function autosaveNow(): Promise<void> {
 
 let internalClipboard: ClipboardPayload | null = null;
 
-export async function copy(cut = false): Promise<void> {
+/** Copy the selected devices into the in-app clipboard; returns the JSON for the system clipboard. */
+function copyToClipboard(cut: boolean): string | null {
   const ed = useEditor.getState();
   const ids = ed.selection.devices;
-  if (!ids.length) return;
+  if (!ids.length) return null;
   internalClipboard = copySelection(ed.doc, ed.pageId, ids);
-  try {
-    await navigator.clipboard?.writeText(JSON.stringify(internalClipboard));
-  } catch {
-    // system clipboard unavailable; the in-app clipboard still works
-  }
   if (cut) ed.execute({ ...removeItems([...ids, ...ed.selection.links]), label: 'Cut' });
+  return JSON.stringify(internalClipboard);
 }
 
-export async function pasteClipboard(): Promise<void> {
-  let payload = internalClipboard;
-  try {
-    const text = await navigator.clipboard?.readText();
-    if (text) {
+/** Paste text from the system clipboard: LineWise objects, CLI output (→ import), else the in-app copy. */
+function pasteText(text: string | null | undefined): void {
+  let payload: ClipboardPayload | null = null;
+  if (text) {
+    try {
       const parsed = JSON.parse(text) as ClipboardPayload;
       if (parsed?.kind === 'linewise-clipboard') payload = parsed;
-    }
-  } catch {
-    // not our JSON: fall back to the in-app clipboard
-  }
-  if (!payload) {
-    // Plain CLI output on the clipboard goes to the import dialog (FR-IMP-20).
-    try {
-      const text = await navigator.clipboard?.readText();
-      if (text && detectKind(text)) useUi.getState().open({ kind: 'import', initialText: text });
     } catch {
-      // clipboard not readable
+      // not our JSON
     }
-    return;
+    // Plain CLI output on the clipboard goes to the import dialog (FR-IMP-20).
+    if (!payload && detectKind(text)) {
+      useUi.getState().open({ kind: 'import', initialText: text });
+      return;
+    }
   }
+  payload ??= internalClipboard;
+  if (!payload) return;
   const ed = useEditor.getState();
   const cmd = paste(ed.pageId, payload);
   if (ed.execute(cmd)) ed.setSelection({ devices: cmd.newDeviceIds });
+}
+
+/** Menu-triggered copy/cut (Windows/Linux menus, command palette). */
+export async function copy(cut = false): Promise<void> {
+  const json = copyToClipboard(cut);
+  if (!json) return;
+  try {
+    await navigator.clipboard?.writeText(json);
+  } catch {
+    // system clipboard unavailable; the in-app clipboard still works
+  }
+}
+
+/**
+ * Menu-triggered paste. Reading the system clipboard can prompt or block in some web views, so
+ * it is bounded by a short timeout; keyboard and native-menu pastes use the paste event instead.
+ */
+export async function pasteClipboard(): Promise<void> {
+  let text: string | null = null;
+  try {
+    text =
+      (await Promise.race([
+        navigator.clipboard?.readText(),
+        new Promise<null>((r) => setTimeout(() => r(null), 300)),
+      ])) ?? null;
+  } catch {
+    // clipboard not readable
+  }
+  pasteText(text);
+}
+
+const editingText = (t: EventTarget | null) => {
+  const e = t as HTMLElement | null;
+  return (
+    !!e &&
+    (e.isContentEditable ||
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.tagName) ||
+      !!e.closest('[role="dialog"]'))
+  );
+};
+
+/**
+ * Copy, cut and paste through the browser's clipboard events (FR-CAN-08). These need no
+ * clipboard permission and work across LineWise windows and with other apps; text fields keep
+ * their native behavior.
+ */
+export function installClipboardHandlers(target: Document = document): () => void {
+  const onCopy = (cut: boolean) => (e: ClipboardEvent) => {
+    if (editingText(e.target) || (target.getSelection?.()?.toString() ?? '') !== '') return;
+    const json = copyToClipboard(cut);
+    if (!json) return;
+    e.clipboardData?.setData('text/plain', json);
+    e.preventDefault();
+  };
+  const copyH = onCopy(false);
+  const cutH = onCopy(true);
+  const pasteH = (e: ClipboardEvent) => {
+    if (editingText(e.target)) return;
+    e.preventDefault();
+    pasteText(e.clipboardData?.getData('text/plain'));
+  };
+  target.addEventListener('copy', copyH);
+  target.addEventListener('cut', cutH);
+  target.addEventListener('paste', pasteH);
+  return () => {
+    target.removeEventListener('copy', copyH);
+    target.removeEventListener('cut', cutH);
+    target.removeEventListener('paste', pasteH);
+  };
 }
 
 export function duplicate(): void {
@@ -380,6 +446,25 @@ export interface CommandDef {
   group: string;
   shortcut?: string;
   run: () => void | Promise<void>;
+}
+
+/** Align or distribute the selected devices, zones and annotations (FR-CAN-06). */
+function arrangeSelection(mode: AlignMode | 'horizontal' | 'vertical'): void {
+  const ed = useEditor.getState();
+  const ids = [...ed.selection.devices, ...ed.selection.zones, ...ed.selection.annotations];
+  const distribute = mode === 'horizontal' || mode === 'vertical';
+  if (ids.length < (distribute ? 3 : 2)) {
+    useUi
+      .getState()
+      .toast(
+        distribute
+          ? t('arrange.needThree', 'Select at least three objects to distribute.')
+          : t('arrange.needTwo', 'Select at least two objects to align.'),
+        'info',
+      );
+    return;
+  }
+  ed.execute(distribute ? distributeNodes(ed.pageId, ids, mode) : alignNodes(ed.pageId, ids, mode));
 }
 
 export function commandList(): CommandDef[] {
@@ -650,6 +735,18 @@ export function commandList(): CommandDef[] {
       shortcut: 'mod+shift+[',
       run: () => bring('back'),
     },
+    ...(
+      [
+        ['arrange.alignLeft', 'left', L('alignLeft', 'Align left')],
+        ['arrange.alignCenter', 'center', L('alignCenter', 'Align centers horizontally')],
+        ['arrange.alignRight', 'right', L('alignRight', 'Align right')],
+        ['arrange.alignTop', 'top', L('alignTop', 'Align top')],
+        ['arrange.alignMiddle', 'middle', L('alignMiddle', 'Align middles vertically')],
+        ['arrange.alignBottom', 'bottom', L('alignBottom', 'Align bottom')],
+        ['arrange.distributeH', 'horizontal', L('distributeH', 'Distribute horizontally')],
+        ['arrange.distributeV', 'vertical', L('distributeV', 'Distribute vertically')],
+      ] as const
+    ).map(([id, mode, label]) => ({ id, group: 'Arrange', label, run: () => arrangeSelection(mode) })),
     { id: 'arrange.group', group: 'Arrange', label: L('group', 'Group'), shortcut: 'mod+G', run: group },
     {
       id: 'arrange.ungroup',

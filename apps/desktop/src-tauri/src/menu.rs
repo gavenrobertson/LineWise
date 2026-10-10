@@ -212,6 +212,25 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             Some("CmdOrCtrl+Shift+L"),
         )?)
         .separator()
+        .item(&item(app, "arrange.alignLeft", "Align Left", None)?)
+        .item(&item(app, "arrange.alignCenter", "Align Centers", None)?)
+        .item(&item(app, "arrange.alignRight", "Align Right", None)?)
+        .item(&item(app, "arrange.alignTop", "Align Top", None)?)
+        .item(&item(app, "arrange.alignMiddle", "Align Middles", None)?)
+        .item(&item(app, "arrange.alignBottom", "Align Bottom", None)?)
+        .item(&item(
+            app,
+            "arrange.distributeH",
+            "Distribute Horizontally",
+            None,
+        )?)
+        .item(&item(
+            app,
+            "arrange.distributeV",
+            "Distribute Vertically",
+            None,
+        )?)
+        .separator()
         .item(&item(
             app,
             "arrange.front",

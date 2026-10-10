@@ -54,6 +54,14 @@ import { customIconUrl, nodeTypes } from './nodes.tsx';
 
 export const TEMPLATE_MIME = 'application/x-linewise-template';
 
+/**
+ * Fit padding that keeps content clear of the overlays: the zoom controls (bottom left) and,
+ * when shown, the minimap (bottom right, about 200 px wide).
+ */
+export function fitPadding(minimap = usePrefs.getState().showMinimap) {
+  return { top: '48px', bottom: '48px', left: '72px', right: minimap ? '240px' : '48px' } as const;
+}
+
 /** Imperative canvas API for menus, the command palette and find. */
 export const canvasApi: {
   instance: ReactFlowInstance | null;
@@ -64,7 +72,7 @@ export const canvasApi: {
   viewportCenter: () => XY;
 } = {
   instance: null,
-  fit: () => void canvasApi.instance?.fitView({ padding: 0.15, duration: 200 }),
+  fit: () => void canvasApi.instance?.fitView({ padding: fitPadding(), duration: 200 }),
   zoomIn: () => void canvasApi.instance?.zoomIn({ duration: 150 }),
   zoomOut: () => void canvasApi.instance?.zoomOut({ duration: 150 }),
   focusOn: (ids) => {
@@ -535,6 +543,11 @@ export function Canvas() {
         connectionMode={ConnectionMode.Loose}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag
+        // FR-CAN-01: wheel and two-finger scroll pan; Ctrl/Cmd+wheel and pinch zoom (10%–400%);
+        // middle- or right-button drag and Space+drag pan.
+        panOnScroll
+        zoomActivationKeyCode={['Meta', 'Control']}
+        zoomOnPinch
         panOnDrag={[1, 2]}
         panActivationKeyCode="Space"
         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
@@ -548,7 +561,7 @@ export function Canvas() {
         nodesConnectable={!readOnly}
         elevateEdgesOnSelect
         fitView
-        fitViewOptions={{ padding: 0.15 }}
+        fitViewOptions={{ padding: fitPadding(prefs.showMinimap) }}
         onMoveEnd={(_, vp) => setUi({ zoom: vp.zoom })}
         attributionPosition="bottom-center"
         aria-label={t('canvas.label', 'Diagram canvas')}
@@ -588,12 +601,14 @@ export function Canvas() {
         <ViewportPortal>
           {guides.x !== undefined && (
             <div
+              data-lw-guide="x"
               className="pointer-events-none absolute w-px bg-[var(--accent)]"
               style={{ left: guides.x, top: -100000, height: 200000, opacity: 0.6 }}
             />
           )}
           {guides.y !== undefined && (
             <div
+              data-lw-guide="y"
               className="pointer-events-none absolute h-px bg-[var(--accent)]"
               style={{ top: guides.y, left: -100000, width: 200000, opacity: 0.6 }}
             />
