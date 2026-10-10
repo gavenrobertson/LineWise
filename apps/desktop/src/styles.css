@@ -1,0 +1,260 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+@import 'tailwindcss';
+@import '@xyflow/react/dist/base.css';
+@import '@linewise/brand/fonts/fonts.css';
+
+/* Design tokens (spec section 15). Light is the default; dark follows the OS
+   unless the user picks a theme (FR-APP-04). */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #eef1f5;
+  --border: #e3e7ec;
+  --border-strong: #cdd4de;
+  --text: #0e1726;
+  --text-muted: #4b5563;
+  --text-subtle: #6b7280;
+  --accent: #0d9488;
+  --accent-strong: #0b7c72;
+  --accent-soft: rgba(13, 148, 136, 0.12);
+  --accent-contrast: #ffffff;
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --warning: #b45309;
+  --warning-soft: rgba(217, 119, 6, 0.12);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.1);
+  --canvas: #fbfcfd;
+  --grid: #d5dbe3;
+  --device: #1f6fb2;
+  --device-line: #0e1726;
+  --link: #64748b;
+  --link-fiber: #ea580c;
+  --link-serial: #7c3aed;
+  --focus: #0d9488;
+  --shadow: 0 1px 2px rgba(14, 23, 38, 0.06), 0 4px 16px rgba(14, 23, 38, 0.08);
+  --font-ui: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-brand: 'Sora', var(--font-ui);
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0b1220;
+    --surface: #111a2b;
+    --surface-2: #152036;
+    --surface-3: #1b2840;
+    --border: #24324a;
+    --border-strong: #33435f;
+    --text: #e6eaf0;
+    --text-muted: #a3aebf;
+    --text-subtle: #8b97aa;
+    --accent: #14b8a6;
+    --accent-strong: #2dd4bf;
+    --accent-soft: rgba(20, 184, 166, 0.16);
+    --accent-contrast: #0b1220;
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.14);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.14);
+    --info: #60a5fa;
+    --info-soft: rgba(96, 165, 250, 0.14);
+    --canvas: #0e1726;
+    --grid: #24324a;
+    --device: #3b8ad9;
+    --device-line: #e6eaf0;
+    --link: #94a3b8;
+    --link-fiber: #fb923c;
+    --link-serial: #a78bfa;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b1220;
+  --surface: #111a2b;
+  --surface-2: #152036;
+  --surface-3: #1b2840;
+  --border: #24324a;
+  --border-strong: #33435f;
+  --text: #e6eaf0;
+  --text-muted: #a3aebf;
+  --text-subtle: #8b97aa;
+  --accent: #14b8a6;
+  --accent-strong: #2dd4bf;
+  --accent-soft: rgba(20, 184, 166, 0.16);
+  --accent-contrast: #0b1220;
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.14);
+  --canvas: #0e1726;
+  --grid: #24324a;
+  --device: #3b8ad9;
+  --device-line: #e6eaf0;
+  --link: #94a3b8;
+  --link-fiber: #fb923c;
+  --link-serial: #a78bfa;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+/* High-contrast / increased-contrast (NFR-A11Y-04). */
+@media (prefers-contrast: more) {
+  :root {
+    --border: #6b7280;
+    --border-strong: #374151;
+    --text-muted: #1f2937;
+    --link: #1f2937;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-ui: var(--font-ui);
+  --font-brand: var(--font-brand);
+  --font-mono: var(--font-mono);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* React Flow theming */
+.react-flow {
+  --xy-background-color: var(--canvas);
+  --xy-background-pattern-color: var(--grid);
+  --xy-minimap-background-color: var(--surface);
+  --xy-minimap-mask-background-color: color-mix(in srgb, var(--bg) 70%, transparent);
+  --xy-selection-background-color: var(--accent-soft);
+  --xy-selection-border: 1px dashed var(--accent);
+  --xy-controls-button-background-color: var(--surface);
+  --xy-controls-button-color: var(--text);
+  --xy-controls-button-border-color: var(--border);
+  --xy-handle-background-color: var(--accent);
+  --xy-handle-border-color: var(--surface);
+}
+
+.react-flow__node:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle,
+.react-flow.connecting .react-flow__handle {
+  opacity: 1;
+}
+
+.lw-edge-label {
+  position: absolute;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: pre;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--canvas) 85%, transparent);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+.lw-edge-label--mid {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.lw-dim {
+  opacity: 0.22;
+}
+
+/* Scrollbars that respect the theme */
+* {
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+@media print {
+  .lw-no-print {
+    display: none !important;
+  }
+}
+
+#lw-print-root {
+  display: none;
+}
+
+@media print {
+  body.lw-printing > *:not(#lw-print-root) {
+    display: none !important;
+  }
+  body.lw-printing #lw-print-root {
+    display: block;
+  }
+  .lw-print-page {
+    display: block;
+    width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
+    page-break-after: always;
+    break-after: page;
+  }
+}

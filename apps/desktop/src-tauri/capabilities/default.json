@@ -11,6 +11,8 @@
     "dialog:allow-ask",
     "dialog:allow-message",
     "allow-app-version",
+    "allow-quit-app",
+    "allow-print-page",
     "allow-read-text-file",
     "allow-read-binary-file",
     "allow-save-atomic",

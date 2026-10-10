@@ -3,7 +3,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { ask } from '@tauri-apps/plugin-dialog';
+import { ask, message } from '@tauri-apps/plugin-dialog';
 import type {
   FileFilter,
   MenuCommand,
@@ -105,7 +105,20 @@ export function createTauriPlatform(): PlatformAdapter {
     listRecovery: () => invoke<RecoveryEntry[]>('recovery_list'),
     clearRecovery: (docId) => invoke('recovery_clear', { docId }),
 
-    confirm: (message, title) => ask(message, { title: title ?? 'LineWise', kind: 'warning' }),
+    confirm: (text, title) => ask(text, { title: title ?? 'LineWise', kind: 'warning' }),
+
+    async askUnsaved(text, labels) {
+      const r = await message(text, {
+        title: 'LineWise',
+        kind: 'warning',
+        buttons: { yes: labels.save, no: labels.discard, cancel: labels.cancel },
+      });
+      return r === labels.save || r === 'Yes'
+        ? 'save'
+        : r === labels.discard || r === 'No'
+          ? 'discard'
+          : 'cancel';
+    },
 
     async setTitle(title) {
       await getCurrentWindow().setTitle(title);
@@ -119,6 +132,12 @@ export function createTauriPlatform(): PlatformAdapter {
       // Files passed at launch are queued in Rust until the UI is ready.
       void invoke<string[]>('take_pending_opens').then((paths) => paths.forEach(handler));
       return subscribe<string>('open-file', handler);
+    },
+
+    onCloseRequested(confirmClose) {
+      return subscribe<null>('close-requested', () => {
+        void confirmClose().then((ok) => ok && invoke('quit_app'));
+      });
     },
 
     async checkForUpdates(channel) {
@@ -135,7 +154,9 @@ export function createTauriPlatform(): PlatformAdapter {
     openExternal: (url) => invoke('open_external', { url }),
     openLogsFolder: () => invoke('open_logs_folder'),
     async print() {
-      window.print();
+      // WKWebView ignores window.print(); WebView2 supports it.
+      if (detectOs() === 'macos') await invoke('print_page');
+      else window.print();
     },
   };
 }

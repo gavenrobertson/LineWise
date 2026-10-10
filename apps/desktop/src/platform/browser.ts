@@ -187,6 +187,12 @@ export function createBrowserPlatform(): PlatformAdapter {
       return window.confirm(message);
     },
 
+    async askUnsaved(text) {
+      if (hooks.nextConfirm.length) return hooks.nextConfirm.shift() ? 'discard' : 'cancel';
+      if (automated) return 'discard';
+      return window.confirm(text) ? 'discard' : 'cancel';
+    },
+
     async setTitle(title) {
       document.title = title;
     },
@@ -199,6 +205,16 @@ export function createBrowserPlatform(): PlatformAdapter {
     onOpenFile(handler) {
       openHandlers.add(handler);
       return () => openHandlers.delete(handler);
+    },
+
+    onCloseRequested(_confirm, isDirty) {
+      const h = (e: BeforeUnloadEvent) => {
+        if (!isDirty()) return;
+        e.preventDefault();
+        e.returnValue = '';
+      };
+      window.addEventListener('beforeunload', h);
+      return () => window.removeEventListener('beforeunload', h);
     },
 
     async checkForUpdates() {

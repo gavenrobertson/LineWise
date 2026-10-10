@@ -400,6 +400,23 @@ export function updateLinks(ids: string[], patch: LinkFields): Command {
   };
 }
 
+/** Merge a style patch into each link's style; `undefined` values remove a key. */
+export function updateLinkStyle(ids: string[], patch: Partial<Link['style']>): Command {
+  const set = new Set(ids);
+  return {
+    label: 'Edit link style',
+    run: (d) => {
+      for (const l of d.links) {
+        if (!set.has(l.id)) continue;
+        const next: Record<string, unknown> = { ...l.style, ...patch };
+        for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+        l.style = next as Link['style'];
+        stamp(l);
+      }
+    },
+  };
+}
+
 /** Drop a device onto a link: the link is split into two through the device (FR-CAN-09). */
 export function insertDeviceOnLink(linkId: string, opts: AddDeviceOptions): Command & { deviceId: string } {
   const add = addDevice(opts);
@@ -527,7 +544,26 @@ export function upsertVlan(v: Partial<Vlan> & { number: number }): Command & { v
 }
 
 export function removeVlans(ids: string[]): Command {
-  return { label: 'Delete VLAN', run: (d) => void (d.vlans = d.vlans.filter((v) => !ids.includes(v.id))) };
+  return {
+    label: 'Delete VLAN',
+    run: (d) => {
+      d.vlans = d.vlans.filter((v) => !ids.includes(v.id));
+      for (const s of d.subnets) if (s.vlanId && ids.includes(s.vlanId)) delete s.vlanId;
+    },
+  };
+}
+
+/** Delete VRFs; interfaces and subnets in them fall back to the global table. */
+export function removeVrfs(ids: string[]): Command {
+  return {
+    label: 'Delete VRF',
+    run: (d) => {
+      d.vrfs = d.vrfs.filter((v) => !ids.includes(v.id));
+      for (const s of d.subnets) if (s.vrfId && ids.includes(s.vrfId)) delete s.vrfId;
+      for (const dev of d.devices)
+        for (const i of dev.interfaces) if (i.vrfId && ids.includes(i.vrfId)) delete i.vrfId;
+    },
+  };
 }
 
 export function upsertVrf(v: Partial<Vrf> & { name: string }): Command & { vrfId: string } {
@@ -600,6 +636,36 @@ export function renamePage(id: string, name: string): Command {
   return { label: 'Rename page', run: (d) => void (findPage(d, id).name = name) };
 }
 
+export function updatePage(id: string, patch: Partial<Pick<Page, 'name' | 'background'>>): Command {
+  return { label: 'Edit page', run: (d) => void Object.assign(findPage(d, id), patch) };
+}
+
+/** Replace a page's user layers (FR-CAN-13); annotations on removed layers move to no layer. */
+export function setPageLayers(pageId: string, layers: Page['layers']): Command {
+  return {
+    label: 'Edit layers',
+    run: (d) => {
+      const page = findPage(d, pageId);
+      page.layers = layers.map((l, i) => ({ ...l, order: i }));
+      const ids = new Set(layers.map((l) => l.id));
+      for (const a of page.annotations) if (a.layerId && !ids.has(a.layerId)) delete a.layerId;
+    },
+  };
+}
+
+/** Change page order: `ids` is the full list of page ids in the new order. */
+export function reorderPages(ids: string[]): Command {
+  return {
+    label: 'Reorder pages',
+    run: (d) => {
+      ids.forEach((id, i) => {
+        const p = d.pages.find((x) => x.id === id);
+        if (p) p.order = i;
+      });
+    },
+  };
+}
+
 export function removePage(id: string): Command {
   return {
     label: 'Delete page',
@@ -653,6 +719,12 @@ export function updateSettings(patch: Partial<DocumentSettings>): Command {
 
 export function renameDocument(name: string): Command {
   return { label: 'Rename diagram', run: (d) => void (d.name = name) };
+}
+
+export function updateDocumentInfo(
+  patch: Partial<Pick<NetworkDocument, 'name' | 'author' | 'description'>>,
+): Command {
+  return { label: 'Edit diagram properties', run: (d) => void Object.assign(d, patch) };
 }
 
 export function addAsset(mime: string, base64: string): Command & { assetId: string } {

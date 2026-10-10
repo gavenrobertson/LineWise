@@ -51,7 +51,7 @@ export function createDocument(name = 'Untitled diagram', author = ''): NetworkD
     assets: {},
     settings: {
       labelTemplate: '{hostname}',
-      defaultLinkRouting: 'orthogonal',
+      defaultLinkRouting: 'straight',
       iconStyle: 'classic',
       showInterfaceNames: true,
       showInterfaceIps: false,

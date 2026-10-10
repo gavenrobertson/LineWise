@@ -63,6 +63,23 @@ fn queue_open(app: &tauri::AppHandle, path: String) {
     let _ = app.emit("open-file", path);
 }
 
+/// Set once the UI has confirmed it is safe to close (no unsaved changes, or discarded).
+#[derive(Default)]
+struct CloseGate(std::sync::atomic::AtomicBool);
+
+/// The UI calls this after handling "close-requested" (FR-APP-02: unsaved changes prompt).
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle, gate: tauri::State<'_, CloseGate>) {
+    gate.0.store(true, std::sync::atomic::Ordering::SeqCst);
+    app.exit(0);
+}
+
+/// WKWebView ignores window.print(), so printing goes through the native web view (FR-EXP-10).
+#[tauri::command]
+fn print_page(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.print().map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     install_panic_hook();
@@ -94,6 +111,16 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(PendingOpens::default())
+        .manage(CloseGate::default())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let open = !window.state::<CloseGate>().0.load(std::sync::atomic::Ordering::SeqCst);
+                if open {
+                    api.prevent_close();
+                    let _ = window.emit("close-requested", ());
+                }
+            }
+        })
         .setup(|app| {
             let handle = app.handle().clone();
             let allowed = files::AllowedPaths::load(&handle);
@@ -112,6 +139,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             app_version,
             take_pending_opens,
+            quit_app,
+            print_page,
             open_external,
             open_logs_folder,
             files::read_text_file,
@@ -132,6 +161,14 @@ pub fn run() {
         .expect("error while building LineWise");
 
     app.run(|_app, _event| {
+        // Cmd+Q and the app menu's Quit ask the UI first, like closing the window.
+        if let tauri::RunEvent::ExitRequested { api, code, .. } = &_event {
+            let allowed = _app.state::<CloseGate>().0.load(std::sync::atomic::Ordering::SeqCst);
+            if !allowed && code.is_none() {
+                api.prevent_exit();
+                let _ = _app.emit("close-requested", ());
+            }
+        }
         #[cfg(target_os = "macos")]
         if let tauri::RunEvent::Opened { urls } = _event {
             for url in urls {

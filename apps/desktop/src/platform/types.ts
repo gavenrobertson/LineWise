@@ -110,10 +110,20 @@ export interface PlatformAdapter {
   clearRecovery(docId: string): Promise<void>;
 
   confirm(message: string, title?: string): Promise<boolean>;
+  /** Three-way unsaved-changes prompt: Save, Don't Save, Cancel. */
+  askUnsaved(
+    message: string,
+    labels: { save: string; discard: string; cancel: string },
+  ): Promise<'save' | 'discard' | 'cancel'>;
   setTitle(title: string): Promise<void>;
   onMenu(handler: (cmd: MenuCommand) => void): () => void;
   /** File association / "Open with" (FR-APP-09). */
   onOpenFile(handler: (path: string) => void): () => void;
+  /**
+   * Window close / app quit (FR-APP-02). `confirmClose` resolves true when it is
+   * safe to close; `isDirty` is used where only a synchronous check is possible.
+   */
+  onCloseRequested(confirmClose: () => Promise<boolean>, isDirty: () => boolean): () => void;
   checkForUpdates(channel: 'stable' | 'beta'): Promise<UpdateInfo | null>;
   openExternal(url: string): Promise<void>;
   openLogsFolder(): Promise<void>;

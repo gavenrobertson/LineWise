@@ -6,12 +6,28 @@
 use tauri::menu::{Menu, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder};
 use tauri::{AppHandle, Runtime};
 
+/// Human-readable shortcut for Windows/Linux menu labels: "CmdOrCtrl+Shift+S" → "Ctrl+Shift+S".
+pub fn shortcut_hint(accel: &str) -> String {
+    accel.replace("CmdOrCtrl", "Ctrl").replace("Cmd", "Ctrl")
+}
+
+/// On macOS shortcuts are real menu key equivalents. On Windows and Linux the
+/// web view handles every shortcut itself (so typing in text fields keeps the
+/// native Ctrl+C/V/Z behavior) and the menu only shows the hint after a tab.
 fn item<R: Runtime>(app: &AppHandle<R>, id: &str, label: &str, accel: Option<&str>) -> tauri::Result<tauri::menu::MenuItem<R>> {
-    let mut b = MenuItemBuilder::with_id(id, label);
-    if let Some(a) = accel {
-        b = b.accelerator(a);
+    if cfg!(target_os = "macos") {
+        let mut b = MenuItemBuilder::with_id(id, label);
+        if let Some(a) = accel {
+            b = b.accelerator(a);
+        }
+        b.build(app)
+    } else {
+        let text = match accel {
+            Some(a) => format!("{label}\t{}", shortcut_hint(a)),
+            None => label.to_string(),
+        };
+        MenuItemBuilder::with_id(id, text).build(app)
     }
-    b.build(app)
 }
 
 pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
@@ -29,18 +45,33 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item(app, "file.close", "Close Diagram", Some("CmdOrCtrl+W"))?)
         .build()?;
 
-    let mut edit_b = SubmenuBuilder::new(app, "Edit")
-        .item(&item(app, "edit.undo", "Undo", Some("CmdOrCtrl+Z"))?)
-        .item(&item(app, "edit.redo", "Redo", Some("CmdOrCtrl+Shift+Z"))?)
-        .separator()
-        .item(&item(app, "edit.cut", "Cut", Some("CmdOrCtrl+X"))?)
-        .item(&item(app, "edit.copy", "Copy", Some("CmdOrCtrl+C"))?)
-        .item(&item(app, "edit.paste", "Paste", Some("CmdOrCtrl+V"))?)
-        .item(&item(app, "edit.duplicate", "Duplicate", Some("CmdOrCtrl+D"))?)
-        .item(&item(app, "edit.delete", "Delete", None)?)
-        .item(&item(app, "edit.selectAll", "Select All", Some("CmdOrCtrl+A"))?)
-        .separator()
-        .item(&item(app, "edit.find", "Find…", Some("CmdOrCtrl+F"))?);
+    let mut edit_b = SubmenuBuilder::new(app, "Edit");
+    if cfg!(target_os = "macos") {
+        // Predefined items keep text editing working in inputs; the web view
+        // handles these keys itself for the canvas (lib/keyboard.ts).
+        edit_b = edit_b
+            .item(&PredefinedMenuItem::undo(app, None)?)
+            .item(&PredefinedMenuItem::redo(app, None)?)
+            .separator()
+            .item(&PredefinedMenuItem::cut(app, None)?)
+            .item(&PredefinedMenuItem::copy(app, None)?)
+            .item(&PredefinedMenuItem::paste(app, None)?)
+            .item(&item(app, "edit.duplicate", "Duplicate", Some("CmdOrCtrl+D"))?)
+            .item(&item(app, "edit.delete", "Delete", None)?)
+            .item(&PredefinedMenuItem::select_all(app, None)?);
+    } else {
+        edit_b = edit_b
+            .item(&item(app, "edit.undo", "Undo", Some("CmdOrCtrl+Z"))?)
+            .item(&item(app, "edit.redo", "Redo", Some("CmdOrCtrl+Shift+Z"))?)
+            .separator()
+            .item(&item(app, "edit.cut", "Cut", Some("CmdOrCtrl+X"))?)
+            .item(&item(app, "edit.copy", "Copy", Some("CmdOrCtrl+C"))?)
+            .item(&item(app, "edit.paste", "Paste", Some("CmdOrCtrl+V"))?)
+            .item(&item(app, "edit.duplicate", "Duplicate", Some("CmdOrCtrl+D"))?)
+            .item(&item(app, "edit.delete", "Delete", Some("Delete"))?)
+            .item(&item(app, "edit.selectAll", "Select All", Some("CmdOrCtrl+A"))?);
+    }
+    edit_b = edit_b.separator().item(&item(app, "edit.find", "Find…", Some("CmdOrCtrl+F"))?);
     if !cfg!(target_os = "macos") {
         edit_b = edit_b.separator().item(&item(app, "edit.preferences", "Preferences…", Some("CmdOrCtrl+,"))?);
     }
@@ -115,4 +146,15 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     top.extend([file, edit, view, insert, arrange, network, window, help]);
     let refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = top.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<R>).collect();
     Menu::with_items(app, &refs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shortcut_hint;
+
+    #[test]
+    fn hints_use_ctrl() {
+        assert_eq!(shortcut_hint("CmdOrCtrl+Shift+S"), "Ctrl+Shift+S");
+        assert_eq!(shortcut_hint("F5"), "F5");
+    }
 }

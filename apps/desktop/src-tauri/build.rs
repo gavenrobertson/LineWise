@@ -4,6 +4,8 @@ fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "app_version",
+            "quit_app",
+            "print_page",
             "read_text_file",
             "read_binary_file",
             "save_atomic",

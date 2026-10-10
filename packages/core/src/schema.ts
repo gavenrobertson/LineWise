@@ -296,7 +296,7 @@ export const Suppression = z.object({ ruleId: z.string(), objectIds: z.array(Id)
 
 export const DocumentSettings = z.object({
   labelTemplate: z.string().default('{hostname}'),
-  defaultLinkRouting: z.enum(['straight', 'orthogonal', 'curved']).default('orthogonal'),
+  defaultLinkRouting: z.enum(['straight', 'orthogonal', 'curved']).default('straight'),
   iconStyle: z.enum(['classic', 'line']).default('classic'),
   showInterfaceNames: z.boolean().default(true),
   showInterfaceIps: z.boolean().default(false),
@@ -327,7 +327,7 @@ export const NetworkDocument = z.object({
   assets: z.record(Id, Asset).default({}),
   settings: DocumentSettings.default({
     labelTemplate: '{hostname}',
-    defaultLinkRouting: 'orthogonal',
+    defaultLinkRouting: 'straight',
     iconStyle: 'classic',
     showInterfaceNames: true,
     showInterfaceIps: false,
