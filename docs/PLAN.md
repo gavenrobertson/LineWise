@@ -1,23 +1,28 @@
 # LineWise implementation plan
 
-Milestones follow `docs/SPEC.md` section 13. Each task is about half a day or less, lists the requirement IDs it covers, and names the tasks it depends on. Status lives in `TRACEABILITY.md`; this file is the order of work.
+Milestones follow `docs/SPEC.md` section 13.
+
+**Status (2026-10-10).** The first session built most of M0–M5 without CI, tags or a filled-in traceability matrix. Work continues on that history: each milestone is re-audited in order against its acceptance criteria, gaps are closed (tests first where practical), `TRACEABILITY.md` rows are filled with modules and tests that name the requirement (checked by `scripts/traceability.mjs`), and the milestone is tagged on the commit where its criteria pass. Tasks added during the audit are marked _(audit)_. Each task is about half a day or less, lists the requirement IDs it covers, and names the tasks it depends on. Status lives in `TRACEABILITY.md`; this file is the order of work.
 
 ## M0 — Foundation (`v0.0.1`)
 
-| #    | Task                                                                                                                           | Requirements                         | Depends on |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ | ---------- |
-| 0.1  | pnpm workspace, root scripts, TS base config, `.editorconfig`, `.gitignore`                                                    | NFR-MNT-01                           | —          |
-| 0.2  | ESLint (flat config, typescript-eslint), Prettier, commitlint, Husky                                                           | NFR-MNT-01, REL-20                   | 0.1        |
-| 0.3  | `packages/core` skeleton, Vitest with coverage thresholds                                                                      | NFR-MNT-02                           | 0.1        |
-| 0.4  | `packages/parsers` and `packages/device-library` skeletons                                                                     | —                                    | 0.1        |
-| 0.5  | `packages/brand`: SVG masters, fonts, generation script                                                                        | BRD-01                               | 0.1        |
-| 0.6  | `apps/desktop`: Vite + React 19 + Tailwind + Radix shell, i18n bootstrap                                                       | FR-APP-03, NFR-I18N-01               | 0.1        |
-| 0.7  | `PlatformAdapter` interface, `BrowserPlatform`, `TauriPlatform`                                                                | NFR-SEC-01                           | 0.6        |
-| 0.8  | `src-tauri`: Tauri 2 shell, capabilities, CSP, native menus, panic hook, logging                                               | FR-APP-01, NFR-SEC-02, NFR-REL-02/03 | 0.6        |
-| 0.9  | Playwright config (Chromium + WebKit) against the browser build                                                                | —                                    | 0.6, 0.7   |
-| 0.10 | GitHub Actions: `ci.yml`, `release.yml`, `nightly.yml`, `templates.yml`; Renovate                                              | REL-01..04, REL-20/21                | 0.2–0.9    |
-| 0.11 | Community files: LICENSE, README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, PRIVACY, GOVERNANCE, CODEOWNERS, issue/PR templates | OSS-01, OSS-10..14                   | —          |
-| 0.12 | License allowlist check, third-party notices generator                                                                         | OSS-02, OSS-03                       | 0.1        |
+| #    | Task                                                                                                                           | Requirements                                 | Depends on |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- | ---------- |
+| 0.1  | pnpm workspace, root scripts, TS base config, `.editorconfig`, `.gitignore`                                                    | NFR-MNT-01                                   | —          |
+| 0.2  | ESLint (flat config, typescript-eslint), Prettier, commitlint, Husky                                                           | NFR-MNT-01, REL-20                           | 0.1        |
+| 0.3  | `packages/core` skeleton, Vitest with coverage thresholds                                                                      | NFR-MNT-02                                   | 0.1        |
+| 0.4  | `packages/parsers` and `packages/device-library` skeletons                                                                     | —                                            | 0.1        |
+| 0.5  | `packages/brand`: SVG masters, fonts, generation script                                                                        | BRD-01                                       | 0.1        |
+| 0.6  | `apps/desktop`: Vite + React 19 + Tailwind + Radix shell, i18n bootstrap                                                       | FR-APP-03, NFR-I18N-01                       | 0.1        |
+| 0.7  | `PlatformAdapter` interface, `BrowserPlatform`, `TauriPlatform`                                                                | NFR-SEC-01                                   | 0.6        |
+| 0.8  | `src-tauri`: Tauri 2 shell, capabilities, CSP, native menus, panic hook, logging                                               | FR-APP-01, NFR-SEC-02, NFR-REL-02/03         | 0.6        |
+| 0.9  | Playwright config (Chromium + WebKit) against the browser build                                                                | —                                            | 0.6, 0.7   |
+| 0.10 | GitHub Actions: `ci.yml`, `release.yml`, `nightly.yml`, `templates.yml`; Renovate                                              | REL-01..04, REL-20/21                        | 0.2–0.9    |
+| 0.11 | Community files: LICENSE, README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, PRIVACY, GOVERNANCE, CODEOWNERS, issue/PR templates | OSS-01, OSS-10..14                           | —          |
+| 0.12 | License allowlist check, third-party notices generator                                                                         | OSS-02, OSS-03                               | 0.1        |
+| 0.13 | _(audit)_ Native tauri-driver smoke test; fix the blank desktop window (freezePrototype)                                       | FR-APP-01, FR-APP-09                         | 0.8        |
+| 0.14 | _(audit)_ Traceability checker, repository-rule tests (SPDX, architecture), config tests (CSP, capabilities, menus)            | DOC-06, OSS-01, NFR-MNT-01/02, NFR-SEC-01/02 | 0.11       |
+| 0.15 | _(audit)_ Version single source of truth, release-please, release config overlay                                               | REL-03, REL-20                               | 0.10       |
 
 ## M1 — Core model and canvas (`v0.1.0`)
 

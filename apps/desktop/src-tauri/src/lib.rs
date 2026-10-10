@@ -202,6 +202,7 @@ fn install_panic_hook() {
 mod tests {
     use super::*;
 
+    /// FR-APP-09: double-clicking a .lwise file passes its path to the app.
     #[test]
     fn only_lwise_args_are_opened() {
         let args = vec![

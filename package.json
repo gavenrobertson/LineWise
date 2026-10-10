@@ -20,7 +20,10 @@
     "licenses:check": "node scripts/check-licenses.mjs",
     "notices": "node scripts/third-party-notices.mjs",
     "prepare": "husky",
-    "schema": "pnpm --filter @linewise/core exec cross-env UPDATE_SCHEMA=1 vitest run test/jsonSchema.test.ts"
+    "schema": "pnpm --filter @linewise/core exec cross-env UPDATE_SCHEMA=1 vitest run test/jsonSchema.test.ts",
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
+    "traceability": "node scripts/traceability.mjs --summary",
+    "version:check": "node scripts/version.mjs check"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

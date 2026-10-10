@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+# REL-20: release-please turns Conventional Commits on main into a release PR that bumps the
+# version and updates CHANGELOG.md. A follow-up step syncs Cargo.lock (version.mjs). Merging the
+# release PR tags vX.Y.Z and runs release.yml, which builds the draft GitHub Release.
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: rp
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.rp.outputs.pr && fromJSON(steps.rp.outputs.pr).headBranchName || github.ref }}
+          fetch-depth: 0
+      - name: Sync Cargo.lock and every package version on the release PR
+        if: steps.rp.outputs.pr
+        run: |
+          v=$(node -p "require('./apps/desktop/package.json').version")
+          node scripts/version.mjs set "$v"
+          npx --yes prettier@3 --write CHANGELOG.md >/dev/null
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore(release): sync versions to $v" -s
+            git push
+          fi
+      - name: Tag a merged release commit
+        id: tag
+        if: ${{ !steps.rp.outputs.pr && startsWith(github.event.head_commit.message, 'chore(release):') }}
+        run: |
+          v=$(node -p "require('./apps/desktop/package.json').version")
+          node scripts/version.mjs check
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then echo "v$v already tagged"; exit 0; fi
+          git tag -a "v$v" -m "LineWise $v"
+          git push origin "v$v"
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+
+  # Tags pushed with GITHUB_TOKEN do not trigger workflows, so call the release build directly.
+  release:
+    needs: release-please
+    if: needs.release-please.outputs.tag
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag }}
+    secrets: inherit

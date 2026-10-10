@@ -65,6 +65,7 @@ pub async fn install_update(app: AppHandle, channel: String) -> Result<(), Strin
 mod tests {
     use super::endpoint;
 
+    /// REL-11: stable and beta update channels.
     #[test]
     fn channels_have_distinct_endpoints() {
         assert!(endpoint("stable").ends_with("/latest/download/latest.json"));

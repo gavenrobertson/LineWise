@@ -10,7 +10,7 @@ import { join, resolve } from 'node:path';
 export function sectionFor(changelog, version) {
   const lines = changelog.split('\n');
   const start = lines.findIndex((l) =>
-    new RegExp(`^## \\[?v?${version.replace(/\./g, '\\.')}\\]?(\\s|$)`).test(l),
+    new RegExp(`^## \\[?v?${version.replace(/\./g, '\\.')}(\\]|\\s|$)`).test(l),
   );
   if (start < 0) return null;
   const end = lines.findIndex((l, i) => i > start && /^## /.test(l));

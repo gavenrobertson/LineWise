@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "skip-github-release": true,
+  "changelog-path": "CHANGELOG.md",
+  "pull-request-title-pattern": "chore(release): ${version}",
+  "packages": {
+    ".": {
+      "package-name": "linewise",
+      "release-type": "simple",
+      "version-file": "apps/desktop/package.json",
+      "extra-files": [
+        { "type": "json", "path": "apps/desktop/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/core/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/parsers/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/device-library/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/brand/package.json", "jsonpath": "$.version" },
+        { "type": "toml", "path": "apps/desktop/src-tauri/Cargo.toml", "jsonpath": "$.package.version" }
+      ]
+    }
+  }
+}

@@ -301,6 +301,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 mod tests {
     use super::shortcut_hint;
 
+    /// FR-KEY-01: Windows/Linux menus show Ctrl shortcuts; macOS uses Cmd key equivalents.
     #[test]
     fn hints_use_ctrl() {
         assert_eq!(shortcut_hint("CmdOrCtrl+Shift+S"), "Ctrl+Shift+S");

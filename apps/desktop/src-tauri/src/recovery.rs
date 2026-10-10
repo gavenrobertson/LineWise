@@ -85,6 +85,7 @@ pub fn recovery_clear(app: AppHandle, doc_id: String) -> Result<(), String> {
 mod tests {
     use super::safe_id;
 
+    /// FR-FMT-07, NFR-SEC-01: recovery files stay inside the app-data recovery folder.
     #[test]
     fn rejects_path_traversal_ids() {
         assert!(safe_id("0192f0a1-7c3e-7abc-8def-0123456789ab").is_ok());

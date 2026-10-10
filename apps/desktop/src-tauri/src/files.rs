@@ -320,6 +320,7 @@ pub fn recent_add(
 mod tests {
     use super::*;
 
+    /// FR-FMT-06, NFR-REL-01: temp file + fsync + rename, one .bak of the previous version.
     #[test]
     fn atomic_write_keeps_backup_and_leaves_no_temp() {
         let dir = tempfile::tempdir().unwrap();
@@ -339,6 +340,7 @@ mod tests {
         assert!(leftovers.is_empty());
     }
 
+    /// NFR-SEC-01: file access is limited to paths the user picked in a dialog.
     #[test]
     fn paths_must_be_allowed() {
         let dir = tempfile::tempdir().unwrap();
@@ -354,6 +356,7 @@ mod tests {
             .is_err());
     }
 
+    /// FR-APP-05: the last 10 recent files, most recent first.
     #[test]
     fn recent_list_is_capped_and_deduplicated() {
         let allowed = AllowedPaths::empty();

@@ -4,7 +4,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 
 | Requirement | Priority | Module(s) | Test(s) | Status |
 | --- | --- | --- | --- | --- |
-| FR-APP-01 | MUST | | | todo |
+| FR-APP-01 | MUST | `apps/desktop/src-tauri/src/menu.rs`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/config.test.ts`, `apps/desktop/test/pure.test.ts` | done |
 | FR-APP-02 | MUST | | | todo |
 | FR-APP-03 | MUST | | | todo |
 | FR-APP-04 | MUST | | | todo |
@@ -139,8 +139,8 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-PERF-05 | MUST | | | todo |
 | NFR-PERF-06 | MUST | | | todo |
 | NFR-PERF-07 | MUST | | | todo |
-| NFR-SEC-01 | MUST | | | todo |
-| NFR-SEC-02 | MUST | | | todo |
+| NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
+| NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
 | NFR-SEC-03 | MUST | | | todo |
 | NFR-SEC-04 | MUST | | | todo |
 | NFR-SEC-05 | MUST | | | todo |
@@ -159,36 +159,36 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-REL-01 | MUST | | | todo |
 | NFR-REL-02 | MUST | | | todo |
 | NFR-REL-03 | MUST | | | todo |
-| NFR-MNT-01 | MUST | | | todo |
-| NFR-MNT-02 | MUST | | | todo |
-| NFR-MNT-03 | MUST | | | todo |
+| NFR-MNT-01 | MUST | `tsconfig.base.json`, `eslint.config.js`, `.github/workflows/ci.yml` | `scripts/repo-rules.test.mjs` | done |
+| NFR-MNT-02 | MUST | `packages/core/package.json`, `eslint.config.js` | `scripts/repo-rules.test.mjs` | done |
+| NFR-MNT-03 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/decisions-log.md` | `scripts/repo-docs.test.mjs` | done |
 | REL-01 | MUST | | | todo |
 | REL-02 | MUST | | | todo |
-| REL-03 | MUST | | | todo |
+| REL-03 | MUST | `scripts/version.mjs`, `apps/desktop/src-tauri/tauri.conf.json` — Version single-sourcing is done and tested; app and document icons are checked in M6 (BRD-02/03). | `scripts/version.test.mjs`, `apps/desktop/test/config.test.ts` | partial |
 | BRD-02 | MUST | | | todo |
 | BRD-03 | MUST | | | todo |
 | REL-04 | MUST | | | todo |
 | REL-10 | MUST | | | todo |
 | REL-11 | MUST | | | todo |
 | REL-12 | MUST | | | todo |
-| REL-20 | MUST | | | todo |
-| REL-21 | MUST | | | todo |
-| OSS-01 | MUST | | | todo |
-| OSS-02 | MUST | | | todo |
-| OSS-03 | MUST | | | todo |
+| REL-20 | MUST | `commitlint.config.js`, `.husky/commit-msg`, `release-please-config.json`, `.github/workflows/release-please.yml`, `CHANGELOG.md` | `scripts/repo-docs.test.mjs`, `scripts/release-notes.test.mjs` | done |
+| REL-21 | MUST |  — Branch protection is a repository setting only the owner can enable (docs/HUMAN-TODO.md). |  | todo |
+| OSS-01 | MUST | `LICENSE` | `scripts/repo-rules.test.mjs` | done |
+| OSS-02 | MUST | `scripts/check-licenses.mjs`, `scripts/licenses.mjs`, `apps/desktop/src-tauri/deny.toml`, `.github/workflows/ci.yml` | `scripts/licenses.test.mjs` | done |
+| OSS-03 | MUST | `scripts/third-party-notices.mjs`, `apps/desktop/src/dialogs/AboutDialog.tsx` | `apps/desktop/test/components.test.tsx` | done |
 | OSS-04 | MUST | | | todo |
-| OSS-05 | MUST | | | todo |
-| OSS-10 | MUST | | | todo |
-| OSS-11 | MUST | | | todo |
-| OSS-12 | MUST | | | todo |
-| OSS-13 | MUST | | | todo |
-| OSS-14 | MUST | | | todo |
+| OSS-05 | MUST | `CONTRIBUTING.md`, `.github/pull_request_template.md` — Sign-off is documented; the DCO GitHub app must be installed by the owner (docs/HUMAN-TODO.md). |  | partial |
+| OSS-10 | MUST | `README.md` | `scripts/repo-docs.test.mjs` | done |
+| OSS-11 | MUST | `CONTRIBUTING.md` | `scripts/repo-docs.test.mjs` | done |
+| OSS-12 | MUST | `CODE_OF_CONDUCT.md`, `SECURITY.md`, `PRIVACY.md`, `GOVERNANCE.md`, `.github/CODEOWNERS` | `scripts/repo-docs.test.mjs` | done |
+| OSS-13 | MUST | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/pull_request_template.md` | `scripts/repo-docs.test.mjs` | done |
+| OSS-14 | MUST | `.github/labels.yml`, `.github/workflows/labels.yml` | `scripts/repo-docs.test.mjs` | done |
 | DOC-01 | MUST | | | todo |
 | DOC-02 | MUST | | | todo |
 | DOC-03 | MUST | | | todo |
-| DOC-04 | MUST | | | todo |
+| DOC-04 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/adr/0002-react-flow-over-maxgraph.md`, `docs/adr/0003-command-patch-architecture.md`, `docs/adr/0004-file-format.md`, `docs/adr/0005-license.md` | `scripts/repo-docs.test.mjs` | done |
 | DOC-05 | MUST | | | todo |
-| DOC-06 | MUST | | | todo |
+| DOC-06 | MUST | `TRACEABILITY.md`, `scripts/traceability.mjs` | `scripts/traceability.test.mjs`, `scripts/repo-docs.test.mjs` | done |
 | BRD-01 | MUST | | | todo |
 | BRD-04 | MUST | | | todo |
 | BRD-05 | MUST | | | todo |

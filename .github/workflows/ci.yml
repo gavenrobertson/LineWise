@@ -41,8 +41,12 @@ jobs:
         run: pnpm format
       - name: Typecheck
         run: pnpm typecheck
-      - name: Script tests (license evaluator)
-        run: node --test scripts/licenses.test.mjs
+      - name: Script and repository-rule tests
+        run: pnpm test:scripts
+      - name: Traceability matrix and version consistency
+        run: |
+          pnpm traceability
+          pnpm version:check
       - name: Unit, property, golden and component tests with coverage gates
         run: pnpm test:coverage
       - name: Upload coverage
