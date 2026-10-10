@@ -1,0 +1,23 @@
+{
+  "name": "@linewise/bench",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Large generated diagrams and performance benchmarks (NFR-PERF-07).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "generate": "node --experimental-transform-types --no-warnings scripts/generate.ts",
+    "bench": "pnpm generate && playwright test -c playwright.config.ts"
+  },
+  "dependencies": {
+    "@linewise/core": "workspace:*",
+    "@linewise/device-library": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "vitest": "^5.0.3"
+  }
+}

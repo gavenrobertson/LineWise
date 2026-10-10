@@ -119,6 +119,22 @@ export function linkedInterfaceIds(doc: NetworkDocument): Set<string> {
   return s;
 }
 
+const linkedCache = new WeakMap<readonly unknown[], ReadonlySet<string>>();
+
+/**
+ * Read-only, cached `linkedInterfaceIds` for finished (frozen) documents, so selectors that run
+ * per device do not rescan every link (NFR-PERF-04). Drafts and unfrozen documents are not cached.
+ */
+export function linkedInterfaceIdsOf(doc: NetworkDocument): ReadonlySet<string> {
+  if (!Object.isFrozen(doc.links)) return linkedInterfaceIds(doc);
+  let s = linkedCache.get(doc.links);
+  if (!s) {
+    s = linkedInterfaceIds(doc);
+    linkedCache.set(doc.links, s);
+  }
+  return s;
+}
+
 const PHYSICAL_TYPES = new Set([
   'ethernet',
   'fastethernet',

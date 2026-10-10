@@ -286,3 +286,27 @@ test('FR-CAN-09 drag a template onto the canvas, and onto a link to insert it in
   const links = (await doc(page)).links;
   expect(links.every((l) => l.endpointA.deviceId === sw.id || l.endpointB.deviceId === sw.id)).toBe(true);
 });
+
+test('FR-CAN-14 hierarchical and orthogonal auto-layout run in a worker and undo in one step', async ({
+  page,
+}) => {
+  await openApp(page);
+  await startFrom(page, /Three-tier campus/);
+  const before = await positionOf(page, 'ACC1');
+  for (const algorithm of [/Hierarchical/, /Orthogonal/]) {
+    await page.keyboard.press(`${MOD}+Shift+l`);
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: algorithm }).first().click();
+    await dialog.getByRole('button', { name: 'Apply layout' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText(/Layout failed/)).toHaveCount(0);
+  }
+  // Tiers stay in order: core above distribution above access.
+  const y = async (h: string) => (await positionOf(page, h)).y;
+  expect(await y('CORE1')).toBeLessThan(await y('DIST1'));
+  expect(await y('DIST1')).toBeLessThan(await y('ACC1'));
+  await page.locator('.react-flow__pane').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press(`${MOD}+z`);
+  await page.keyboard.press(`${MOD}+z`);
+  await expect.poll(async () => positionOf(page, 'ACC1')).toEqual(before);
+});

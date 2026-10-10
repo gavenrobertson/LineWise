@@ -451,3 +451,46 @@ export function orthogonalPoints(a: XY, b: XY, offset: number, obstacles: Rect[]
   if (!routed || routed.length < 2) return simple;
   return clipEnds(routed);
 }
+
+/**
+ * Structural equality up to `depth` levels (arrays and plain objects); anything deeper must be
+ * the same object. Used to keep unchanged canvas nodes and edges as the same objects between
+ * model rebuilds so React Flow and React skip them (NFR-PERF-04).
+ */
+export function sameShape(a: unknown, b: unknown, depth: number): boolean {
+  if (a === b) return true;
+  if (depth <= 0 || typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!sameShape(a[i], b[i], depth - 1)) return false;
+    return true;
+  }
+  if (
+    Array.isArray(b) ||
+    Object.getPrototypeOf(a) !== Object.prototype ||
+    Object.getPrototypeOf(b) !== Object.prototype
+  )
+    return false;
+  const ka = Object.keys(a);
+  if (ka.length !== Object.keys(b).length) return false;
+  for (const k of ka)
+    if (!sameShape((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], depth - 1))
+      return false;
+  return true;
+}
+
+/** Reuse previous items (by id) that are structurally unchanged; reuse the whole array if nothing changed. */
+export function stabilize<T extends { id: string }>(prev: T[], next: T[], depth: number): T[] {
+  const byId = new Map(prev.map((x) => [x.id, x]));
+  let changed = prev.length !== next.length;
+  const out = next.map((n, i) => {
+    const p = byId.get(n.id);
+    if (p && sameShape(p, n, depth)) {
+      if (prev[i] !== p) changed = true;
+      return p;
+    }
+    changed = true;
+    return n;
+  });
+  return changed ? out : prev;
+}

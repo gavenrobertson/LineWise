@@ -12,3 +12,6 @@ apps/desktop/src-tauri/gen/
 .env*
 THIRD_PARTY_NOTICES.md
 apps/desktop/public/THIRD_PARTY_NOTICES.md
+bench/fixtures/
+bench/results/
+bench/test-results/

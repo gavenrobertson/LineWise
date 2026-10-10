@@ -23,7 +23,9 @@
     "schema": "pnpm --filter @linewise/core exec cross-env UPDATE_SCHEMA=1 vitest run test/jsonSchema.test.ts",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "traceability": "node scripts/traceability.mjs --summary",
-    "version:check": "node scripts/version.mjs check"
+    "version:check": "node scripts/version.mjs check",
+    "bench": "pnpm --filter @linewise/bench bench",
+    "fuzz": "pnpm --filter @linewise/parsers --filter @linewise/core exec vitest run -t fuzz"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

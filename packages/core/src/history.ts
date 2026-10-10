@@ -4,7 +4,7 @@
  * a Command run through Immer's produceWithPatches; History stores forward and
  * inverse patches and coalesces consecutive commands with the same key.
  */
-import { applyPatches, enablePatches, produceWithPatches, type Draft, type Patch } from 'immer';
+import { applyPatches, enablePatches, freeze, produceWithPatches, type Draft, type Patch } from 'immer';
 import { nowIso } from './ids.ts';
 import type { NetworkDocument } from './schema.ts';
 
@@ -123,10 +123,12 @@ export class History {
 export class Editor {
   readonly history: History;
 
-  constructor(
-    public doc: NetworkDocument,
-    limit?: number,
-  ) {
+  doc: NetworkDocument;
+
+  constructor(doc: NetworkDocument, limit?: number) {
+    // Freeze once up front. Immer would otherwise deep-freeze the whole document on the first
+    // edit after opening a file, which costs ~45 ms with 500 devices (NFR-PERF-04).
+    this.doc = freeze(doc, true);
     this.history = new History(limit);
   }
 

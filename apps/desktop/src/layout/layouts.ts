@@ -3,7 +3,7 @@
  * Auto-layout algorithms (FR-CAN-14, FR-IMP-24). Pure functions over a small
  * graph description so they run in the layout worker and in unit tests.
  * Hierarchical layouts place devices in network tiers (WAN → edge → core →
- * access → endpoints) using ELK's layered algorithm with partitions.
+ * access → endpoints) using ELK's layered algorithm, with edges oriented down the tiers.
  */
 import type { DeviceRole } from '@linewise/core';
 import {
@@ -181,37 +181,92 @@ interface ElkGraph {
   edges?: { id: string; sources: string[]; targets: string[] }[];
 }
 
+/**
+ * For each node, the number of same-tier hops to a node of its tier that links to a lower tier
+ * (0 for those nodes; missing when there is none).
+ */
+function depthToLowerTier(
+  edges: { source: string; target: string }[],
+  tier: Map<string, number>,
+): Map<string, number> {
+  const same = new Map<string, string[]>();
+  const depth = new Map<string, number>();
+  const queue: string[] = [];
+  for (const { source: a, target: b } of edges) {
+    const ta = tier.get(a) as number;
+    const tb = tier.get(b) as number;
+    if (ta === tb) {
+      same.set(a, [...(same.get(a) ?? []), b]);
+      same.set(b, [...(same.get(b) ?? []), a]);
+    } else {
+      const upper = ta < tb ? a : b;
+      if (!depth.has(upper)) {
+        depth.set(upper, 0);
+        queue.push(upper);
+      }
+    }
+  }
+  for (let i = 0; i < queue.length; i++) {
+    const n = queue[i] as string;
+    for (const m of same.get(n) ?? [])
+      if (!depth.has(m)) {
+        depth.set(m, (depth.get(n) as number) + 1);
+        queue.push(m);
+      }
+  }
+  return depth;
+}
+
 export async function elkLayout(elk: ElkLike, req: LayoutRequest): Promise<Positions> {
   const s = req.spacing ?? 1;
   const direction = req.algorithm === 'hierarchical-right' ? 'RIGHT' : 'DOWN';
   const ids = new Set(req.nodes.map((n) => n.id));
-  // Partitions must be contiguous small integers; compress the tiers present.
-  const tiers = [...new Set(req.nodes.map((n) => tierOf(n.role)))].sort((a, b) => a - b);
+  const tier = new Map(req.nodes.map((n) => [n.id, tierOf(n.role)]));
+  const multiTier = new Set(tier.values()).size > 1;
+  // Rows come from orienting every edge downward instead of ELK's partitioning, which is far
+  // slower on large graphs (NFR-PERF-05: 500 nodes in about a second instead of ~40 s):
+  //  - between tiers, from the upper tier to the lower one;
+  //  - inside a tier, from the device farther (through same-tier links) from the tier below to
+  //    the nearer one, so a core switch sits above the distribution switches of the same role;
+  //  - peers at the same distance (DIST1–DIST2, CORE1–CORE2) are left out.
+  const valid = req.edges.filter((e) => ids.has(e.source) && ids.has(e.target) && e.source !== e.target);
+  const depth = multiTier ? depthToLowerTier(valid, tier) : new Map<string, number>();
+  const edges = valid.flatMap((e, i) => {
+    const ta = tier.get(e.source) as number;
+    const tb = tier.get(e.target) as number;
+    let down: boolean;
+    if (!multiTier) down = true;
+    else if (ta !== tb) down = ta < tb;
+    else {
+      const da = depth.get(e.source) ?? Infinity;
+      const db = depth.get(e.target) ?? Infinity;
+      if (da === db) return [];
+      down = da > db;
+    }
+    const [src, dst] = down ? [e.source, e.target] : [e.target, e.source];
+    return [{ id: `e${i}`, sources: [src], targets: [dst] }];
+  });
+  const large = req.nodes.length > 150;
   const graph: ElkGraph = {
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': direction,
-      'elk.edgeRouting': req.algorithm === 'orthogonal' ? 'ORTHOGONAL' : 'POLYLINE',
-      'elk.partitioning.activate': 'true',
+      // Only node positions are used; LineWise draws its own link routes.
+      'elk.edgeRouting': 'POLYLINE',
+      'elk.separateConnectedComponents': 'false',
       'elk.layered.spacing.nodeNodeBetweenLayers': String(Math.round(70 * s)),
       'elk.spacing.nodeNode': String(Math.round(40 * s)),
       'elk.spacing.componentComponent': String(Math.round(80 * s)),
       'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
       'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-      'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+      'elk.layered.thoroughness': large ? '1' : '7',
+      'elk.layered.considerModelOrder.strategy': large ? 'NONE' : 'NODES_AND_EDGES',
     },
     children: [...req.nodes]
       .sort((a, b) => (direction === 'DOWN' ? a.x - b.x : a.y - b.y))
-      .map((n) => ({
-        id: n.id,
-        width: NODE_W - 24,
-        height: NODE_H - 30,
-        layoutOptions: { 'elk.partitioning.partition': String(tiers.indexOf(tierOf(n.role))) },
-      })),
-    edges: req.edges
-      .filter((e) => ids.has(e.source) && ids.has(e.target) && e.source !== e.target)
-      .map((e, i) => ({ id: `e${i}`, sources: [e.source], targets: [e.target] })),
+      .map((n) => ({ id: n.id, width: NODE_W - 24, height: NODE_H - 30 })),
+    edges,
   };
   const out = await elk.layout(graph);
   const pos: Positions = {};

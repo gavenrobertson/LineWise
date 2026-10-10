@@ -7,15 +7,16 @@
  */
 import {
   BaseEdge,
-  EdgeLabelRenderer,
   useInternalNode,
   useReactFlow,
+  useStore,
   type Edge,
   type EdgeProps,
   type InternalNode,
 } from '@xyflow/react';
 import { updateLinkStyle } from '@linewise/core';
-import { memo, useState, type PointerEvent } from 'react';
+import { memo, useState, type PointerEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useEditor } from '../store/editor.ts';
 import { edgeGeometryPure as edgeGeometry } from './edgeGeometry.ts';
 import { midDirection, nodeCenter, type XY } from './geometry.ts';
@@ -83,6 +84,23 @@ function Waypoints({
       ))}
     </>
   );
+}
+
+/**
+ * Like React Flow's EdgeLabelRenderer, but the label layer is looked up once per canvas rather
+ * than with a DOM query per edge on every store update, which cost ~270 ms per edit with 800
+ * links (NFR-PERF-04).
+ */
+const labelLayers = new WeakMap<Element, Element>();
+
+function EdgeLabels({ children }: { children: ReactNode }) {
+  const root = useStore((s) => s.domNode);
+  let layer = root ? (labelLayers.get(root) ?? null) : null;
+  if (root && !layer) {
+    layer = root.querySelector('.react-flow__edgelabel-renderer');
+    if (layer) labelLayers.set(root, layer);
+  }
+  return layer ? createPortal(children, layer) : null;
 }
 
 export type NetworkEdgeData = { view: LinkView };
@@ -155,7 +173,7 @@ export const NetworkEdge = memo(function NetworkEdge({
           strokeWidth={1.25}
         />
       )}
-      <EdgeLabelRenderer>
+      <EdgeLabels>
         {selected && !readOnly && view.waypoints.length > 0 && (
           <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
         )}
@@ -185,7 +203,7 @@ export const NetworkEdge = memo(function NetworkEdge({
             {view.labelMid}
           </div>
         )}
-      </EdgeLabelRenderer>
+      </EdgeLabels>
     </g>
   );
 });

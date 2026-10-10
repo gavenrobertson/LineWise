@@ -3,7 +3,7 @@
  * Derived views of the model (FR-NET-30..33): VLAN membership, L3 adjacency,
  * shortest physical path and per-device summaries. Pure functions.
  */
-import { linkedInterfaceIds } from './document.ts';
+import { linkedInterfaceIdsOf } from './document.ts';
 import { parseVlanList } from './naming.ts';
 import type { Device, Interface, Link, NetworkDocument } from './schema.ts';
 
@@ -120,7 +120,7 @@ export interface DeviceSummary {
 
 /** Hover card data (FR-NET-09). */
 export function deviceSummary(doc: NetworkDocument, d: Device): DeviceSummary {
-  const used = linkedInterfaceIds(doc);
+  const used = linkedInterfaceIdsOf(doc);
   return {
     hostname: d.hostname,
     role: d.role,

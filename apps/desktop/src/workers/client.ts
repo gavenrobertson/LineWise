@@ -6,6 +6,7 @@
  */
 import { validate, type Issue, type NetworkDocument } from '@linewise/core';
 import { runLayout, type ElkLike, type LayoutRequest, type Positions } from '../layout/layouts.ts';
+import { createElk } from './elk.ts';
 
 const hasWorker =
   typeof Worker !== 'undefined' && typeof window !== 'undefined' && !('__vitest_worker__' in globalThis);
@@ -46,6 +47,13 @@ export interface LayoutJob {
 
 let seq = 0;
 
+/** Layouts computed by ELK (in ELK's own worker); the rest run in layout.worker.ts. */
+const ELK_ALGORITHMS = new Set<LayoutRequest['algorithm']>([
+  'hierarchical-down',
+  'hierarchical-right',
+  'orthogonal',
+]);
+
 export function startLayout(request: LayoutRequest): LayoutJob {
   if (!hasWorker) {
     let stopped = false;
@@ -54,6 +62,21 @@ export function startLayout(request: LayoutRequest): LayoutJob {
       return new mod.default() as unknown as ElkLike;
     };
     return { promise: runLayout(request, elk, () => stopped), cancel: () => (stopped = true) };
+  }
+  if (ELK_ALGORITHMS.has(request.algorithm)) {
+    const handle = createElk();
+    let reject: (e: Error) => void = () => {};
+    const cancelled = new Promise<never>((_, rej) => (reject = rej));
+    const promise = Promise.race([runLayout(request, async () => handle.elk), cancelled]).finally(
+      handle.dispose,
+    );
+    return {
+      promise,
+      cancel: () => {
+        handle.dispose();
+        reject(new DOMException('Layout cancelled', 'AbortError') as unknown as Error);
+      },
+    };
   }
   const worker = new Worker(new URL('./layout.worker.ts', import.meta.url), { type: 'module' });
   const id = ++seq;

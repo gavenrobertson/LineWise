@@ -47,12 +47,14 @@ import { getTemplate } from '@linewise/device-library';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
-import { distanceToPolyline, linkPoints, nodeCenter, nodeTopLeft, type XY } from './geometry.ts';
+import { distanceToPolyline, linkPoints, nodeCenter, nodeTopLeft, stabilize, type XY } from './geometry.ts';
 import { buildPageModel } from './model.ts';
 import { anchorOf, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
 
 export const TEMPLATE_MIME = 'application/x-linewise-template';
+
+const summaryCache = new WeakMap<object, { links: unknown; text: string }>();
 
 /**
  * Fit padding that keeps content clear of the overlays: the zoom controls (bottom left) and,
@@ -125,6 +127,9 @@ export function Canvas() {
   // Controlled flow: keep React Flow's measured sizes so nodes render and cull correctly.
   const dims = useRef(new Map<string, { width: number; height: number }>());
   const [dimsVersion, bumpDims] = useState(0);
+  // Previous node and edge objects, reused when unchanged (NFR-PERF-04).
+  const prevNodes = useRef<Node[]>([]);
+  const prevEdges = useRef<NetworkEdgeType[]>([]);
   const dragCtx = useRef<{ key: string; carried: Map<string, XY>; origin: Map<string, XY> } | null>(null);
 
   useEffect(() => {
@@ -182,7 +187,24 @@ export function Canvas() {
       });
     }
     for (const dv of model.devices) {
-      const s = deviceSummary(doc, dv.device);
+      // The hover card text only depends on the device and the links (NFR-PERF-04: cached by object).
+      let summary = summaryCache.get(dv.device);
+      if (!summary || summary.links !== doc.links) {
+        const s = deviceSummary(doc, dv.device);
+        summary = {
+          links: doc.links,
+          text: [
+            s.hostname,
+            s.role,
+            s.model,
+            s.mgmtIp && `mgmt ${s.mgmtIp}`,
+            `${s.usedCount}/${s.interfaceCount} interfaces used`,
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        };
+        summaryCache.set(dv.device, summary);
+      }
       out.push({
         id: dv.device.id,
         type: 'device',
@@ -195,15 +217,7 @@ export function Canvas() {
           view: dv,
           iconStyle: doc.settings.iconStyle,
           iconUrl: customIconUrl(doc, dv.device.iconOverride),
-          summary: [
-            s.hostname,
-            s.role,
-            s.model,
-            s.mgmtIp && `mgmt ${s.mgmtIp}`,
-            `${s.usedCount}/${s.interfaceCount} interfaces used`,
-          ]
-            .filter(Boolean)
-            .join('\n'),
+          summary: summary.text,
         },
       });
     }
@@ -221,23 +235,24 @@ export function Canvas() {
         data: { hostname: o.hostname, pageName: o.pageName },
       });
     }
-    return out;
+    prevNodes.current = stabilize(prevNodes.current, out, 5);
+    return prevNodes.current;
     // dimsVersion re-runs this when the measured-size ref changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, page, pageId, sel, drag, doc, dimsVersion, lockedLayers, readOnly]);
 
-  const edges: NetworkEdgeType[] = useMemo(
-    () =>
-      (model?.links ?? []).map((l) => ({
-        id: l.link.id,
-        type: 'network',
-        source: l.sourceId,
-        target: l.targetId,
-        selected: sel.has(l.link.id),
-        data: { view: l },
-      })),
-    [model, sel],
-  );
+  const edges: NetworkEdgeType[] = useMemo(() => {
+    const next: NetworkEdgeType[] = (model?.links ?? []).map((l) => ({
+      id: l.link.id,
+      type: 'network',
+      source: l.sourceId,
+      target: l.targetId,
+      selected: sel.has(l.link.id),
+      data: { view: l },
+    }));
+    prevEdges.current = stabilize(prevEdges.current, next, 6);
+    return prevEdges.current;
+  }, [model, sel]);
 
   // ---------------------------------------------------------------- dragging
 
