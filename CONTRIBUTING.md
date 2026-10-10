@@ -59,7 +59,7 @@ Read [`docs/dev/architecture.md`](docs/dev/architecture.md) before larger change
 - TypeScript `strict`. No `any` without an `eslint-disable` comment that says why.
 - Prettier formatting, ESLint clean, `cargo fmt` and `cargo clippy -- -D warnings` clean.
 - `// SPDX-License-Identifier: Apache-2.0` at the top of every source file.
-- UI strings go through i18next: `t('area.key', 'English default')`. Run `pnpm i18n` to refresh `en.json`.
+- UI strings go through i18next with an English default: `t('area.key', 'English default')`.
 - Every interactive control has an accessible name. Component tests run axe-core and must report zero violations.
 - Reference requirement IDs from [`docs/SPEC.md`](docs/SPEC.md) in code comments, tests and commits, and update [`TRACEABILITY.md`](TRACEABILITY.md).
 

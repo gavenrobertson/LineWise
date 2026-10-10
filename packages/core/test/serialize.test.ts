@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   addDevice,
   connect,
@@ -107,5 +108,17 @@ describe('load [FR-FMT-03, FR-FMT-05]', () => {
       for (const k of Object.keys(migrations)) delete migrations[Number(k)];
       Object.assign(migrations, before);
     }
+  });
+});
+
+describe('DOC-03 documented example file', () => {
+  it('docs/examples/branch-office.lwise loads cleanly and re-serializes byte for byte', () => {
+    const path = new URL('../../../docs/examples/branch-office.lwise', import.meta.url);
+    const text = readFileSync(path, 'utf8');
+    const r = parseDocument(text);
+    expect(r.status).toBe('ok');
+    if (r.status !== 'ok') return;
+    expect(r.warnings).toEqual([]);
+    expect(serializeDocument(r.doc)).toBe(text);
   });
 });

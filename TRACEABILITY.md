@@ -141,7 +141,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-PERF-07 | MUST | | | todo |
 | NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
-| NFR-SEC-03 | MUST | | | todo |
+| NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts`, `apps/desktop/src/canvas/icons.ts` — SVG sanitized on import; assets shown only as images; audit in M5 | `apps/desktop/test/pure.test.ts` | partial |
 | NFR-SEC-04 | MUST | | | todo |
 | NFR-SEC-05 | MUST | | | todo |
 | NFR-SEC-06 | MUST | | | todo |
@@ -183,13 +183,13 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | OSS-12 | MUST | `CODE_OF_CONDUCT.md`, `SECURITY.md`, `PRIVACY.md`, `GOVERNANCE.md`, `.github/CODEOWNERS` | `scripts/repo-docs.test.mjs` | done |
 | OSS-13 | MUST | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/pull_request_template.md` | `scripts/repo-docs.test.mjs` | done |
 | OSS-14 | MUST | `.github/labels.yml`, `.github/workflows/labels.yml` | `scripts/repo-docs.test.mjs` | done |
-| DOC-01 | MUST | | | todo |
-| DOC-02 | MUST | | | todo |
-| DOC-03 | MUST | | | todo |
+| DOC-01 | MUST | `docs/user/index.md` — starting page; per-topic pages and VitePress site in M6 | `scripts/repo-docs.test.mjs` | partial |
+| DOC-02 | MUST | `docs/dev/index.md`, `docs/dev/architecture.md`, `docs/dev/release.md` — signing setup walkthrough in M6 | `scripts/repo-docs.test.mjs` | partial |
+| DOC-03 | MUST | `docs/file-format.md`, `docs/examples/branch-office.lwise`, `schema/v1.json` | `packages/core/test/serialize.test.ts`, `packages/core/test/jsonSchema.test.ts`, `scripts/repo-docs.test.mjs` | done |
 | DOC-04 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/adr/0002-react-flow-over-maxgraph.md`, `docs/adr/0003-command-patch-architecture.md`, `docs/adr/0004-file-format.md`, `docs/adr/0005-license.md` | `scripts/repo-docs.test.mjs` | done |
 | DOC-05 | MUST | | | todo |
 | DOC-06 | MUST | `TRACEABILITY.md`, `scripts/traceability.mjs` | `scripts/traceability.test.mjs`, `scripts/repo-docs.test.mjs` | done |
 | BRD-01 | MUST | | | todo |
 | BRD-04 | MUST | | | todo |
 | BRD-05 | MUST | | | todo |
-| BRD-06 | SHOULD | | | todo |
+| BRD-06 | SHOULD | `docs/brand.md` | `scripts/repo-docs.test.mjs` | done |

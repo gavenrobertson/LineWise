@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Community files, ADRs and governance (OSS-10..14, DOC-04, DOC-06, NFR-MNT-03, REL-20).
+// Community files, ADRs, docs and governance (OSS-10..14, DOC-01..04, DOC-06, BRD-06, NFR-MNT-03, REL-20).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -112,4 +112,42 @@ test('REL-20: Conventional Commits are enforced and release-please manages versi
   assert.equal(cfg['changelog-path'], 'CHANGELOG.md');
   assert.ok(has('.github/workflows/release-please.yml'));
   assert.match(read('CHANGELOG.md'), /## \[Unreleased\]/);
+});
+
+test('BRD-06: docs/brand.md documents the mark, colors, fonts, sizes and files', () => {
+  const md = read('docs/brand.md');
+  for (const hex of ['#0E1726', '#1A2436', '#0D9488', '#FFFFFF', '#F4F6F8', '#4B5563', '#A3AEBF'])
+    assert.ok(md.includes(hex), hex);
+  for (const word of [
+    'Sora',
+    'IBM Plex Mono',
+    'Lockup',
+    'app-icon-small.svg',
+    'logo-mark-mono.svg',
+    'doc-icon.svg',
+  ])
+    assert.ok(md.includes(word), word);
+  for (const f of ['app-icon.svg', 'app-icon-small.svg', 'logo-mark-mono.svg', 'doc-icon.svg'])
+    assert.ok(has(`packages/brand/svg/${f}`), f);
+});
+
+test('DOC-01, DOC-02, DOC-03: user guide, developer guide and file-format spec exist and link up', () => {
+  const user = read('docs/user/index.md');
+  for (const topic of [
+    'Getting started',
+    'Drawing basics',
+    'Views',
+    'Importing',
+    'Exporting',
+    'Keyboard shortcuts',
+  ])
+    assert.ok(user.includes(topic), topic);
+  const dev = read('docs/dev/index.md');
+  for (const link of ['architecture.md', 'release.md', 'file-format.md']) assert.ok(dev.includes(link), link);
+  assert.match(read('docs/dev/architecture.md'), /```mermaid/);
+  const ff = read('docs/file-format.md');
+  assert.ok(ff.includes('schema/v1.json') && ff.includes('examples/branch-office.lwise'));
+  assert.ok(has('docs/examples/branch-office.lwise'));
+  // Every docs link in the README resolves.
+  for (const [, p] of read('README.md').matchAll(/\]\((docs\/[^)#]+)\)/g)) assert.ok(has(p), p);
 });

@@ -15,3 +15,5 @@ schema
 bench/fixtures
 THIRD_PARTY_NOTICES.md
 apps/desktop/public/THIRD_PARTY_NOTICES.md
+# The documented example is a byte-exact serializer output (golden test).
+docs/examples

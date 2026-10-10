@@ -1,0 +1,200 @@
+{
+  "$schema": "https://raw.githubusercontent.com/gavenrobertson/linewise/main/schema/v1.json",
+  "assets": {},
+  "author": "",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "description": "",
+  "devices": [
+    {
+      "assetTag": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "hostname": "R1",
+      "id": "ex--0003",
+      "interfaces": [
+        {
+          "allowedVlans": "",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "customFields": {},
+          "description": "",
+          "deviceId": "ex--0003",
+          "duplex": "auto",
+          "enabled": true,
+          "id": "ex--0008",
+          "ipv4": [
+            {
+              "address": "10.0.10.1",
+              "prefix": 24,
+              "secondary": false
+            }
+          ],
+          "ipv6": [],
+          "media": "any",
+          "mode": "routed",
+          "name": "Ethernet0",
+          "poe": false,
+          "shortName": "Eth0",
+          "type": "ethernet",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "labelPosition": "bottom",
+      "locked": false,
+      "mgmtIp": "",
+      "model": "",
+      "notes": "",
+      "osVersion": "",
+      "platform": "",
+      "rack": "",
+      "role": "router",
+      "routing": [],
+      "serial": "",
+      "site": "",
+      "tags": [],
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "vendor": ""
+    },
+    {
+      "assetTag": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "hostname": "SW1",
+      "id": "ex--0004",
+      "interfaces": [
+        {
+          "accessVlan": 10,
+          "allowedVlans": "",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "customFields": {},
+          "description": "",
+          "deviceId": "ex--0004",
+          "duplex": "auto",
+          "enabled": true,
+          "id": "ex--0009",
+          "ipv4": [],
+          "ipv6": [],
+          "media": "any",
+          "mode": "access",
+          "name": "Ethernet0",
+          "poe": false,
+          "shortName": "Eth0",
+          "type": "ethernet",
+          "updatedAt": "2026-01-01T00:00:00.000Z"
+        }
+      ],
+      "labelPosition": "bottom",
+      "locked": false,
+      "mgmtIp": "",
+      "model": "",
+      "notes": "",
+      "osVersion": "",
+      "platform": "",
+      "rack": "",
+      "role": "l2-switch",
+      "routing": [],
+      "serial": "",
+      "site": "",
+      "tags": [],
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "vendor": ""
+    }
+  ],
+  "format": "LineWise",
+  "id": "ex--0001",
+  "links": [
+    {
+      "cableId": "",
+      "circuitId": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "endpointA": {
+        "deviceId": "ex--0003",
+        "interfaceId": "ex--0008"
+      },
+      "endpointB": {
+        "deviceId": "ex--0004",
+        "interfaceId": "ex--0009"
+      },
+      "id": "ex--0007",
+      "label": "",
+      "medium": "copper",
+      "provider": "",
+      "style": {},
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "metadata": {},
+  "name": "Branch office",
+  "pages": [
+    {
+      "annotations": [],
+      "background": "dots",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "id": "ex--0002",
+      "layers": [],
+      "name": "Page 1",
+      "nodePositions": {
+        "ex--0003": {
+          "x": 0,
+          "y": 0
+        },
+        "ex--0004": {
+          "x": 0,
+          "y": 200
+        }
+      },
+      "offPageRefs": [],
+      "order": 0,
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "viewport": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "zoneBoxes": {}
+    }
+  ],
+  "portChannels": [],
+  "schemaVersion": 1,
+  "settings": {
+    "defaultLinkRouting": "straight",
+    "disabledRules": [],
+    "iconStyle": "classic",
+    "labelTemplate": "{hostname}",
+    "showInterfaceIps": false,
+    "showInterfaceNames": true,
+    "showVlans": false,
+    "suppressions": []
+  },
+  "subnets": [
+    {
+      "cidr": "10.0.10.0/24",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "description": "",
+      "gatewayIp": "10.0.10.1",
+      "id": "ex--0006",
+      "name": "Users",
+      "reserved": [],
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "vlanId": "ex--0005"
+    }
+  ],
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "vlans": [
+    {
+      "color": "#2563EB",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "customFields": {},
+      "description": "",
+      "id": "ex--0005",
+      "name": "Users",
+      "number": 10,
+      "subnetIds": [],
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "vrfs": [],
+  "zones": []
+}

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { readFileSync } from 'node:fs';
 import { DEVICE_ROLES, instantiateInterfaces } from '@linewise/core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -55,6 +56,15 @@ describe('templates [FR-TPL-01, FR-TPL-02, FR-TPL-05]', () => {
     for (const t of TEMPLATES.filter((x) => !x.generic)) {
       expect(t.verified ? Boolean(t.sourceUrl) : true, t.id).toBe(true);
     }
+  });
+
+  it('docs/unverified-templates.md lists exactly the unverified vendor templates', () => {
+    const doc = readFileSync(new URL('../../../docs/unverified-templates.md', import.meta.url), 'utf8');
+    const listed = [...doc.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]).sort();
+    const unverified = TEMPLATES.filter((t) => !t.generic && !t.verified)
+      .map((t) => t.id)
+      .sort();
+    expect(listed).toEqual(unverified);
   });
 
   it('searches by text, role and vendor', () => {
