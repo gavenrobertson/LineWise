@@ -3,6 +3,18 @@
 The build continues with placeholders for each item; nothing here blocks local development. Exact steps are in [docs/dev/release.md](dev/release.md).
 
 - [x] Create the GitHub repository `gavenrobertson/linewise` and push this code.
+- [ ] **Push the milestone tags.** This environment can push only its working branch (tag pushes are refused with HTTP 403), so each milestone tag is listed here with the commit whose CI run verified it. Create and push them from a clone; each push runs `release.yml`, which makes a draft release with unsigned installers:
+
+  | Tag      | Commit                                     | Verified by CI run                                                                 |
+  | -------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
+  | `v0.0.1` | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38080684053](https://github.com/gavenrobertson/LineWise/actions/runs/38080684053) |
+
+  ```bash
+  git fetch origin claude/wizardly-bohr-l366zp
+  git tag -a v0.0.1 50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19 -m "LineWise 0.0.1 — M0 Foundation"
+  git push origin v0.0.1
+  ```
+
 - [ ] Decide when to merge `claude/wizardly-bohr-l366zp` into `main` (and make `main` the default branch). The milestone tags point at commits on this branch.
 - [ ] **Updater key pair:** `pnpm --filter @linewise/desktop tauri signer generate -w ~/.tauri/linewise.key`; put the public key in `apps/desktop/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`, replacing `REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY`); add secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Until then releases have no updater artifacts and installed apps cannot auto-update (REL-10..12).
 - [ ] **Apple:** Developer Program membership → "Developer ID Application" certificate → App Store Connect API key. Secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` (contents of the .p8). Until then the macOS build is ad-hoc signed and Gatekeeper blocks it (REL-02).

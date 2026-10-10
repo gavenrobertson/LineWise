@@ -4,6 +4,29 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-10
+
+Core model and canvas (milestone M1).
+
+### Added
+
+- Network model with Zod schemas and a generated JSON Schema (`schema/v1.json`); every change is a command with Immer patches, with unlimited undo/redo and drag coalescing (FR-CAN-07).
+- Canvas: pan (wheel, trackpad, Space+drag, middle button), zoom 10–400%, fit and zoom to selection, grid snap and alignment guides, minimap, every selection mode, nudge, arrange, group and lock, copy/paste across diagrams, drop on a link to insert a device (FR-CAN-01..09).
+- Links: draw from a handle or drop on a device body; a port picker with "next free port" and type-to-filter; straight, orthogonal (routed around devices) and curved styles; bend points; interface labels that spread apart; media styles; parallel links and port-channel bundles (FR-LNK-01..06).
+- Inspector with device fields, the full interface table and inline validation (FR-INS-01..04).
+- Original Classic and Line icon sets for every role; generic templates; library with search, favorites and recently used (FR-ICO-01..03, FR-TPL-01/02/05).
+- Diagram tabs, each with its own undo history (FR-APP-02).
+- Stable, Git-friendly `.lwise` files; atomic save with `.bak`; autosave and crash recovery; recovery dialog for damaged files; newer files open read-only (FR-FMT-01..07).
+- File-format specification with an annotated example (`docs/file-format.md`), architecture and developer guides, user guide start page and brand guide.
+- `bench/`: generated 100–5,000-device networks and a performance benchmark (NFR-PERF-07).
+
+### Fixed
+
+- Hierarchical and orthogonal auto-layout failed in production builds.
+- Zoom to fit no longer zooms past 100% (a blank page zoomed to 400% when the first device was placed).
+- Bend points on a selected link can be dragged again.
+- SVG export could carry markup from a hand-edited asset's MIME type; assets are now allowlisted (NFR-SEC-03).
+
 ## [0.0.1] - 2026-10-10
 
 Foundation (milestone M0).
