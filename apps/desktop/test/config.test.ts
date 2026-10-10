@@ -64,6 +64,22 @@ describe('NFR-SEC-01 least-privilege capabilities', () => {
   it('applies only to the main window', () => {
     expect(caps.windows).toEqual(['main']);
   });
+
+  it('opens a remote debugging port only in the CI smoke build, which is never shipped', () => {
+    const smoke = JSON.parse(readFileSync(here('src-tauri/tauri.smoke.conf.json'), 'utf8'));
+    const debug = readFileSync(here('src-tauri/tauri.debug.conf.json'), 'utf8');
+    expect(JSON.stringify(conf)).not.toContain('remote-debugging');
+    expect(debug).not.toContain('remote-debugging');
+    // The smoke window is the shipped window plus the debugging port (the config merge replaces arrays).
+    const { additionalBrowserArgs, ...rest } = smoke.app.windows[0];
+    expect(rest).toEqual(conf.app.windows[0]);
+    expect(additionalBrowserArgs).toMatch(/--remote-debugging-port=\d+/);
+    const ci = readFileSync(here('../../.github/workflows/ci.yml'), 'utf8');
+    const release = readFileSync(here('../../.github/workflows/release.yml'), 'utf8');
+    expect(release).not.toContain('tauri.smoke.conf.json');
+    // The smoke build runs after the debug installers are bundled and uploads nothing itself.
+    expect(ci.indexOf('tauri.smoke.conf.json')).toBeGreaterThan(ci.indexOf('name: Debug installers'));
+  });
 });
 
 describe('REL-03, FR-APP-09 bundle identity and file association', () => {

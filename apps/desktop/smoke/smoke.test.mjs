@@ -10,6 +10,11 @@
  *   node --test apps/desktop/smoke/smoke.test.mjs
  *
  * Uses the W3C WebDriver HTTP protocol directly to avoid a WebDriver client dependency.
+ *
+ * Attach mode (LINEWISE_SMOKE_ATTACH=<port>, used on Windows CI): recent WebView2 runtimes ignore
+ * the debugging port msedgedriver passes through WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so the app
+ * is built with tauri.smoke.conf.json, which opens that port itself, and the test launches it and
+ * attaches msedgedriver to it with `debuggerAddress` instead of going through tauri-driver.
  */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -27,8 +32,11 @@ const MOD = ''; // Control (the smoke test runs on Windows and Linux only)
 const SHIFT = '';
 const ENTER = '';
 
+const ATTACH = process.env.LINEWISE_SMOKE_ATTACH;
 const smokeDir = mkdtempSync(join(tmpdir(), 'linewise-smoke-'));
 let driver;
+/** The app process in attach mode. */
+let app;
 
 async function wd(method, path, body) {
   const res = await fetch(`${DRIVER}${path}`, {
@@ -58,7 +66,33 @@ async function until(fn, what, timeout = 20_000) {
   throw new Error(`Timed out waiting for ${what}${last ? `: ${last.message}` : ''}`);
 }
 
+async function stopApp() {
+  if (!app || app.exitCode !== null) return;
+  const exited = new Promise((r) => app.once('exit', r));
+  app.kill();
+  await exited;
+}
+
 async function session(args = []) {
+  if (ATTACH) {
+    // Single instance: the previous launch must be gone before the next one starts.
+    await stopApp();
+    app = spawn(APP, args, { stdio: 'inherit', env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir } });
+    await until(
+      () => fetch(`http://127.0.0.1:${ATTACH}/json/version`).then((r) => r.ok),
+      `the app's debugging port ${ATTACH}`,
+      60_000,
+    );
+    const value = await wd('POST', '/session', {
+      capabilities: {
+        alwaysMatch: {
+          browserName: 'webview2',
+          'ms:edgeOptions': { debuggerAddress: `127.0.0.1:${ATTACH}` },
+        },
+      },
+    });
+    return value.sessionId;
+  }
   const value = await wd('POST', '/session', {
     capabilities: { alwaysMatch: { 'tauri:options': { application: APP, args } } },
   });
@@ -87,14 +121,20 @@ before(async () => {
   assert.ok(APP, 'Build the app first: pnpm tauri build --debug --no-bundle');
   // LINEWISE_NATIVE_DRIVER points tauri-driver at a specific native driver (CI uses a logging wrapper).
   const native = process.env.LINEWISE_NATIVE_DRIVER;
-  driver = spawn('tauri-driver', native ? ['--native-driver', native] : [], {
-    stdio: 'inherit',
-    env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir },
-  });
+  driver = ATTACH
+    ? spawn(native ?? 'msedgedriver', ['--port=4444'], {
+        stdio: 'inherit',
+        shell: /\.(cmd|bat)$/i.test(native ?? ''),
+      })
+    : spawn('tauri-driver', native ? ['--native-driver', native] : [], {
+        stdio: 'inherit',
+        env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir },
+      });
   await until(() => fetch(`${DRIVER}/status`).then((r) => r.ok), 'tauri-driver');
 });
 
-after(() => {
+after(async () => {
+  await stopApp();
   driver?.kill();
   rmSync(smokeDir, { recursive: true, force: true });
 });
