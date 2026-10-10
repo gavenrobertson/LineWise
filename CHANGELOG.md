@@ -4,6 +4,15 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+Validation (milestone M3).
+
+### Added
+
+- Problem badges on the canvas can be turned off from the View menu, the command palette or Preferences (FR-VAL-03).
+- Every validation rule (VAL-001..020) is tested both ways: it fires on a bad configuration and stays silent on a good one.
+
 ## [0.2.0] - 2026-10-10
 
 Network features (milestone M2).
