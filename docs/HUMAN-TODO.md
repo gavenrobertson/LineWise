@@ -8,11 +8,13 @@ The build continues with placeholders for each item; nothing here blocks local d
   | Tag      | Commit                                     | Verified by CI run                                                                 |
   | -------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
   | `v0.0.1` | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38080684053](https://github.com/gavenrobertson/LineWise/actions/runs/38080684053) |
+  | `v0.1.0` | `fca725230cc9ef11b49a0a9a94293e36c861f0f6` | [38081402516](https://github.com/gavenrobertson/LineWise/actions/runs/38081402516) |
 
   ```bash
   git fetch origin claude/wizardly-bohr-l366zp
   git tag -a v0.0.1 50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19 -m "LineWise 0.0.1 — M0 Foundation"
-  git push origin v0.0.1
+  git tag -a v0.1.0 fca725230cc9ef11b49a0a9a94293e36c861f0f6 -m "LineWise 0.1.0 — M1 Core model and canvas"
+  git push origin v0.0.1 v0.1.0
   ```
 
 - [ ] Decide when to merge `claude/wizardly-bohr-l366zp` into `main` (and make `main` the default branch). The milestone tags point at commits on this branch.

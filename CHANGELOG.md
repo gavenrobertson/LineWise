@@ -4,6 +4,29 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-10
+
+Network features (milestone M2).
+
+### Added
+
+- VLAN manager with ranges (`100-110,200`) in one step, colors, and the ports carrying each VLAN (FR-NET-05).
+- Subnets and IPAM: utilization, next free IP, overlap detection, assignment from a subnet, VLSM planner; subnet calculator for IPv4 and IPv6; point-to-point /30 or /31 from a pool (FR-NET-06..08).
+- Loopbacks, SVIs, tunnels and sub-interfaces as first-class interfaces that are never cabled (FR-NET-04).
+- Device info card on hover; per-document label templates (FR-NET-09, FR-NET-10).
+- Annotations (text, shapes, arrows, notes, embedded images), nested zones that carry their contents, multi-page diagrams with off-page connectors, and a layers panel (FR-CAN-10..13).
+- L1/L2/L3 views over one model, VLAN highlight and shortest-path highlight (FR-NET-30..33).
+- Template editor: from scratch or by cloning, range syntax, save to your library, JSON export and import (FR-TPL-04).
+
+### Fixed
+
+- After linking with the keyboard, focus returns to the device the link was drawn from; Alt+Arrow moves from the focused device.
+- The connect dialog's device search picks an exact hostname first.
+
+### Known gaps
+
+- No vendor-model templates yet: their port layouts must be checked against vendor datasheets, which this build environment could not reach (FR-TPL-03).
+
 ## [0.1.0] - 2026-10-10
 
 Core model and canvas (milestone M1).
