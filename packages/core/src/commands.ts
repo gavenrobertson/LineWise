@@ -326,12 +326,16 @@ export interface ConnectEnd {
   interfaceId?: string;
 }
 
-function resolveEnd(d: D, end: ConnectEnd, used: Set<string>): string {
+function resolveEnd(d: D, end: ConnectEnd, used: Set<string>, medium: LinkMedium): string {
   const dev = findDevice(d, end.deviceId);
   if (end.interfaceId) {
     if (!dev.interfaces.some((i) => i.id === end.interfaceId))
       throw new Error(`Interface ${end.interfaceId} not on ${dev.hostname}`);
-    if (used.has(end.interfaceId)) throw new Error(`Interface already linked on ${dev.hostname}`);
+    const chosen = dev.interfaces.find((i) => i.id === end.interfaceId);
+    // A multipoint tunnel (mGRE/DMVPN) legitimately has many virtual peers.
+    const multipoint = medium === 'virtual' && chosen?.type === 'tunnel';
+    if (used.has(end.interfaceId) && !multipoint)
+      throw new Error(`Interface already linked on ${dev.hostname}`);
     return end.interfaceId;
   }
   const free = dev.interfaces.find((i) => isPhysical(i as Interface) && !used.has(i.id));
@@ -357,9 +361,9 @@ export function connect(
       if (a.deviceId === b.deviceId && a.interfaceId && a.interfaceId === b.interfaceId)
         throw new Error('Cannot link an interface to itself');
       const used = linkedInterfaceIds(d as NetworkDocument);
-      const ia = resolveEnd(d, a, used);
+      const ia = resolveEnd(d, a, used, medium);
       used.add(ia);
-      const ib = resolveEnd(d, b, used);
+      const ib = resolveEnd(d, b, used, medium);
       const t = nowIso();
       d.links.push({
         id,

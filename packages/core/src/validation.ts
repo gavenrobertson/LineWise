@@ -83,7 +83,8 @@ export function buildContext(doc: NetworkDocument): RuleContext {
   const linkOf = new Map<string, LinkEnds>();
   for (const e of ends) {
     for (const i of [e.a.iface.id, e.b.iface.id]) {
-      linkCount.set(i, (linkCount.get(i) ?? 0) + 1);
+      // Only physical links count toward "one link per interface" (VAL-005).
+      if (e.link.medium !== 'virtual') linkCount.set(i, (linkCount.get(i) ?? 0) + 1);
       linkOf.set(i, e);
     }
   }

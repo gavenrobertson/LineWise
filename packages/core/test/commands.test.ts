@@ -373,3 +373,24 @@ describe('labels [FR-NET-10]', () => {
     expect(renderLabel('{hostname}\\n{serial}', d)).toBe('R1');
   });
 });
+
+describe('multipoint tunnels', () => {
+  it('lets a tunnel interface carry several virtual links, but not physical ones', () => {
+    const { ed, pageId } = newEditor();
+    const hub = addDevice({ role: 'router', pageId, position: { x: 0, y: 0 } });
+    ed.execute(hub);
+    ed.execute(addInterfaces(hub.deviceId, 'Tunnel0'));
+    const tun = ed.doc.devices[0]?.interfaces[0]?.id as string;
+    for (let i = 0; i < 2; i++) {
+      const s = addDevice({ role: 'router', pageId, position: { x: 0, y: 0 } });
+      ed.execute(s);
+      ed.execute(connect({ deviceId: hub.deviceId, interfaceId: tun }, { deviceId: s.deviceId }, 'virtual'));
+    }
+    expect(ed.doc.links).toHaveLength(2);
+    const s3 = addDevice({ role: 'router', pageId, position: { x: 0, y: 0 } });
+    ed.execute(s3);
+    expect(() =>
+      ed.execute(connect({ deviceId: hub.deviceId, interfaceId: tun }, { deviceId: s3.deviceId }, 'copper')),
+    ).toThrow(/already linked/);
+  });
+});

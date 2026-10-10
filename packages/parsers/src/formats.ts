@@ -124,8 +124,9 @@ const HEADER_ALIASES: Record<Exclude<CsvField, 'ignore'>, RegExp> = {
 export function guessCsvMapping(header: string[]): CsvField[] {
   const used = new Set<CsvField>();
   return header.map((h) => {
+    const norm = h.trim().replace(/[_-]+/g, ' ');
     const hit = (Object.keys(HEADER_ALIASES) as Exclude<CsvField, 'ignore'>[]).find(
-      (f) => !used.has(f) && HEADER_ALIASES[f].test(h.trim()),
+      (f) => !used.has(f) && HEADER_ALIASES[f].test(norm),
     );
     if (hit) used.add(hit);
     return hit ?? 'ignore';

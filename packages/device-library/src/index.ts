@@ -34,3 +34,4 @@ export function searchTemplates(templates: DeviceTemplate[], q: TemplateQuery): 
     return terms.every((term) => hay.includes(term));
   });
 }
+export { STARTERS, type Starter } from './starters.ts';
