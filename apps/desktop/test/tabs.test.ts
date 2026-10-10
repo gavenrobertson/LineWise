@@ -84,7 +84,11 @@ describe('FR-APP-02 diagram tabs', () => {
     ed().openTab(createDocument('B'), { path: '/d/b.lwise', name: 'b.lwise' });
     ed().switchTab(a);
     expect(ed().rev).toBeGreaterThan(revA);
-    ed().setIssues(revA, [{ ruleId: 'VAL-016', severity: 'info', message: 'stale', objectIds: [], fixes: [] }], []);
+    ed().setIssues(
+      revA,
+      [{ ruleId: 'VAL-016', severity: 'info', message: 'stale', objectIds: [], fixes: [] }],
+      [],
+    );
     expect(ed().issues).toEqual([]);
   });
 });
