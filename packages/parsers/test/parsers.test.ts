@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
   detectKind,
@@ -241,7 +240,7 @@ describe('running-config [FR-IMP-03, FR-IMP-25]', () => {
     expect(isSecretLine(' description uplink')).toBe(false);
   });
 
-  it('reports unknown lines instead of failing', () => {
+  it('FR-IMP-22 reports unknown lines instead of failing', () => {
     const r = parseRunningConfig(read('running-config/05-malformed.txt'));
     expect(r.devices[0]?.hostname).toBe('BROKEN');
     expect(r.unparsedLines.map((u) => u.text)).toEqual(
@@ -290,53 +289,7 @@ describe('CSV [FR-IMP-05]', () => {
 });
 
 describe('robustness [NFR-SEC-05]', () => {
-  const kinds = [
-    'cdp',
-    'lldp',
-    'running-config',
-    'ip-interface-brief',
-    'interfaces-status',
-    'vlan-brief',
-    'etherchannel-summary',
-    'csv',
-    'drawio',
-    'gns3',
-    'containerlab',
-    'nmap',
-  ] as const;
-  const runs = Number(process.env.FUZZ_RUNS ?? 150);
-
-  it('never throws or hangs on arbitrary input', () => {
-    const lineish = fc
-      .array(
-        fc.oneof(
-          fc.string({ maxLength: 80 }),
-          fc.constantFrom(
-            'Device ID: X',
-            'Interface: Gi0/1,  Port ID (outgoing port): Gi0/2',
-            'interface Gi0/1',
-            ' ip address 1.2.3.4 255.255.255.0',
-            'Local Intf: Gi0/1',
-            'Chassis id: 1',
-            '<mxCell vertex="1" style="router"/>',
-            'VLAN Name Status Ports',
-            '1 Po1(SU) LACP Gi0/1(P)',
-          ),
-        ),
-        { maxLength: 60 },
-      )
-      .map((ls) => ls.join('\n'));
-    fc.assert(
-      fc.property(lineish, fc.constantFrom(...kinds), (text, kind) => {
-        const t0 = performance.now();
-        const r = parseText(text, {}, kind);
-        expect(r).toBeTruthy();
-        expect(performance.now() - t0).toBeLessThan(1000);
-      }),
-      { numRuns: runs },
-    );
-  });
-
+  // Per-parser fuzzing lives in fuzz.test.ts.
   it('rejects oversized input with a warning', () => {
     const r = parseText('x'.repeat(21 * 1024 * 1024), {}, 'running-config');
     expect(r.warnings[0]).toMatch(/too large/);
@@ -347,5 +300,66 @@ describe('robustness [NFR-SEC-05]', () => {
     parseText(`${'interface '.repeat(20000)}\n${'Device ID: '.repeat(20000)}`, {}, 'running-config');
     parseText(`${'a,'.repeat(200000)}`, {}, 'csv');
     expect(performance.now() - t0).toBeLessThan(1000);
+  });
+});
+
+describe('other formats', () => {
+  const brief = (rel: string) => {
+    const r = parseText(read(rel), { fileName: rel.split('/')[1] });
+    return {
+      kind: r.kind,
+      devices: r.devices.map((d) => [d.hostname, d.role] as const),
+      links: r.links.map((l) => [l.a.hostname, l.b.hostname] as const),
+      annotations: r.annotations.length,
+    };
+  };
+
+  it('FR-IMP-06 draw.io (plain and compressed): network shapes become devices, connectors links, the rest annotations', () => {
+    expect(brief('drawio/01-uncompressed.drawio')).toEqual({
+      kind: 'drawio',
+      devices: [
+        ['R1', 'router'],
+        ['SW1', 'l2-switch'],
+      ],
+      links: [['R1', 'SW1']],
+      annotations: 1,
+    });
+    expect(brief('drawio/02-compressed.drawio').devices).toEqual([
+      ['FW1', 'firewall'],
+      ['Internet', 'cloud'],
+    ]);
+  });
+
+  it('FR-IMP-07 GNS3 projects: nodes and links with port names', () => {
+    const r = parseText(read('gns3/01-basic.gns3'), { fileName: '01-basic.gns3' });
+    expect(r.devices.map((d) => [d.hostname, d.role])).toEqual([
+      ['R1', 'router'],
+      ['Switch1', 'l2-switch'],
+      ['PC1', 'workstation'],
+    ]);
+    expect(r.links.map((l) => `${l.a.hostname}:${l.a.iface}-${l.b.hostname}:${l.b.iface}`)).toEqual([
+      'R1:FastEthernet0/0-Switch1:Ethernet0',
+      'Switch1:Ethernet1-PC1:Ethernet0',
+    ]);
+  });
+
+  it('FR-IMP-08 Containerlab topologies: nodes, management IPs and links', () => {
+    const r = parseText(read('containerlab/01-srl.clab.yml'), { fileName: '01-srl.clab.yml' });
+    expect(r.devices.map((d) => [d.hostname, d.role, d.mgmtIp])).toEqual([
+      ['leaf1', 'l3-switch', '172.20.20.11'],
+      ['leaf2', 'l3-switch', undefined],
+      ['client1', 'server', undefined],
+    ]);
+    expect(r.links).toHaveLength(2);
+    expect(r.links.every((l) => l.medium === 'virtual')).toBe(true);
+  });
+
+  it('FR-IMP-09 Nmap XML: live hosts become devices without links', () => {
+    const r = parseText(read('nmap/01-scan.xml'), { fileName: '01-scan.xml' });
+    expect(r.devices.map((d) => [d.hostname, d.mgmtIp])).toEqual([
+      ['gw', '10.0.0.1'],
+      ['10.0.0.5', '10.0.0.5'],
+    ]);
+    expect(r.links).toEqual([]);
   });
 });

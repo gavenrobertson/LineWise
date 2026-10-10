@@ -49,6 +49,11 @@ jobs:
           pnpm version:check
       - name: Unit, property, golden and component tests with coverage gates
         run: pnpm test:coverage
+      - name: Fuzz every parser and the file loader with 10,000 inputs each (NFR-SEC-05)
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm fuzz
+        env:
+          FUZZ_RUNS: '10000'
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v7

@@ -372,18 +372,32 @@ export function parseDrawio(text: string): ParseResult {
 
 // ------------------------------------------------------------------ GNS3
 
-interface Gns3Node {
-  node_id: string;
+// Imported JSON and YAML are untrusted: every value is checked before use (NFR-SEC-05).
+const str = (v: unknown): string | undefined =>
+  typeof v === 'string' ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : undefined;
+const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
+const rec = (v: unknown): Record<string, unknown> | undefined =>
+  v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
+const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+
+interface Gns3Port {
   name: string;
-  node_type?: string;
-  symbol?: string;
-  x?: number;
-  y?: number;
-  ports?: { name: string; adapter_number: number; port_number: number }[];
+  adapter: number | undefined;
+  port: number | undefined;
+}
+
+interface Gns3Node {
+  id: string;
+  name: string;
+  nodeType: string;
+  symbol: string;
+  x: number;
+  y: number;
+  ports: Gns3Port[];
 }
 
 function gns3Role(n: Gns3Node): DeviceRole {
-  const t = `${n.node_type ?? ''} ${n.symbol ?? ''} ${n.name}`.toLowerCase();
+  const t = `${n.nodeType} ${n.symbol} ${n.name}`.toLowerCase();
   if (/ethernet_switch|ethernet_hub|switch/.test(t))
     return /multilayer|l3/.test(t) ? 'l3-switch' : 'l2-switch';
   if (/firewall|asa/.test(t)) return 'firewall';
@@ -397,44 +411,57 @@ function gns3Role(n: Gns3Node): DeviceRole {
 export function parseGns3(text: string): ParseResult {
   const r = emptyResult('gns3');
   splitLines(text);
-  let j: {
-    topology?: {
-      nodes?: Gns3Node[];
-      links?: {
-        nodes?: { node_id: string; adapter_number: number; port_number: number; label?: { text?: string } }[];
-      }[];
-    };
-  };
+  let j: unknown;
   try {
     j = JSON.parse(text);
   } catch {
     r.warnings.push('The GNS3 project is not valid JSON.');
     return r;
   }
-  const nodes = j.topology?.nodes ?? [];
+  const topology = rec(rec(j)?.topology);
   const byId = new Map<string, { node: Gns3Node; dev: ParsedDevice }>();
-  for (const n of nodes) {
-    const dev: ParsedDevice = {
-      hostname: n.name,
-      role: gns3Role(n),
-      interfaces: [],
-      position: { x: n.x ?? 0, y: n.y ?? 0 },
+  list(topology?.nodes).forEach((raw, i) => {
+    const o = rec(raw);
+    if (!o) return;
+    const node: Gns3Node = {
+      id: str(o.node_id) ?? `#${i}`,
+      // A node without a name still needs a hostname.
+      name: str(o.name)?.trim() || str(o.node_id) || `node${i + 1}`,
+      nodeType: str(o.node_type) ?? '',
+      symbol: str(o.symbol) ?? '',
+      x: num(o.x) ?? 0,
+      y: num(o.y) ?? 0,
+      ports: list(o.ports).flatMap((p) => {
+        const po = rec(p);
+        const name = str(po?.name);
+        return name ? [{ name, adapter: num(po?.adapter_number), port: num(po?.port_number) }] : [];
+      }),
     };
-    for (const p of n.ports ?? []) getOrAddInterface(dev, p.name);
-    byId.set(n.node_id, { node: n, dev });
+    const dev: ParsedDevice = {
+      hostname: node.name,
+      role: gns3Role(node),
+      interfaces: [],
+      position: { x: node.x, y: node.y },
+    };
+    for (const p of node.ports) getOrAddInterface(dev, p.name);
+    byId.set(node.id, { node, dev });
     r.devices.push(dev);
-  }
-  for (const l of j.topology?.links ?? []) {
-    const [a, b] = l.nodes ?? [];
-    const na = a && byId.get(a.node_id);
-    const nb = b && byId.get(b.node_id);
+  });
+  for (const rawLink of list(topology?.links)) {
+    const ends = list(rec(rawLink)?.nodes).map((e) => rec(e));
+    const [a, b] = ends;
+    const na = a && byId.get(str(a.node_id) ?? '');
+    const nb = b && byId.get(str(b.node_id) ?? '');
     if (!a || !b || !na || !nb) continue;
-    const portName = (end: typeof a, info: { node: Gns3Node; dev: ParsedDevice }) =>
-      info.node.ports?.find(
-        (p) => p.adapter_number === end.adapter_number && p.port_number === end.port_number,
-      )?.name ??
-      end.label?.text ??
-      `Ethernet${end.adapter_number}/${end.port_number}`;
+    const portName = (end: Record<string, unknown>, info: { node: Gns3Node; dev: ParsedDevice }) => {
+      const adapter = num(end.adapter_number);
+      const port = num(end.port_number);
+      return (
+        info.node.ports.find((p) => p.adapter === adapter && p.port === port)?.name ??
+        str(rec(end.label)?.text) ??
+        `Ethernet${adapter ?? 0}/${port ?? 0}`
+      );
+    };
     const ia = portName(a, na);
     const ib = portName(b, nb);
     getOrAddInterface(na.dev, ia);
@@ -461,34 +488,36 @@ function clabRole(kind: string, image = ''): DeviceRole {
 export function parseContainerlab(text: string): ParseResult {
   const r = emptyResult('containerlab');
   splitLines(text);
-  let y: {
-    name?: string;
-    topology?: {
-      nodes?: Record<string, { kind?: string; image?: string; 'mgmt-ipv4'?: string }>;
-      links?: { endpoints?: string[] }[];
-    };
-  };
+  let y: unknown;
   try {
-    y = parseYaml(text, { maxAliasCount: 50 }) as typeof y;
+    y = parseYaml(text, { maxAliasCount: 50, logLevel: 'error' });
   } catch (e) {
     r.warnings.push(`The Containerlab file is not valid YAML: ${(e as Error).message}`);
     return r;
   }
-  const nodes = y?.topology?.nodes ?? {};
+  const topology = rec(rec(y)?.topology);
   const devs = new Map<string, ParsedDevice>();
-  for (const [name, n] of Object.entries(nodes)) {
-    const d: ParsedDevice = { hostname: name, role: clabRole(n?.kind ?? '', n?.image ?? ''), interfaces: [] };
-    if (n?.image) d.platform = n.image;
-    if (n?.['mgmt-ipv4']) d.mgmtIp = n['mgmt-ipv4'];
+  for (const [name, raw] of Object.entries(rec(topology?.nodes) ?? {})) {
+    const n = rec(raw);
+    const image = str(n?.image);
+    const d: ParsedDevice = {
+      hostname: name,
+      role: clabRole(str(n?.kind) ?? '', image ?? ''),
+      interfaces: [],
+    };
+    if (image) d.platform = image;
+    const mgmt = str(n?.['mgmt-ipv4']);
+    if (mgmt) d.mgmtIp = mgmt;
     devs.set(name, d);
     r.devices.push(d);
   }
-  for (const l of y?.topology?.links ?? []) {
-    const [a, b] = l.endpoints ?? [];
+  for (const raw of list(topology?.links)) {
+    const endpoints = list(rec(raw)?.endpoints);
+    const [a, b] = endpoints.map((e) => str(e) ?? '');
     const [ha, ia] = (a ?? '').split(':');
     const [hb, ib] = (b ?? '').split(':');
     if (!ha || !hb || !ia || !ib) {
-      r.warnings.push(`Skipped link with endpoints ${JSON.stringify(l.endpoints)}.`);
+      r.warnings.push(`Skipped link with endpoints ${JSON.stringify(endpoints).slice(0, 200)}.`);
       continue;
     }
     for (const [h, i] of [

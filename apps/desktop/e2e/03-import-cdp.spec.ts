@@ -61,3 +61,36 @@ test('import CDP neighbors with preview, then undo and redo', async ({ page }) =
   expect(d.devices).toHaveLength(4);
   expect(d.links).toHaveLength(3);
 });
+
+test('FR-IMP-24, FR-IMP-21 imported devices go to a new page with an automatic layout', async ({ page }) => {
+  await openApp(page);
+  await startBlank(page);
+  await page.locator('body').press(`${MOD}+i`);
+  const dialog = page.getByRole('dialog', { name: 'Import network data' });
+  await dialog.getByLabel(/Paste CLI output/).fill(CDP);
+  await dialog.getByRole('button', { name: 'Add pasted text' }).click();
+  await dialog.getByRole('button', { name: 'Review' }).click();
+  // Untick one device in the preview: it is not created (FR-IMP-21).
+  await dialog.getByRole('checkbox', { name: 'Include AP-LOBBY', exact: true }).uncheck();
+  await dialog.getByRole('radio', { name: 'New page' }).click();
+  await dialog.getByRole('button', { name: 'Apply import' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  type Doc = {
+    devices: { id: string; hostname: string }[];
+    pages: { name: string; nodePositions: Record<string, { x: number; y: number }> }[];
+  };
+  const d = (await doc(page)) as unknown as Doc;
+  expect(d.devices.map((x) => x.hostname).sort()).toEqual(['R1', 'SW1', 'SW2']);
+  expect(d.pages).toHaveLength(2);
+  const imported = d.pages.find((p) => Object.keys(p.nodePositions).length > 0)!;
+  expect(imported.name).toBe('Imported');
+  // Laid out: every device placed, no two on top of each other.
+  const pts = d.devices.map((x) => imported.nodePositions[x.id]!);
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++)
+      expect(Math.hypot(pts[i]!.x - pts[j]!.x, pts[i]!.y - pts[j]!.y)).toBeGreaterThan(60);
+  await expect(
+    page.getByRole('navigation', { name: 'Pages' }).getByRole('tab', { name: 'Imported' }),
+  ).toHaveAttribute('aria-selected', 'true');
+});

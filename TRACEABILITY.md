@@ -27,7 +27,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-CAN-12 | MUST | `apps/desktop/src/panels/PagesBar.tsx`, `apps/desktop/src/panels/OutlinePanel.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/12-network.spec.ts`, `packages/core/test/commands.test.ts` | done |
 | FR-CAN-13 | MUST | `apps/desktop/src/panels/LayersPanel.tsx` | `apps/desktop/e2e/12-network.spec.ts` | done |
 | FR-NET-30 | MUST | `packages/core/src/selectors.ts`, `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/panels/Toolbar.tsx` | `packages/core/test/selectors.test.ts`, `apps/desktop/e2e/02-views-and-vlan.spec.ts` | done |
-| FR-CAN-14 | MUST | | | todo |
+| FR-CAN-14 | MUST | `apps/desktop/src/layout/layouts.ts`, `apps/desktop/src/workers/elk.ts`, `apps/desktop/src/workers/layout.worker.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-CAN-15 | MUST | | | todo |
 | FR-CAN-16 | SHOULD | | | todo |
 | FR-CAN-17 | SHOULD | | | todo |
@@ -81,22 +81,22 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-FMT-05 | MUST | `packages/core/src/serialize.ts`, `apps/desktop/src/dialogs/LoadIssuesDialog.tsx` | `packages/core/test/serialize.test.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
 | FR-FMT-06 | MUST | `apps/desktop/src-tauri/src/files.rs` — cargo test in the same file | `apps/desktop/src-tauri/src/files.rs` | done |
 | FR-FMT-07 | MUST | `apps/desktop/src/App.tsx`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/e2e/08-crash-recovery.spec.ts`, `apps/desktop/e2e/11-files.spec.ts`, `apps/desktop/src-tauri/src/recovery.rs` | done |
-| FR-IMP-01 | MUST | | | todo |
-| FR-IMP-02 | MUST | | | todo |
-| FR-IMP-03 | MUST | | | todo |
-| FR-IMP-04 | MUST | | | todo |
-| FR-IMP-05 | MUST | | | todo |
-| FR-IMP-06 | SHOULD | | | todo |
-| FR-IMP-07 | SHOULD | | | todo |
-| FR-IMP-08 | SHOULD | | | todo |
-| FR-IMP-09 | MAY | | | todo |
-| FR-IMP-20 | MUST | | | todo |
-| FR-IMP-21 | MUST | | | todo |
-| FR-IMP-22 | MUST | | | todo |
-| FR-IMP-23 | MUST | | | todo |
-| FR-IMP-24 | MUST | | | todo |
-| FR-IMP-25 | MUST | | | todo |
-| FR-IMP-26 | MUST | | | todo |
+| FR-IMP-01 | MUST | `packages/parsers/src/neighbors.ts` | `packages/parsers/test/parsers.test.ts`, `apps/desktop/e2e/03-import-cdp.spec.ts` | done |
+| FR-IMP-02 | MUST | `packages/parsers/src/neighbors.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-03 | MUST | `packages/parsers/src/config.ts` | `packages/parsers/test/parsers.test.ts`, `apps/desktop/e2e/04-import-config.spec.ts` | done |
+| FR-IMP-04 | MUST | `packages/parsers/src/show.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-05 | MUST | `packages/parsers/src/formats.ts`, `apps/desktop/src/dialogs/ImportDialog.tsx` | `packages/parsers/test/parsers.test.ts`, `packages/parsers/test/roundtrip.test.ts` | done |
+| FR-IMP-06 | SHOULD | `packages/parsers/src/formats.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-07 | SHOULD | `packages/parsers/src/formats.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-08 | SHOULD | `packages/parsers/src/formats.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-09 | MAY | `packages/parsers/src/formats.ts` | `packages/parsers/test/parsers.test.ts` | done |
+| FR-IMP-20 | MUST | `packages/parsers/src/detect.ts`, `apps/desktop/src/dialogs/ImportDialog.tsx` | `packages/parsers/test/parsers.test.ts`, `apps/desktop/e2e/03-import-cdp.spec.ts` | done |
+| FR-IMP-21 | MUST | `packages/parsers/src/merge.ts`, `apps/desktop/src/dialogs/ImportDialog.tsx` | `packages/parsers/test/merge.test.ts`, `apps/desktop/e2e/03-import-cdp.spec.ts` | done |
+| FR-IMP-22 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/config.ts` | `packages/parsers/test/parsers.test.ts`, `packages/parsers/test/fuzz.test.ts` | done |
+| FR-IMP-23 | MUST | `packages/parsers/src/merge.ts` | `packages/parsers/test/merge.test.ts` | done |
+| FR-IMP-24 | MUST | `apps/desktop/src/dialogs/ImportDialog.tsx`, `apps/desktop/src/workers/client.ts` | `apps/desktop/e2e/03-import-cdp.spec.ts` | done |
+| FR-IMP-25 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/config.ts` | `packages/parsers/test/parsers.test.ts`, `apps/desktop/e2e/04-import-config.spec.ts` | done |
+| FR-IMP-26 | MUST | `packages/parsers/fixtures` — every parser has at least five fixtures including a malformed one, with golden snapshots | `packages/parsers/test/parsers.test.ts` | done |
 | FR-EXP-01 | MUST | | | todo |
 | FR-EXP-02 | MUST | | | todo |
 | FR-EXP-03 | MUST | | | todo |
@@ -143,7 +143,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
 | NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts`, `apps/desktop/src/canvas/icons.ts` — SVG sanitized on import; assets shown only as images; audit in M5 | `apps/desktop/test/pure.test.ts` | partial |
 | NFR-SEC-04 | MUST | | | todo |
-| NFR-SEC-05 | MUST | | | todo |
+| NFR-SEC-05 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/formats.ts` — 10,000 inputs per parser and for the file loader in CI | `packages/parsers/test/fuzz.test.ts`, `packages/parsers/test/parsers.test.ts`, `packages/core/test/fuzz.test.ts` | done |
 | NFR-SEC-06 | MUST | | | todo |
 | NFR-SEC-07 | MUST | | | todo |
 | NFR-SEC-08 | MUST | | | todo |
