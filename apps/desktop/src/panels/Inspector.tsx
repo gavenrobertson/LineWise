@@ -324,7 +324,7 @@ function LinkFields({ links }: { links: Link[] }) {
       {links.some((l) => l.style.waypoints?.length) && (
         <button
           type="button"
-          className="self-start text-[11.5px] text-accent underline"
+          className="self-start text-[11.5px] text-accent-ink underline"
           onClick={() => execute(updateLinkStyle(ids, { waypoints: undefined }))}
         >
           {t('inspector.clearBends', 'Remove bend points')}

@@ -58,7 +58,7 @@ export function TabBar() {
               >
                 {dirty && (
                   <span
-                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-fill"
                     aria-label={t('tabs.unsaved', 'unsaved changes')}
                     role="img"
                   />

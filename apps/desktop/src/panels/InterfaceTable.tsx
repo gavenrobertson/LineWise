@@ -471,7 +471,7 @@ export function InterfaceTable({ device }: { device: Device }) {
                       <span
                         className={cx(
                           'h-1.5 w-1.5 shrink-0 rounded-full',
-                          !i.enabled ? 'bg-danger' : peer ? 'bg-accent' : 'bg-line-strong',
+                          !i.enabled ? 'bg-danger' : peer ? 'bg-accent-fill' : 'bg-line-strong',
                         )}
                         aria-hidden="true"
                       />
@@ -486,14 +486,14 @@ export function InterfaceTable({ device }: { device: Device }) {
                   >
                     {summary(i)}
                     {pc && (
-                      <span className="ml-1 rounded bg-accent-soft px-1 text-accent">Po{pc.number}</span>
+                      <span className="ml-1 rounded bg-accent-soft px-1 text-accent-ink">Po{pc.number}</span>
                     )}
                   </td>
                   <td className="truncate py-1 pr-3">
                     {peer ? (
                       <button
                         type="button"
-                        className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent"
+                        className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent-ink"
                         onClick={() => setSelection({ links: [peer.linkId] })}
                         title={peer.text}
                       >

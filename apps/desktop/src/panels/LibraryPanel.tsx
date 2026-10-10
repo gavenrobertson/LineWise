@@ -77,6 +77,13 @@ function Item({
     e.dataTransfer.effectAllowed = 'copy';
   };
   const portCount = tpl.interfaces.length;
+  const subtitle = [
+    tpl.generic ? ROLE_LABELS[tpl.role] : `${tpl.vendor} · ${tpl.model}`,
+    portCount > 0 ? t('library.portGroups', '{{n}} port groups', { n: portCount }) : '',
+    custom ? t('library.custom', 'custom') : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <li className="group flex items-center gap-1 rounded-md pr-1 hover:bg-surface-3">
       <button
@@ -87,18 +94,17 @@ function Item({
         onClick={() => placeTemplate(tpl)}
         className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left"
         title={`${tpl.name}${tpl.sourceUrl ? `\n${tpl.sourceUrl}` : ''}\n${t('library.dragHint', 'Drag onto the canvas, or press Enter to place it.')}`}
-        aria-label={t('library.place', 'Place {{name}}', { name: tpl.name })}
       >
         <span className="shrink-0">
           <DeviceIcon role={tpl.role} style={iconStyle} size={28} />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-[12.5px] font-medium text-ink">{tpl.name}</span>
-          <span className="block truncate text-[11px] text-subtle">
-            {tpl.generic ? ROLE_LABELS[tpl.role] : `${tpl.vendor} · ${tpl.model}`}
-            {portCount > 0 && ` · ${t('library.portGroups', '{{n}} port groups', { n: portCount })}`}
-            {custom && ` · ${t('library.custom', 'custom')}`}
+          {/* The name comes from the visible text, read as "Place <name> <subtitle>" (WCAG 2.5.3). */}
+          <span className="block truncate text-[12.5px] font-medium text-ink">
+            <span className="sr-only">{t('library.placePrefix', 'Place')} </span>
+            {tpl.name}
           </span>
+          <span className="block truncate text-[11px] text-subtle">{subtitle}</span>
         </span>
       </button>
       {custom && (

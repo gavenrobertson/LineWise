@@ -14,9 +14,13 @@
   --border-strong: #cdd4de;
   --text: #0e1726;
   --text-muted: #4b5563;
-  --text-subtle: #6b7280;
+  --text-subtle: #5f6673;
+  /* Link teal is the accent (BRD-05). Text in the accent color and filled buttons use a darker
+     teal so text keeps 4.5:1 contrast (NFR-A11Y-04). */
   --accent: #0d9488;
-  --accent-strong: #0b7c72;
+  --accent-ink: #0f766e;
+  --accent-fill: #0f766e;
+  --accent-strong: #115e59;
   --accent-soft: rgba(13, 148, 136, 0.12);
   --accent-contrast: #ffffff;
   --danger: #dc2626;
@@ -42,19 +46,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #0b1220;
-    --surface: #111a2b;
-    --surface-2: #152036;
-    --surface-3: #1b2840;
-    --border: #24324a;
-    --border-strong: #33435f;
+    /* Ink is the base surface (BRD-05); panels use Ink raised. */
+    --bg: #0e1726;
+    --surface: #1a2436;
+    --surface-2: #1f2a3e;
+    --surface-3: #263349;
+    --border: #2c3a52;
+    --border-strong: #3d4d69;
     --text: #e6eaf0;
     --text-muted: #a3aebf;
-    --text-subtle: #8b97aa;
-    --accent: #14b8a6;
-    --accent-strong: #2dd4bf;
-    --accent-soft: rgba(20, 184, 166, 0.16);
-    --accent-contrast: #0b1220;
+    --text-subtle: #97a3b6;
+    --accent: #0d9488;
+    --accent-ink: #2dd4bf;
+    --accent-fill: #0d9488;
+    --accent-strong: #14b8a6;
+    --accent-soft: rgba(13, 148, 136, 0.2);
+    --accent-contrast: #0e1726;
     --danger: #f87171;
     --danger-soft: rgba(248, 113, 113, 0.14);
     --warning: #fbbf24;
@@ -74,19 +81,22 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #0b1220;
-  --surface: #111a2b;
-  --surface-2: #152036;
-  --surface-3: #1b2840;
-  --border: #24324a;
-  --border-strong: #33435f;
+  /* Ink is the base surface (BRD-05); panels use Ink raised. */
+  --bg: #0e1726;
+  --surface: #1a2436;
+  --surface-2: #1f2a3e;
+  --surface-3: #263349;
+  --border: #2c3a52;
+  --border-strong: #3d4d69;
   --text: #e6eaf0;
   --text-muted: #a3aebf;
-  --text-subtle: #8b97aa;
-  --accent: #14b8a6;
-  --accent-strong: #2dd4bf;
-  --accent-soft: rgba(20, 184, 166, 0.16);
-  --accent-contrast: #0b1220;
+  --text-subtle: #97a3b6;
+  --accent: #0d9488;
+  --accent-ink: #2dd4bf;
+  --accent-fill: #0d9488;
+  --accent-strong: #14b8a6;
+  --accent-soft: rgba(13, 148, 136, 0.2);
+  --accent-contrast: #0e1726;
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.14);
   --warning: #fbbf24;
@@ -110,7 +120,25 @@
     --border: #6b7280;
     --border-strong: #374151;
     --text-muted: #1f2937;
+    --text-subtle: #374151;
     --link: #1f2937;
+  }
+  /* The same, for the dark theme: stronger lines and lighter secondary text. */
+  :root[data-theme='dark'] {
+    --border: #7c8aa3;
+    --border-strong: #a3aebf;
+    --text-muted: #d5dce6;
+    --text-subtle: #c3ccd9;
+    --link: #d5dce6;
+  }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --border: #7c8aa3;
+    --border-strong: #a3aebf;
+    --text-muted: #d5dce6;
+    --text-subtle: #c3ccd9;
+    --link: #d5dce6;
   }
 }
 
@@ -125,6 +153,8 @@
   --color-muted: var(--text-muted);
   --color-subtle: var(--text-subtle);
   --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-fill: var(--accent-fill);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
   --color-accent-contrast: var(--accent-contrast);

@@ -244,7 +244,7 @@ function SubnetsTab() {
                         aria-label={t('ipam.utilOf', 'Utilization of {{c}}', { c: s.cidr })}
                       >
                         <div
-                          className={`h-full ${u > 0.9 ? 'bg-danger' : u > 0.7 ? 'bg-warning' : 'bg-accent'}`}
+                          className={`h-full ${u > 0.9 ? 'bg-danger' : u > 0.7 ? 'bg-warning' : 'bg-accent-fill'}`}
                           style={{ width: `${Math.max(u > 0 ? 2 : 0, u * 100)}%` }}
                         />
                       </div>

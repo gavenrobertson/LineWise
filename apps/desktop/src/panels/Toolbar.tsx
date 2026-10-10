@@ -305,7 +305,7 @@ export function Toolbar() {
         type="button"
         onClick={() => ui.setPalette(true)}
         className="mr-1 hidden h-8 items-center gap-2 rounded-md border border-line bg-surface-2 px-2 text-xs text-muted hover:text-ink md:inline-flex"
-        aria-label={t('cmd.palette', 'Command palette')}
+        title={t('cmd.palette', 'Command palette')}
       >
         <Command size={13} />
         <span>{t('toolbar.search', 'Search or run a command')}</span>

@@ -73,7 +73,7 @@ export function IconPicker({ devices }: { devices: Device[] }) {
           >
             <button
               type="button"
-              className="mb-2 w-full rounded-md px-2 py-1 text-left text-[12px] text-accent hover:bg-accent-soft"
+              className="mb-2 w-full rounded-md px-2 py-1 text-left text-[12px] text-accent-ink hover:bg-accent-soft"
               onClick={() => applyRole(undefined)}
             >
               {t('field.roleIcon', 'Use the icon for its role')}

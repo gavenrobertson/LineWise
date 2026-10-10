@@ -50,7 +50,7 @@ export function StatusBar() {
       </span>
       {selected > 0 && <span>{t('status.selected', '{{n}} selected', { n: selected })}</span>}
       {highlight?.kind === 'vlan' && (
-        <span className="text-accent">
+        <span className="text-accent-ink">
           {t('status.vlan', 'Highlighting VLAN {{v}}', { v: highlight.vlan })}
         </span>
       )}
@@ -60,18 +60,17 @@ export function StatusBar() {
         type="button"
         className="inline-flex items-center gap-2 rounded px-1 hover:bg-surface-3 hover:text-ink"
         onClick={() => toggle('problemsOpen')}
-        aria-label={t('status.problems', '{{e}} errors, {{w}} warnings. Toggle problems panel.', {
-          e: errors,
-          w: warnings,
-        })}
       >
+        {/* The visible counts are part of the accessible name (WCAG 2.5.3). */}
         <span className="inline-flex items-center gap-0.5">
-          <CircleAlert size={12} className={errors ? 'text-danger' : ''} />
+          <CircleAlert size={12} className={errors ? 'text-danger' : ''} aria-hidden="true" />
           {errors}
+          <span className="sr-only">{t('status.errorsWord', ' errors, ')}</span>
         </span>
         <span className="inline-flex items-center gap-0.5">
-          <TriangleAlert size={12} className={warnings ? 'text-warning' : ''} />
+          <TriangleAlert size={12} className={warnings ? 'text-warning' : ''} aria-hidden="true" />
           {warnings}
+          <span className="sr-only">{t('status.warningsWord', ' warnings. Toggle problems panel.')}</span>
         </span>
       </button>
       <span>{t(`layer.${layer}`, LAYER_NAMES[layer])}</span>
@@ -93,7 +92,7 @@ function PathHops() {
   if (!hl) return null;
   const hops = hl.linkIds.size;
   return (
-    <span className="text-accent">
+    <span className="text-accent-ink">
       {hops ? t('status.hops', 'Path: {{n}} hops', { n: hops }) : t('status.noPath', 'No physical path')}
     </span>
   );

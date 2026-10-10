@@ -65,7 +65,7 @@ export function WelcomeDialog() {
         <div className="flex flex-col gap-2">
           <div className="mb-2 flex items-center gap-2">
             <BrandMark size={36} />
-            <Wordmark className="text-[22px] text-ink" />
+            <Wordmark className="text-[24px] text-ink" />
           </div>
           <p className="mb-2 text-xs text-muted">
             {t('welcome.tagline', 'Network diagrams that know what a trunk is.')}

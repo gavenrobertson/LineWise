@@ -130,7 +130,7 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
         {view.badges.length > 0 && (
           <div className="mt-0.5 flex flex-wrap justify-center gap-0.5">
             {view.badges.map((b) => (
-              <span key={b} className="rounded bg-accent-soft px-1 font-mono text-[9px] text-accent">
+              <span key={b} className="rounded bg-accent-soft px-1 font-mono text-[9px] text-accent-ink">
                 {b}
               </span>
             ))}

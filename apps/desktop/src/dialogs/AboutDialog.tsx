@@ -30,7 +30,7 @@ export function AboutDialog() {
   const link = (href: string, text: string) => (
     <button
       type="button"
-      className="text-accent underline"
+      className="text-accent-ink underline"
       onClick={() => void platform().openExternal(href)}
     >
       {text}
@@ -59,7 +59,7 @@ export function AboutDialog() {
           {link(`${REPO}/blob/main/LICENSE`, t('about.licenseLink', 'Read the license'))} ·{' '}
           <button
             type="button"
-            className="text-accent underline"
+            className="text-accent-ink underline"
             onClick={showLicenses}
             aria-expanded={notices !== null}
           >

@@ -8,7 +8,10 @@ import * as RTooltip from '@radix-ui/react-tooltip';
 import { X } from 'lucide-react';
 import {
   forwardRef,
+  useEffect,
   useId,
+  useRef,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -23,7 +26,7 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-accent-contrast hover:bg-accent-strong border-transparent',
+  primary: 'bg-accent-fill text-accent-contrast hover:bg-accent-strong border-transparent',
   secondary: 'bg-surface text-ink border-line hover:bg-surface-2',
   ghost: 'bg-transparent text-ink border-transparent hover:bg-surface-3',
   danger: 'bg-danger text-white border-transparent hover:opacity-90',
@@ -65,7 +68,7 @@ export const IconButton = forwardRef<
       aria-pressed={active === undefined ? undefined : active}
       className={cx(
         'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-ink transition-colors hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-40',
-        active && 'bg-accent-soft text-accent',
+        active && 'bg-accent-soft text-accent-ink',
         className,
       )}
       {...rest}
@@ -247,7 +250,7 @@ export function Badge({
     error: 'bg-danger-soft text-danger',
     warning: 'bg-warning-soft text-warning',
     info: 'bg-info-soft text-info',
-    accent: 'bg-accent-soft text-accent',
+    accent: 'bg-accent-soft text-accent-ink',
   };
   return (
     <span
@@ -303,13 +306,41 @@ export function Dialog({
               </button>
             </RDialog.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto px-5 py-4">{children}</div>
+          <ScrollBody label={title}>{children}</ScrollBody>
           {footer && (
             <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>
           )}
         </RDialog.Content>
       </RDialog.Portal>
     </RDialog.Root>
+  );
+}
+
+/**
+ * A dialog body that keyboard users can scroll: it becomes a focusable, labelled region only
+ * while its content overflows (WCAG 2.1.1; axe "scrollable-region-focusable").
+ */
+function ScrollBody({ label, children }: { label: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const check = () => setScrolls(el.scrollHeight > el.clientHeight + 1);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    for (const c of el.children) ro.observe(c);
+    check();
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className="min-h-0 flex-1 overflow-auto px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--focus)]"
+      {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': label } : {})}
+    >
+      {children}
+    </div>
   );
 }
 

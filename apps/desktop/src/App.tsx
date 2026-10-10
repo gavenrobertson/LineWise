@@ -109,7 +109,7 @@ function Toasts() {
           {t.kind === 'error' ? (
             <CircleAlert size={15} className="mt-0.5 shrink-0 text-danger" />
           ) : t.kind === 'success' ? (
-            <CircleCheck size={15} className="mt-0.5 shrink-0 text-accent" />
+            <CircleCheck size={15} className="mt-0.5 shrink-0 text-accent-ink" />
           ) : (
             <Info size={15} className="mt-0.5 shrink-0 text-info" />
           )}

@@ -181,7 +181,7 @@ describe('Library panel', () => {
     await userEvent.type(search, 'firewall');
     expect(
       screen
-        .getAllByRole('button', { name: /^Place / })
+        .getAllByRole('button', { name: /^Place\s?/ })
         .every((b) => /firewall/i.test(b.getAttribute('aria-label') ?? b.textContent ?? '')),
     ).toBe(true);
     await userEvent.click(screen.getAllByRole('button', { name: 'Add to favorites' })[0]!);

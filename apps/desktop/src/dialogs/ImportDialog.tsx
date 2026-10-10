@@ -325,7 +325,7 @@ function ReviewStep({ plan, setPlan }: { plan: ImportPlan; setPlan: (p: ImportPl
           </h3>
           <button
             type="button"
-            className="text-[11.5px] text-accent underline"
+            className="text-[11.5px] text-accent-ink underline"
             onClick={() =>
               setPlan({ ...plan, devices: plan.devices.map((d) => ({ ...d, selected: !allDevices })) })
             }

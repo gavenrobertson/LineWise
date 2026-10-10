@@ -209,7 +209,7 @@ export function ExportDialog() {
               role="radio"
               aria-checked={format === f.id}
               onClick={() => setFormat(f.id)}
-              className={`rounded-md px-2 py-1.5 text-left text-[13px] ${format === f.id ? 'bg-accent-soft font-medium text-accent' : 'text-ink hover:bg-surface-3'}`}
+              className={`rounded-md px-2 py-1.5 text-left text-[13px] ${format === f.id ? 'bg-accent-soft font-medium text-accent-ink' : 'text-ink hover:bg-surface-3'}`}
             >
               {t(`export.fmt.${f.id}`, f.label)}
             </button>

@@ -29,7 +29,7 @@ export function Wordmark({ className }: { className?: string }) {
   return (
     <span
       className={className}
-      style={{ fontFamily: 'var(--font-brand)', fontWeight: 600, letterSpacing: '-0.01em' }}
+      style={{ fontFamily: 'var(--font-brand)', fontWeight: 600, letterSpacing: '-0.03em' }}
     >
       Line<span style={{ color: 'var(--accent)' }}>Wise</span>
     </span>

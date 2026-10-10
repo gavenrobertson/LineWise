@@ -131,7 +131,7 @@ export function OutlinePanel() {
                   {!readOnly && (
                     <button
                       type="button"
-                      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-accent hover:bg-accent-soft"
+                      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-accent-ink hover:bg-accent-soft"
                       title={t('outline.refHint', 'Show a connector to this device on the current page')}
                       onClick={() => {
                         if (ref) execute(removeOffPageRef(page?.id ?? '', d.id));
