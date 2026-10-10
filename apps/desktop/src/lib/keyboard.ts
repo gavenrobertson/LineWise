@@ -61,6 +61,23 @@ export function matches(
   return k === key || (!!e.code && e.code === codeFor(key));
 }
 
+/**
+ * Document-level shortcuts that still work while a text field has focus (outside dialogs), like
+ * Save in any native editor. The field is blurred first so its pending edit is committed.
+ */
+export const WHILE_TYPING = new Set([
+  'file.new',
+  'file.open',
+  'file.save',
+  'file.saveAs',
+  'file.import',
+  'file.export',
+  'file.print',
+  'view.commandPalette',
+  'edit.find',
+  'help.shortcuts',
+]);
+
 const MAC_EDIT_KEYS = new Set([
   'edit.undo',
   'edit.redo',
@@ -90,7 +107,20 @@ export function useKeyboard(): void {
         }
         return;
       }
-      if (isTyping(e.target)) return;
+      if (isTyping(e.target)) {
+        const el = e.target as HTMLElement;
+        if (!(e.metaKey || e.ctrlKey) || el.closest?.('[role="dialog"]')) return;
+        const c = commandList().find(
+          (x) =>
+            x.shortcut && WHILE_TYPING.has(x.id) && handlesShortcut(x.id, kind, os) && matches(e, x.shortcut),
+        );
+        if (!c) return;
+        e.preventDefault();
+        el.blur();
+        // Let the field's blur handler commit its edit before the command runs.
+        setTimeout(() => runCommand(c.id as MenuCommand), 0);
+        return;
+      }
       // Canvas keys apply when focus is on the canvas (or nowhere), not on toolbar or panel controls.
       const target = e.target as HTMLElement | null;
       const onCanvas = !target || target === document.body || !!target.closest?.('.react-flow');

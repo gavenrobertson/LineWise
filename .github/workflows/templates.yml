@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# FR-TPL-07: PRs touching the device library are checked for schema validity, unique ids,
+# datasheet links on vendor templates, and icon SVG lint/sanitization.
+name: templates
+
+on:
+  pull_request:
+    paths: ['packages/device-library/**']
+  push:
+    branches: [main]
+    paths: ['packages/device-library/**']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Template schema, uniqueness, sourceUrl and icon checks
+        run: pnpm --filter @linewise/device-library test
+      - name: Generated index is up to date
+        run: |
+          pnpm --filter @linewise/device-library run index
+          git diff --exit-code -- packages/device-library/src/generated.ts

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Journey 7: keyboard only — create devices, link them, rename one. No mouse.
 import { expect, test } from '@playwright/test';
-import { doc, MOD, openApp } from './helpers.ts';
+import { doc, MOD, openApp, tabKey } from './helpers.ts';
 
-test('build and edit a diagram with the keyboard alone', async ({ page }) => {
+test('build and edit a diagram with the keyboard alone', async ({ page, browserName }) => {
   await openApp(page);
   const welcome = page.getByRole('dialog', { name: 'Welcome to LineWise' });
   // Tab to "New blank diagram".
@@ -14,7 +14,7 @@ test('build and edit a diagram with the keyboard alone', async ({ page }) => {
         .evaluate((el) => el === document.activeElement)
     )
       break;
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(tabKey(browserName));
   }
   await expect(welcome.getByRole('button', { name: 'New blank diagram' })).toBeFocused();
   await page.keyboard.press('Enter');

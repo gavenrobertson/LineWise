@@ -1,11 +1,15 @@
 # Things only Gaven can do
 
-The build continues with placeholders for each item; nothing here blocks local development.
+The build continues with placeholders for each item; nothing here blocks local development. Exact steps are in [docs/dev/release.md](dev/release.md).
 
-- [ ] Create the GitHub repository `gavenrobertson/linewise` and push this code.
-- [ ] Apple Developer Program membership → "Developer ID Application" certificate → App Store Connect API key for notarization. Add secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` (contents of the .p8 file), `APPLE_TEAM_ID`.
-- [ ] Windows code signing: apply to SignPath Foundation (free for OSS), or set up Azure Trusted Signing, or buy an OV/EV certificate. Add the matching secrets (see `docs/dev/release.md`).
-- [ ] Generate the Tauri updater key pair (`pnpm tauri signer generate -w ~/.tauri/linewise.key`), put the public key in `apps/desktop/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`), and add secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
-- [ ] Turn on branch protection for `main` (required checks, linear history) and the DCO GitHub app.
-- [ ] Register a domain for the docs site (for example `linewise.dev`) and point GitHub Pages at it.
-- [ ] Run the manual release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon.
+- [x] Create the GitHub repository `gavenrobertson/linewise` and push this code.
+- [ ] Decide when to merge `claude/wizardly-bohr-l366zp` into `main` (and make `main` the default branch). The milestone tags point at commits on this branch.
+- [ ] **Updater key pair:** `pnpm --filter @linewise/desktop tauri signer generate -w ~/.tauri/linewise.key`; put the public key in `apps/desktop/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`, replacing `REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY`); add secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Until then releases have no updater artifacts and installed apps cannot auto-update (REL-10..12).
+- [ ] **Apple:** Developer Program membership → "Developer ID Application" certificate → App Store Connect API key. Secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` (contents of the .p8). Until then the macOS build is ad-hoc signed and Gatekeeper blocks it (REL-02).
+- [ ] **Windows signing:** apply to SignPath Foundation (free for OSS) or set up Azure Trusted Signing (secrets `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`; variables `TRUSTED_SIGNING_ENDPOINT`, `TRUSTED_SIGNING_ACCOUNT`, `TRUSTED_SIGNING_PROFILE`), or buy an OV/EV certificate. Until then SmartScreen warns (REL-01).
+- [ ] Turn on branch protection for `main` (required checks: `ci`; one review for external PRs; linear history) and install the [DCO GitHub app](https://github.com/apps/dco) (REL-21, OSS-05).
+- [ ] Enable GitHub private vulnerability reporting (Settings → Code security) so the link in SECURITY.md works (NFR-SEC-08).
+- [ ] Enable GitHub Pages with source "GitHub Actions" for the docs site; optionally register a domain (for example `linewise.dev`) and set it as the Pages custom domain (DOC-01).
+- [ ] Choose a contact email for Code of Conduct reports and add it to `CODE_OF_CONDUCT.md`.
+- [ ] Install the Renovate GitHub app on the repository.
+- [ ] Run the manual release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon, including the v0.9 → v1.0 auto-update check (M6 acceptance).

@@ -25,6 +25,8 @@ import { Inspector } from '../src/panels/Inspector.tsx';
 import { ProblemsPanel } from '../src/panels/ProblemsPanel.tsx';
 import { StatusBar } from '../src/panels/StatusBar.tsx';
 import { Toolbar } from '../src/panels/Toolbar.tsx';
+import { useKeyboard } from '../src/lib/keyboard.ts';
+import { platform, setPlatform } from '../src/platform/index.ts';
 import { useEditor } from '../src/store/editor.ts';
 import { useUi } from '../src/store/ui.ts';
 
@@ -261,6 +263,58 @@ describe('Dialogs', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Review' }));
     expect(screen.getByText('R9')).toBeInTheDocument();
     await expectNoAxeViolations();
+  });
+});
+
+describe('Keyboard', () => {
+  function Shortcuts() {
+    useKeyboard();
+    return null;
+  }
+
+  it('Ctrl/Cmd+S in a text field commits the edit and saves (FR-KEY-01)', async () => {
+    const saves: string[] = [];
+    const real = platform();
+    setPlatform({
+      ...real,
+      saveDiagram: async (text, path, name) => {
+        saves.push(text);
+        return { path: path ?? `/tmp/${name}`, name };
+      },
+    });
+    try {
+      const r1 = useEditor.getState().doc.devices.find((d) => d.hostname === 'R1')!;
+      act(() => useEditor.getState().setSelection({ devices: [r1.id] }));
+      wrap(
+        <>
+          <Shortcuts />
+          <Inspector />
+        </>,
+      );
+      const field = screen.getByLabelText('Hostname');
+      await userEvent.clear(field);
+      await userEvent.type(field, 'CORE-1');
+      await userEvent.keyboard('{Control>}s{/Control}');
+      await act(() => new Promise((r) => setTimeout(r, 20)));
+      expect(useEditor.getState().doc.devices.find((d) => d.id === r1.id)?.hostname).toBe('CORE-1');
+      expect(saves).toHaveLength(1);
+      expect(saves[0]).toContain('"hostname": "CORE-1"');
+    } finally {
+      setPlatform(real);
+    }
+  });
+
+  it('plain keys typed in a field never trigger canvas shortcuts', async () => {
+    const r1 = useEditor.getState().doc.devices.find((d) => d.hostname === 'R1')!;
+    act(() => useEditor.getState().setSelection({ devices: [r1.id] }));
+    wrap(
+      <>
+        <Shortcuts />
+        <Inspector />
+      </>,
+    );
+    await userEvent.type(screen.getByLabelText('Hostname'), 'l');
+    expect(useUi.getState().dialog).toBeNull();
   });
 });
 

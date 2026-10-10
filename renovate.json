@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    "helpers:pinGitHubActionDigestsToSemver"
+  ],
+  "timezone": "UTC",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 6am on the first day of the month"] },
+  "packageRules": [
+    {
+      "description": "Group Tauri (npm + Cargo) so the CLI, API and plugins move together.",
+      "matchPackageNames": ["/^@tauri-apps//", "/^tauri/", "/^tauri-plugin-/", "tauri-build"],
+      "groupName": "tauri"
+    },
+    { "matchPackageNames": ["/^@radix-ui//"], "groupName": "radix-ui" },
+    { "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"], "groupName": "react" },
+    { "matchPackageNames": ["vitest", "@vitest/**"], "groupName": "vitest" },
+    { "matchPackageNames": ["/eslint/", "typescript-eslint", "globals"], "groupName": "lint" },
+    {
+      "description": "typescript-eslint supports TypeScript <6.1; major TypeScript bumps need a manual check (docs/decisions-log.md).",
+      "matchPackageNames": ["typescript"],
+      "matchUpdateTypes": ["major", "minor"],
+      "dependencyDashboardApproval": true
+    },
+    { "matchManagers": ["github-actions"], "groupName": "github-actions" },
+    { "matchUpdateTypes": ["patch", "minor"], "matchCurrentVersion": "!/^0/", "automerge": false }
+  ]
+}

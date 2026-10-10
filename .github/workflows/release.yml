@@ -1,0 +1,212 @@
+# SPDX-License-Identifier: Apache-2.0
+# Tag vX.Y.Z (or vX.Y.Z-pre) → build, sign, notarize → DRAFT GitHub Release with installers,
+# latest.json, SHA-256 checksums and a CycloneDX SBOM (spec section 11, REL-01..04, REL-10..12).
+# A maintainer reviews and publishes the draft; publish-channel.yml then updates the beta feed.
+# Signing secrets are optional: without them the build is clearly unsigned (see release notes).
+name: release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+', 'v[0-9]+.[0-9]+.[0-9]+-*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build (e.g. v1.0.0)
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare:
+    name: Check version and create the draft release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.draft.outputs.id }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - name: Tag matches the version in package.json, Cargo.toml and Cargo.lock (REL-03)
+        run: node scripts/version.mjs check --tag "$TAG"
+      - id: meta
+        run: |
+          if [[ "$TAG" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Release notes from CHANGELOG.md
+        run: node scripts/release-notes.mjs "${TAG#v}" > "$RUNNER_TEMP/notes.md"
+      - id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=(--draft --title "LineWise ${TAG}" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag)
+          if [ "${{ steps.meta.outputs.prerelease }}" = "true" ]; then flags+=(--prerelease); fi
+          id=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq "map(select(.tag_name == \"${TAG}\"))[0].id // empty")
+          if [ -z "$id" ]; then
+            gh release create "$TAG" "${flags[@]}"
+            id=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq "map(select(.tag_name == \"${TAG}\"))[0].id")
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64 (NSIS + MSI)
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: nsis,msi
+          # WiX 3 (used by Tauri for MSI) cannot target ARM64, so ARM64 ships NSIS only; the x64
+          # MSI also installs on Windows 11 ARM under emulation (docs/decisions-log.md).
+          - name: Windows ARM64 (NSIS)
+            os: windows-latest
+            target: aarch64-pc-windows-msvc
+            bundles: nsis
+          - name: macOS universal (DMG)
+            os: macos-latest
+            target: universal-apple-darwin
+            bundles: app,dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target == 'universal-apple-darwin' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: ${{ matrix.target }}
+      - run: pnpm install --frozen-lockfile
+
+      # Only secrets that exist are exported, so the Tauri CLI never sees empty values.
+      - name: Export the signing secrets that are configured
+        shell: bash
+        env:
+          S_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          S_TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          S_TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+          S_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          S_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          S_APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          S_APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          S_APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          S_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          S_APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          S_AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          S_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          S_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          S_TRUSTED_SIGNING_ENDPOINT: ${{ vars.TRUSTED_SIGNING_ENDPOINT }}
+          S_TRUSTED_SIGNING_ACCOUNT: ${{ vars.TRUSTED_SIGNING_ACCOUNT }}
+          S_TRUSTED_SIGNING_PROFILE: ${{ vars.TRUSTED_SIGNING_PROFILE }}
+        run: |
+          put() { local name="$1" value="$2"; [ -n "$value" ] || return 0; { echo "${name}<<__LW_EOF__"; echo "$value"; echo "__LW_EOF__"; } >> "$GITHUB_ENV"; }
+          for v in TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD TAURI_UPDATER_PUBKEY \
+                   AZURE_CLIENT_ID AZURE_CLIENT_SECRET AZURE_TENANT_ID \
+                   TRUSTED_SIGNING_ENDPOINT TRUSTED_SIGNING_ACCOUNT TRUSTED_SIGNING_PROFILE; do
+            s="S_$v"; put "$v" "${!s}"
+          done
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_API_KEY APPLE_API_ISSUER APPLE_TEAM_ID; do
+              s="S_$v"; put "$v" "${!s}"
+            done
+            if [ -n "$S_APPLE_API_KEY_P8" ]; then
+              printf '%s' "$S_APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+              put APPLE_API_KEY_PATH "$RUNNER_TEMP/AuthKey.p8"
+            fi
+          fi
+
+      - name: Windows signing tool
+        if: runner.os == 'Windows' && env.AZURE_CLIENT_ID != ''
+        run: cargo install trusted-signing-cli --locked
+
+      - name: Release config overlay (signing where configured)
+        shell: bash
+        run: node scripts/release-config.mjs apps/desktop/src-tauri/tauri.release.conf.json
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm tauri
+          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config src-tauri/tauri.release.conf.json
+          releaseId: ${{ needs.prepare.outputs.release_id }}
+          tagName: ${{ env.TAG }}
+          uploadUpdaterJson: true
+          updaterJsonPreferNsis: true
+          retryAttempts: 1
+
+  finalize:
+    name: Checksums, SBOM and notices
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm install --frozen-lockfile
+      - name: Third-party notices
+        run: pnpm notices
+      - name: CycloneDX SBOM (npm + Cargo)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: linewise-${{ env.TAG }}-sbom.cdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Download installers and write SHA-256 checksums (REL-04)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist-release
+          gh release download "$TAG" --dir dist-release --pattern '*'
+          cp "linewise-${TAG}-sbom.cdx.json" THIRD_PARTY_NOTICES.md dist-release/
+          cd dist-release
+          rm -f SHA256SUMS.txt
+          sha256sum -- * | sort -k2 > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Upload checksums, SBOM and notices to the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$TAG" --clobber \
+            dist-release/SHA256SUMS.txt \
+            "dist-release/linewise-${TAG}-sbom.cdx.json" \
+            dist-release/THIRD_PARTY_NOTICES.md
+      - name: Summary
+        run: |
+          {
+            echo "## Draft release ${TAG}"
+            echo
+            echo "Review the draft on the Releases page, then publish it."
+            echo "Publishing updates the update feeds (publish-channel.yml)."
+            echo
+            echo '```'
+            cat dist-release/SHA256SUMS.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

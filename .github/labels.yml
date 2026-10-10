@@ -1,0 +1,13 @@
+# OSS-14: repository labels, synced by .github/workflows/labels.yml.
+- { name: good first issue, color: 7057ff, description: Good for newcomers }
+- { name: help wanted, color: 008672, description: Extra attention is needed }
+- { name: device-template, color: 0d9488, description: Vendor device templates }
+- { name: importer, color: 1d76db, description: CLI and file importers }
+- { name: validation, color: d93f0b, description: Network validation rules }
+- { name: a11y, color: 5319e7, description: Accessibility }
+- { name: 'platform:windows', color: 0e8a16, description: Windows-specific }
+- { name: 'platform:macos', color: 0e8a16, description: macOS-specific }
+- { name: bug, color: d73a4a, description: Something is not working }
+- { name: enhancement, color: a2eeef, description: New feature or request }
+- { name: icon, color: fbca04, description: Device icons }
+- { name: dependencies, color: 0366d6, description: Dependency updates }

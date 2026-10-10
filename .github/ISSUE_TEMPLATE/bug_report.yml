@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open …\n2. Click …"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows 11, Windows 10, macOS (Apple Silicon), macOS (Intel), Linux, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: LineWise version
+      description: Help → About LineWise
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: If the app showed an error screen, paste "Copy diagnostics" here. Logs are in Help → Open Logs Folder. Remove anything private (hostnames, IPs) first.
+      render: text
+  - type: textarea
+    id: file
+    attributes:
+      label: Sample diagram (optional)
+      description: A small, sanitized .lwise file that shows the problem. Never attach real configs with secrets.

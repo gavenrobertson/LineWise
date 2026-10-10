@@ -1,0 +1,29 @@
+name: Device template request
+description: Ask for a vendor model template (port layout from a public datasheet)
+labels: [device-template]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Vendor and model
+      placeholder: Example Networks EX-2400-48P
+    validations:
+      required: true
+  - type: input
+    id: datasheet
+    attributes:
+      label: Public datasheet link
+      description: Templates are only added when the port layout can be checked against a public datasheet (FR-TPL-03).
+    validations:
+      required: true
+  - type: textarea
+    id: ports
+    attributes:
+      label: Port layout from the datasheet
+      placeholder: '48 × 1G RJ45, 4 × 10G SFP+, 1 × management'
+    validations:
+      required: true
+  - type: input
+    id: ru
+    attributes:
+      label: Rack units

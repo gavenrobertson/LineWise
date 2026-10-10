@@ -1,0 +1,18 @@
+name: Icon request
+description: Ask for a new device icon or a change to an existing one
+labels: [icon]
+body:
+  - type: input
+    id: role
+    attributes:
+      label: Device role or object
+      placeholder: Wireless bridge
+    validations:
+      required: true
+  - type: textarea
+    id: convention
+    attributes:
+      label: How is it usually drawn?
+      description: Describe the common diagram convention. Do not attach vendor icon files; LineWise icons are original drawings (FR-ICO-08).
+    validations:
+      required: true

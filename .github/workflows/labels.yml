@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# Keeps repository labels in sync with .github/labels.yml (OSS-14).
+name: labels
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/labels.yml']
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create or update labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const items = fs.readFileSync(".github/labels.yml", "utf8").split("\n").filter((l) => l.startsWith("- {"));
+            for (const l of items) {
+              const get = (k) => (l.match(new RegExp(k + ": (\x27[^\x27]+\x27|[^,}]+)")) || [])[1]?.trim().replace(/^\x27|\x27$/g, "");
+              console.log([get("name"), get("color"), get("description")].join("\t"));
+            }' | while IFS=$'\t' read -r name color desc; do
+              gh label create "$name" --color "$color" --description "$desc" --force
+            done

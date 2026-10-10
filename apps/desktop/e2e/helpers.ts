@@ -67,6 +67,14 @@ export function node(page: Page, hostname: string) {
 /** Ctrl on Windows/Linux runners, Cmd on macOS. */
 export const MOD = process.platform === 'darwin' ? 'Meta' : 'Control';
 
+/**
+ * The key that moves focus to the next control. WebKit on macOS follows the system default where
+ * Tab only visits text fields and Option+Tab visits every control (as in Safari and WKWebView).
+ */
+export function tabKey(browserName: string): string {
+  return browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
+}
+
 export async function startBlank(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New blank diagram' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -105,10 +113,12 @@ export async function queueSavePath(page: Page, path: string): Promise<void> {
 export async function place(page: Page, templateName: string): Promise<void> {
   const library = page.getByRole('tabpanel', { name: 'Library' });
   if (!(await library.isVisible())) await page.getByRole('tab', { name: 'Library' }).click();
+  const before = (await doc(page)).devices.length;
   await library.getByRole('searchbox').fill(templateName);
   await library
     .getByRole('button', { name: `Place ${templateName}` })
     .first()
     .click();
+  await expect.poll(async () => (await doc(page)).devices.length).toBe(before + 1);
   await library.getByRole('searchbox').fill('');
 }

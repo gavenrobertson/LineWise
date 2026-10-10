@@ -99,6 +99,11 @@ jobs:
         run: pnpm --filter @linewise/desktop exec playwright test --project ${{ matrix.browser }}
         env:
           CI: '1'
+          LINEWISE_NOTICES_NO_CARGO: '1'
+      - name: Show failure snapshots
+        if: failure()
+        shell: bash
+        run: find apps/desktop/test-results -name error-context.md -exec sh -c 'echo "::group::$1"; head -c 6000 "$1"; echo "::endgroup::"' _ {} \;
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

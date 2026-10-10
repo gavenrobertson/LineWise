@@ -6,7 +6,8 @@
  * dialog can show it offline. Identical license texts are printed once and referenced by id.
  * The files are build outputs (git-ignored); `pnpm --filter @linewise/desktop build` regenerates them.
  * `--no-cargo` skips Rust crates; this also happens automatically, with a warning, when cargo
- * is not installed (web-only development). CI and release builds always include them.
+ * is not installed (web-only development) or LINEWISE_NOTICES_NO_CARGO=1 (browser E2E builds).
+ * Desktop CI and release builds always include them.
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -22,7 +23,8 @@ function hasCargo() {
     return false;
   }
 }
-const skipCargo = process.argv.includes('--no-cargo') || !hasCargo();
+const skipCargo =
+  process.argv.includes('--no-cargo') || process.env.LINEWISE_NOTICES_NO_CARGO === '1' || !hasCargo();
 const FENCE = '```';
 
 const fonts = [

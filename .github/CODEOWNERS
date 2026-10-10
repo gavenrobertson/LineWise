@@ -1,0 +1,5 @@
+# Default owner for everything (OSS-12). Add maintainers per area as the project grows.
+*                                 @gavenrobertson
+/packages/device-library/         @gavenrobertson
+/apps/desktop/src-tauri/          @gavenrobertson
+/.github/                         @gavenrobertson

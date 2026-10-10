@@ -89,11 +89,22 @@ export function satisfies(expression, ok) {
   return orExpr();
 }
 
+/**
+ * Run pnpm portably: reuse the pnpm that launched us when there is one (npm_execpath), and
+ * go through a shell on Windows otherwise, where pnpm is a .cmd shim Node cannot spawn directly.
+ */
+function pnpm(args) {
+  const opts = { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 };
+  const exec = process.env.npm_execpath;
+  if (exec && /pnpm\.(c?js|mjs)$/.test(exec)) return execFileSync(process.execPath, [exec, ...args], opts);
+  return execFileSync('pnpm', args, { ...opts, shell: process.platform === 'win32' });
+}
+
 /** npm packages from pnpm, flattened to { name, version, license, path, homepage, author }. */
 export function npmPackages({ prod }) {
   const args = ['licenses', 'list', '--json'];
   if (prod) args.push('--prod');
-  const out = execFileSync('pnpm', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const out = pnpm(args);
   const byLicense = JSON.parse(out);
   const list = [];
   for (const [license, pkgs] of Object.entries(byLicense)) {

@@ -14,7 +14,8 @@ async function selectInOutline(page: Page, hostname: string) {
 
 async function connect(page: Page, from: string, to: string, portA: string, portB: string) {
   await selectInOutline(page, from);
-  await page.locator('body').press('l');
+  // The outline item has focus, so L links the selected device.
+  await page.keyboard.press('l');
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').fill(to);
   await dialog.getByRole('button', { name: new RegExp(`^${to}`) }).click();

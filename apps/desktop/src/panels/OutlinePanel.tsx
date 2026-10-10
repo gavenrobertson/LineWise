@@ -81,6 +81,9 @@ export function OutlinePanel() {
                       type="button"
                       aria-pressed={selected}
                       onClick={(e) => {
+                        // WebKit on macOS does not focus buttons on click; focus explicitly so
+                        // keyboard shortcuts (L to link, Enter to edit) act on this selection.
+                        e.currentTarget.focus();
                         const add = e.metaKey || e.ctrlKey || e.shiftKey;
                         setSelection({
                           devices: add

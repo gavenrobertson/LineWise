@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+# REL-11: update channels. When a maintainer publishes a release, its latest.json is copied to
+# the "beta" feed release. Stable users read releases/latest/download/latest.json, which GitHub
+# serves from the newest published non-prerelease, so prereleases only reach beta users.
+name: publish-channel
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  beta-feed:
+    runs-on: ubuntu-latest
+    if: github.event.release.tag_name != 'beta'
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Copy latest.json to the beta feed
+        run: |
+          mkdir feed && cd feed
+          if ! gh release download "$TAG" --pattern latest.json; then
+            echo "::warning::$TAG has no latest.json (unsigned build); the beta feed is unchanged."
+            exit 0
+          fi
+          if ! gh release view beta >/dev/null 2>&1; then
+            git tag -f beta "$GITHUB_SHA" && git push -f origin refs/tags/beta
+            gh release create beta --prerelease --title "Beta update feed" \
+              --notes "Update feed for the beta channel (REL-11). Not an installer download; see the versioned releases."
+          fi
+          gh release upload beta latest.json --clobber
