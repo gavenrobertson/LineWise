@@ -46,5 +46,6 @@ test('restore work after a crash', async ({ page }) => {
   await expect
     .poll(async () => (await doc(page)).devices.map((d) => d.role).sort())
     .toEqual(['firewall', 'server']);
-  await expect(page.getByText('Unsaved changes')).toBeVisible();
+  // Restored work is unsaved. With 1 s autosave the status may already read "Unsaved · recovery copy …".
+  await expect(page.getByRole('status').filter({ hasText: /^Unsaved/ })).toBeVisible();
 });
