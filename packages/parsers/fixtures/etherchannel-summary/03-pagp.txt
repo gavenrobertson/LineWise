@@ -1,0 +1,4 @@
+SW3#show etherchannel summary
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+5      Po5(SD)         PAgP      Gi0/1(D)    Gi0/2(s)

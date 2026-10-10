@@ -1,0 +1,21 @@
+{
+  "id": "generic/access-switch-24ge-4sfp",
+  "name": "Access switch \u2013 24\u00d7GE + 4\u00d7SFP",
+  "vendor": "Generic",
+  "model": "Access switch \u2013 24\u00d7GE + 4\u00d7SFP",
+  "role": "l2-switch",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi1/0/1-24",
+      "poe": true
+    },
+    {
+      "range": "Gi1/1/1-4",
+      "media": "fiber"
+    }
+  ]
+}

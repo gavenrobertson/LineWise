@@ -1,0 +1,90 @@
+{
+  "name": "lab",
+  "topology": {
+    "nodes": [
+      {
+        "node_id": "n1",
+        "name": "R1",
+        "node_type": "dynamips",
+        "symbol": ":/symbols/router.svg",
+        "x": -200,
+        "y": 0,
+        "ports": [
+          {
+            "name": "FastEthernet0/0",
+            "adapter_number": 0,
+            "port_number": 0
+          },
+          {
+            "name": "FastEthernet0/1",
+            "adapter_number": 0,
+            "port_number": 1
+          }
+        ]
+      },
+      {
+        "node_id": "n2",
+        "name": "Switch1",
+        "node_type": "ethernet_switch",
+        "x": 0,
+        "y": 0,
+        "ports": [
+          {
+            "name": "Ethernet0",
+            "adapter_number": 0,
+            "port_number": 0
+          },
+          {
+            "name": "Ethernet1",
+            "adapter_number": 0,
+            "port_number": 1
+          }
+        ]
+      },
+      {
+        "node_id": "n3",
+        "name": "PC1",
+        "node_type": "vpcs",
+        "x": 200,
+        "y": 0,
+        "ports": [
+          {
+            "name": "Ethernet0",
+            "adapter_number": 0,
+            "port_number": 0
+          }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "nodes": [
+          {
+            "node_id": "n1",
+            "adapter_number": 0,
+            "port_number": 0
+          },
+          {
+            "node_id": "n2",
+            "adapter_number": 0,
+            "port_number": 0
+          }
+        ]
+      },
+      {
+        "nodes": [
+          {
+            "node_id": "n2",
+            "adapter_number": 0,
+            "port_number": 1
+          },
+          {
+            "node_id": "n3",
+            "adapter_number": 0,
+            "port_number": 0
+          }
+        ]
+      }
+    ]
+  }
+}

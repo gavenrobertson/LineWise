@@ -1,0 +1,11 @@
+SW9#show cdp neighbors detail
+-------------------------
+Device ID:
+Entry address(es):
+Platform: ,  Capabilities:
+Interface: ,  Port ID (outgoing port):
+random garbage line
+-------------------------
+Device ID: OK-NEIGHBOR
+Interface: Gi1/0/1,  Port ID (outgoing port): Gi0/1
+%% something unexpected %%

@@ -1,0 +1,17 @@
+{
+  "id": "generic/storage-2x10g",
+  "name": "Storage / NAS \u2013 2\u00d710G",
+  "vendor": "Generic",
+  "model": "Storage / NAS \u2013 2\u00d710G",
+  "role": "storage",
+  "rackUnits": 2,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0-1",
+      "speedMbps": 10000
+    }
+  ]
+}

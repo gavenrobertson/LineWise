@@ -1,0 +1,19 @@
+{
+  "id": "generic/load-balancer-4x10g",
+  "name": "Load balancer \u2013 4\u00d710G",
+  "vendor": "Generic",
+  "model": "Load balancer \u2013 4\u00d710G",
+  "role": "load-balancer",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Te0/0-3"
+    },
+    {
+      "range": "mgmt0"
+    }
+  ]
+}

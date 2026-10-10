@@ -1,0 +1,17 @@
+{
+  "id": "generic/hypervisor-4x10g",
+  "name": "Hypervisor host \u2013 4\u00d710G",
+  "vendor": "Generic",
+  "model": "Hypervisor host \u2013 4\u00d710G",
+  "role": "hypervisor",
+  "rackUnits": 2,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0-3",
+      "speedMbps": 10000
+    }
+  ]
+}

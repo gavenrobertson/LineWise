@@ -1,0 +1,4 @@
+SW8#show etherchannel summary
+Group  Port-channel  Protocol    Ports
+xx     PoX(??)         LACP      nothing
+1      Po1(SU)         LACP      notaport

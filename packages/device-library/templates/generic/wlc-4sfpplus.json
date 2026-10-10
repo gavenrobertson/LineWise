@@ -1,0 +1,17 @@
+{
+  "id": "generic/wlc-4sfpplus",
+  "name": "Wireless LAN controller \u2013 4\u00d7SFP+",
+  "vendor": "Generic",
+  "model": "Wireless LAN controller \u2013 4\u00d7SFP+",
+  "role": "wlc",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Te0/0/0-3",
+      "media": "fiber"
+    }
+  ]
+}

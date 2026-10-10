@@ -1,0 +1,8 @@
+CORE1#show cdp neighbors detail
+-------------------------
+Device ID: FW-EDGE
+Entry address(es):
+  IP address: 172.16.0.1
+Platform: cisco ASA5516,  Capabilities: Router
+Interface: TenGigabitEthernet1/1/1,  Port ID (outgoing port): GigabitEthernet1/1
+Holdtime : 140 sec

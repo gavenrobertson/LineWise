@@ -1,0 +1,12 @@
+hostname BROKEN
+interface GigabitEthernet0/1
+ ip address 10.0.0.1 999.255.255.0
+ ip address banana
+ frobnicate the widgets
+interface
+ description orphan line
+this line is not a command
+!
+interface GigabitEthernet0/2
+ switchport access vlan abc
+ description ok

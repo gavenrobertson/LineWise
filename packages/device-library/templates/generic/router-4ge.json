@@ -1,0 +1,16 @@
+{
+  "id": "generic/router-4ge",
+  "name": "Router \u2013 4\u00d7GE",
+  "vendor": "Generic",
+  "model": "Router \u2013 4\u00d7GE",
+  "role": "router",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi0/0-3"
+    }
+  ]
+}

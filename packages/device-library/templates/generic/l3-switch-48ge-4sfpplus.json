@@ -1,0 +1,20 @@
+{
+  "id": "generic/l3-switch-48ge-4sfpplus",
+  "name": "L3 switch \u2013 48\u00d7GE + 4\u00d7SFP+",
+  "vendor": "Generic",
+  "model": "L3 switch \u2013 48\u00d7GE + 4\u00d7SFP+",
+  "role": "l3-switch",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi1/0/1-48"
+    },
+    {
+      "range": "Te1/1/1-4",
+      "media": "fiber"
+    }
+  ]
+}

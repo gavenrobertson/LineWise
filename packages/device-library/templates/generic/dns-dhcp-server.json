@@ -1,0 +1,17 @@
+{
+  "id": "generic/dns-dhcp-server",
+  "name": "DNS / DHCP server \u2013 1\u00d7GE",
+  "vendor": "Generic",
+  "model": "DNS / DHCP server \u2013 1\u00d7GE",
+  "role": "dns-dhcp",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0",
+      "speedMbps": 1000
+    }
+  ]
+}

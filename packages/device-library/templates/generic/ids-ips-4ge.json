@@ -1,0 +1,19 @@
+{
+  "id": "generic/ids-ips-4ge",
+  "name": "IDS / IPS \u2013 4\u00d7GE",
+  "vendor": "Generic",
+  "model": "IDS / IPS \u2013 4\u00d7GE",
+  "role": "ids-ips",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi0/0-3"
+    },
+    {
+      "range": "mgmt0"
+    }
+  ]
+}

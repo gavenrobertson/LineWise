@@ -1,0 +1,15 @@
+-------------------------------------------------------------------------------
+LLDP neighbors:
+-------------------------------------------------------------------------------
+Interface:    eth0, via: LLDP, RID: 1, Time: 0 day, 01:02:03
+  Chassis:
+    ChassisID:    mac 52:54:00:aa:bb:cc
+    SysName:      tor-sw1
+    SysDescr:     Arista Networks EOS version 4.30.1F
+    MgmtIP:       10.1.1.1
+    Capability:   Bridge, on
+    Capability:   Router, on
+  Port:
+    PortID:       ifname Ethernet12
+    PortDescr:    server-17
+-------------------------------------------------------------------------------

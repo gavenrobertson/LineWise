@@ -1,0 +1,4 @@
+SW7#show vlan brief
+VLAN Name Status Ports
+xx   BROKEN                           active    Gi1/0/1
+5000 TOO-BIG                          active

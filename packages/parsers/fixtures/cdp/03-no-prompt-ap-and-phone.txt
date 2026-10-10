@@ -1,0 +1,15 @@
+-------------------------
+Device ID: AP-FLOOR2
+Entry address(es):
+  IP address: 10.20.30.40
+Platform: cisco AIR-AP2802I-B-K9,  Capabilities: Trans-Bridge Source-Route-Bridge IGMP
+Interface: GigabitEthernet1/0/10,  Port ID (outgoing port): GigabitEthernet0
+Holdtime : 120 sec
+
+-------------------------
+Device ID: SEP001122334455
+Entry address(es):
+  IP address: 10.30.0.55
+Platform: Cisco IP Phone 8851,  Capabilities: Host Phone Two-port Mac Relay
+Interface: GigabitEthernet1/0/12,  Port ID (outgoing port): Port 1
+Holdtime : 165 sec

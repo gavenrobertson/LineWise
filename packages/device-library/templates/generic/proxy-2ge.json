@@ -1,0 +1,17 @@
+{
+  "id": "generic/proxy-2ge",
+  "name": "Proxy \u2013 2\u00d7GE",
+  "vendor": "Generic",
+  "model": "Proxy \u2013 2\u00d7GE",
+  "role": "proxy",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0-1",
+      "speedMbps": 1000
+    }
+  ]
+}

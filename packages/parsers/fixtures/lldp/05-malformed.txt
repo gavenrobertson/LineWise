@@ -1,0 +1,8 @@
+SW4#show lldp neighbors detail
+Local Intf:
+Chassis id: abc
+Port id:
+System Name: ROUTER-X
+Management Addresses:
+    IP: not-an-ip
+garbage garbage

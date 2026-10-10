@@ -1,0 +1,16 @@
+name: srl01
+topology:
+  nodes:
+    leaf1:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux
+      mgmt-ipv4: 172.20.20.11
+    leaf2:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux
+    client1:
+      kind: linux
+      image: alpine:latest
+  links:
+    - endpoints: ["leaf1:e1-49", "leaf2:e1-49"]
+    - endpoints: ["client1:eth1", "leaf1:e1-1"]

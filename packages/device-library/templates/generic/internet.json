@@ -1,0 +1,12 @@
+{
+  "id": "generic/internet",
+  "name": "Internet",
+  "vendor": "Generic",
+  "model": "Internet",
+  "role": "internet",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": []
+}

@@ -1,0 +1,2 @@
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0/0   203.0.113.2     YES manual up                    up

@@ -1,0 +1,1 @@
+<nmaprun><host><status state="up"/><address addr="10.0.5.20" addrtype="ipv4"/><hostnames><hostname name="printer-2f"/></hostnames><os><osmatch name="HP JetDirect printer"/></os></host></nmaprun>

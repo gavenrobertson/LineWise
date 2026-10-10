@@ -1,0 +1,8 @@
+SW1#show interfaces status
+
+Port      Name               Status       Vlan       Duplex  Speed Type
+Gi1/0/1   Desk 101           connected    10         a-full a-1000 10/100/1000BaseTX
+Gi1/0/2                      notconnect   10           auto   auto 10/100/1000BaseTX
+Gi1/0/3   Printer            disabled     30           auto   auto 10/100/1000BaseTX
+Gi1/1/1   Uplink CORE1       connected    trunk        full    10G SFP-10GBase-LR
+Te1/1/2                      connected    routed       full    10G SFP-10GBase-SR

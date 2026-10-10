@@ -1,0 +1,4 @@
+hostname,role,vendor,model,mgmt ip,site,serial
+CORE1,l3-switch,Cisco,C9500-24Y4C,10.0.0.1,Huntsville,FCW0001
+ACCESS-1,switch,Cisco,C9200L-48P-4G,10.0.0.11,Huntsville,FCW0002
+FW1,firewall,Fortinet,FortiGate 100F,10.0.0.254,Huntsville,

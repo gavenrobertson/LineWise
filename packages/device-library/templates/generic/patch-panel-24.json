@@ -1,0 +1,16 @@
+{
+  "id": "generic/patch-panel-24",
+  "name": "Patch panel \u2013 24 ports",
+  "vendor": "Generic",
+  "model": "Patch panel \u2013 24 ports",
+  "role": "patch-panel",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Ethernet1-24"
+    }
+  ]
+}

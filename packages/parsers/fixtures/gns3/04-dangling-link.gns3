@@ -1,0 +1,1 @@
+{"topology": {"nodes": [{"node_id": "x", "name": "R9", "node_type": "iou"}], "links": [{"nodes": [{"node_id": "x", "adapter_number": 0, "port_number": 0}, {"node_id": "missing", "adapter_number": 0, "port_number": 0}]}]}}

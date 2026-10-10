@@ -1,0 +1,2 @@
+SW5#show interfaces status
+Gi1/0/1   Desk               connected    10         a-full a-1000 10/100/1000BaseTX

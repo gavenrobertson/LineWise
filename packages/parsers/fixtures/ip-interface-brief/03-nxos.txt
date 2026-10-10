@@ -1,0 +1,5 @@
+N9K-1# show ip interface brief
+IP Interface Status for VRF "default"(1)
+Interface            IP Address      Interface Status
+Vlan10               10.1.10.2       protocol-up/link-up/admin-up
+Eth1/3               10.250.0.0      protocol-down/link-down/admin-down

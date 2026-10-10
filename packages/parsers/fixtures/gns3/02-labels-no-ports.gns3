@@ -1,0 +1,1 @@
+{"topology": {"nodes": [{"node_id": "a", "name": "ASAv", "node_type": "qemu", "symbol": ":/symbols/asa.svg", "x": 0, "y": 0}, {"node_id": "b", "name": "NAT1", "node_type": "nat", "x": 100, "y": 0}], "links": [{"nodes": [{"node_id": "a", "adapter_number": 1, "port_number": 0, "label": {"text": "Gi0/0"}}, {"node_id": "b", "adapter_number": 0, "port_number": 0}]}]}}

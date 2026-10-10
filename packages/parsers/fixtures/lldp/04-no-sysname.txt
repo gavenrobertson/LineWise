@@ -1,0 +1,8 @@
+SW3#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Gi1/0/5
+Chassis id: 0011.2233.4455
+Port id: 0011.2233.4455
+Port Description - not advertised
+System Name - not advertised
+System Capabilities: S

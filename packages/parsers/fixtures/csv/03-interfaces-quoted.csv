@@ -1,0 +1,4 @@
+"hostname","interface","description","ip","mask","vlan","mode"
+"CORE1","Vlan10","Users, floor 1","10.10.0.1","255.255.255.0","",""
+"ACCESS-1","Gi1/0/1","Desk ""A""","","","10","access"
+"ACCESS-1","Gi1/0/49","Uplink","","","","trunk"

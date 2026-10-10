@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LineWise",
+  "version": "../package.json",
+  "identifier": "dev.gavenrobertson.linewise",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "LineWise",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 600,
+        "center": true,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "dmg", "app", "deb", "appimage"],
+    "createUpdaterArtifacts": true,
+    "publisher": "Gaven Robertson",
+    "copyright": "© 2026 LineWise contributors. Apache-2.0.",
+    "category": "DeveloperTool",
+    "shortDescription": "Open-source network diagramming",
+    "longDescription": "Draw Cisco-style network architecture diagrams where every icon is a real device with interfaces, IPs and VLANs.",
+    "license": "Apache-2.0",
+    "licenseFile": "../../../LICENSE",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "fileAssociations": [
+      {
+        "ext": ["lwise"],
+        "name": "LineWise diagram",
+        "description": "LineWise network diagram",
+        "role": "Editor",
+        "mimeType": "application/vnd.linewise+json"
+      }
+    ],
+    "windows": {
+      "nsis": { "installMode": "currentUser", "displayLanguageSelector": false, "installerIcon": "icons/icon.ico" },
+      "wix": { "language": "en-US" },
+      "webviewInstallMode": { "type": "embedBootstrapper" }
+    },
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "hardenedRuntime": true,
+      "dmg": { "windowSize": { "width": 660, "height": 400 } }
+    },
+    "linux": { "deb": { "depends": [] } }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY",
+      "endpoints": ["https://github.com/gavenrobertson/linewise/releases/latest/download/latest.json"],
+      "windows": { "installMode": "passive" }
+    }
+  }
+}

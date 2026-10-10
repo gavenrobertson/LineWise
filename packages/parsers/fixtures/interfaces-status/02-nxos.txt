@@ -1,0 +1,7 @@
+N9K-1# show interface status
+--------------------------------------------------------------------------------
+Port          Name               Status    Vlan      Duplex  Speed   Type
+--------------------------------------------------------------------------------
+mgmt0         --                 connected routed    full    1000    --
+Eth1/1        to-server-1        connected 10        full    10G     10Gbase-SR
+Eth1/49       --                 connected trunk     full    100G    QSFP-100G-SR4

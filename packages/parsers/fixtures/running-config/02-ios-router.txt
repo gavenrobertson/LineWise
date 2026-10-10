@@ -1,0 +1,41 @@
+hostname EDGE-R1
+!
+ip vrf CUSTOMER-A
+ rd 65000:100
+!
+interface Loopback0
+ ip address 10.255.0.1 255.255.255.255
+!
+interface GigabitEthernet0/0/0
+ description WAN to ISP (circuit 123456)
+ ip address 203.0.113.2 255.255.255.252
+ negotiation auto
+!
+interface GigabitEthernet0/0/1
+ description LAN
+ ip address 10.0.0.2 255.255.255.0
+ ip address 10.0.1.2 255.255.255.0 secondary
+ standby 1 ip 10.0.0.1
+ standby 1 priority 110
+ ipv6 address 2001:DB8:0:1::2/64
+!
+interface GigabitEthernet0/0/1.200
+ encapsulation dot1Q 200
+ ip vrf forwarding CUSTOMER-A
+ ip address 10.200.0.1 255.255.255.0
+!
+interface Serial0/1/0
+ ip address 10.0.12.1 255.255.255.252
+ bandwidth 1544
+!
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+!
+router bgp 65000
+ neighbor 203.0.113.1 remote-as 64500
+ neighbor 203.0.113.1 password supersecret
+!
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+crypto isakmp key mykey address 0.0.0.0
+!
+end

@@ -1,0 +1,6 @@
+name: bad
+topology:
+  nodes:
+    a: {kind: linux}
+  links:
+    - endpoints: ["a-no-colon", "b:eth1"]

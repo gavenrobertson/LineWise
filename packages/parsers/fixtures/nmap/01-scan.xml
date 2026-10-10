@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<nmaprun scanner="nmap" args="nmap -O 10.0.0.0/29">
+<host><status state="up"/><address addr="10.0.0.1" addrtype="ipv4"/><address addr="00:11:22:33:44:55" addrtype="mac" vendor="Cisco Systems"/><hostnames><hostname name="gw.lab.example" type="PTR"/></hostnames><os><osmatch name="Cisco IOS 15.X" accuracy="95"/></os></host>
+<host><status state="up"/><address addr="10.0.0.5" addrtype="ipv4"/><os><osmatch name="Linux 5.4 - 5.15" accuracy="90"/></os></host>
+<host><status state="down"/><address addr="10.0.0.6" addrtype="ipv4"/></host>
+</nmaprun>

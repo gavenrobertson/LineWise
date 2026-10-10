@@ -1,0 +1,4 @@
+SW6#show interfaces status
+Port      Name               Status       Vlan       Duplex  Speed Type
+--------- garbage line that is long enough to be sliced -----------------
+Gi1/0/9   Desk 9             connected    abc        a-full a-1000 10/100/1000BaseTX

@@ -1,0 +1,16 @@
+{
+  "id": "generic/virtual-machine",
+  "name": "Virtual machine \u2013 1 vNIC",
+  "vendor": "Generic",
+  "model": "Virtual machine \u2013 1 vNIC",
+  "role": "virtual-machine",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0"
+    }
+  ]
+}

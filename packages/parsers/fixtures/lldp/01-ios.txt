@@ -1,0 +1,35 @@
+SW1#show lldp neighbors detail
+------------------------------------------------
+Local Intf: Gi1/0/48
+Chassis id: 00aa.bb11.2233
+Port id: Gi1/0/1
+Port Description: GigabitEthernet1/0/1
+System Name: ACCESS-2.lab.example
+
+System Description:
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(7)E4, RELEASE SOFTWARE (fc2)
+
+Time remaining: 99 seconds
+System Capabilities: B
+Enabled Capabilities: B
+Management Addresses:
+    IP: 10.10.0.22
+Auto Negotiation - supported, enabled
+
+------------------------------------------------
+Local Intf: Te1/1/1
+Chassis id: 00aa.bb11.4455
+Port id: Te1/0/1
+Port Description: uplink
+System Name: CORE1
+
+System Description:
+Cisco IOS Software [Amsterdam], Catalyst L3 Switch Software, Version 17.3.5
+
+Time remaining: 105 seconds
+System Capabilities: B,R
+Enabled Capabilities: B,R
+Management Addresses:
+    IP: 10.10.0.1
+
+Total entries displayed: 2

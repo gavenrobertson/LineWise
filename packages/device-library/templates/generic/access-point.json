@@ -1,0 +1,17 @@
+{
+  "id": "generic/access-point",
+  "name": "Access point \u2013 1\u00d7GE",
+  "vendor": "Generic",
+  "model": "Access point \u2013 1\u00d7GE",
+  "role": "access-point",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi0",
+      "poe": true
+    }
+  ]
+}

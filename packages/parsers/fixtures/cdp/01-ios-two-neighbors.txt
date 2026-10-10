@@ -1,0 +1,35 @@
+R1#show cdp neighbors detail
+-------------------------
+Device ID: SW1.lab.example
+Entry address(es):
+  IP address: 10.10.0.2
+Platform: cisco WS-C3850-24P,  Capabilities: Router Switch IGMP
+Interface: GigabitEthernet0/1,  Port ID (outgoing port): GigabitEthernet1/0/24
+Holdtime : 151 sec
+
+Version :
+Cisco IOS Software, IOS-XE Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 16.12.4, RELEASE SOFTWARE (fc5)
+Technical Support: http://www.cisco.com/techsupport
+
+advertisement version: 2
+VTP Management Domain: ''
+Native VLAN: 1
+Duplex: full
+Management address(es):
+  IP address: 10.10.0.2
+
+-------------------------
+Device ID: R2
+Entry address(es):
+  IP address: 10.0.12.2
+Platform: cisco ISR4331/K9,  Capabilities: Router Source-Route-Bridge
+Interface: GigabitEthernet0/0,  Port ID (outgoing port): GigabitEthernet0/0/0
+Holdtime : 172 sec
+
+Version :
+Cisco IOS XE Software, Version 17.03.04a
+
+advertisement version: 2
+Duplex: full
+
+Total cdp entries displayed : 2

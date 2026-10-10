@@ -1,0 +1,118 @@
+// SPDX-License-Identifier: Apache-2.0
+//! Native menu bar (FR-APP-01). Item IDs match the frontend's MenuCommand
+//! strings; clicks are forwarded as a "menu" event. macOS gets the standard
+//! app menu; Windows and Linux render the same structure in the window.
+
+use tauri::menu::{Menu, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder};
+use tauri::{AppHandle, Runtime};
+
+fn item<R: Runtime>(app: &AppHandle<R>, id: &str, label: &str, accel: Option<&str>) -> tauri::Result<tauri::menu::MenuItem<R>> {
+    let mut b = MenuItemBuilder::with_id(id, label);
+    if let Some(a) = accel {
+        b = b.accelerator(a);
+    }
+    b.build(app)
+}
+
+pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
+    let file = SubmenuBuilder::new(app, "File")
+        .item(&item(app, "file.new", "New Diagram", Some("CmdOrCtrl+N"))?)
+        .item(&item(app, "file.open", "Open…", Some("CmdOrCtrl+O"))?)
+        .separator()
+        .item(&item(app, "file.save", "Save", Some("CmdOrCtrl+S"))?)
+        .item(&item(app, "file.saveAs", "Save As…", Some("CmdOrCtrl+Shift+S"))?)
+        .separator()
+        .item(&item(app, "file.import", "Import…", Some("CmdOrCtrl+I"))?)
+        .item(&item(app, "file.export", "Export…", Some("CmdOrCtrl+E"))?)
+        .item(&item(app, "file.print", "Print…", Some("CmdOrCtrl+P"))?)
+        .separator()
+        .item(&item(app, "file.close", "Close Diagram", Some("CmdOrCtrl+W"))?)
+        .build()?;
+
+    let mut edit_b = SubmenuBuilder::new(app, "Edit")
+        .item(&item(app, "edit.undo", "Undo", Some("CmdOrCtrl+Z"))?)
+        .item(&item(app, "edit.redo", "Redo", Some("CmdOrCtrl+Shift+Z"))?)
+        .separator()
+        .item(&item(app, "edit.cut", "Cut", Some("CmdOrCtrl+X"))?)
+        .item(&item(app, "edit.copy", "Copy", Some("CmdOrCtrl+C"))?)
+        .item(&item(app, "edit.paste", "Paste", Some("CmdOrCtrl+V"))?)
+        .item(&item(app, "edit.duplicate", "Duplicate", Some("CmdOrCtrl+D"))?)
+        .item(&item(app, "edit.delete", "Delete", None)?)
+        .item(&item(app, "edit.selectAll", "Select All", Some("CmdOrCtrl+A"))?)
+        .separator()
+        .item(&item(app, "edit.find", "Find…", Some("CmdOrCtrl+F"))?);
+    if !cfg!(target_os = "macos") {
+        edit_b = edit_b.separator().item(&item(app, "edit.preferences", "Preferences…", Some("CmdOrCtrl+,"))?);
+    }
+    let edit = edit_b.build()?;
+
+    let view = SubmenuBuilder::new(app, "View")
+        .item(&item(app, "view.commandPalette", "Command Palette…", Some("CmdOrCtrl+K"))?)
+        .separator()
+        .item(&item(app, "view.l1", "Physical (L1)", Some("CmdOrCtrl+1"))?)
+        .item(&item(app, "view.l2", "Data Link (L2)", Some("CmdOrCtrl+2"))?)
+        .item(&item(app, "view.l3", "Network (L3)", Some("CmdOrCtrl+3"))?)
+        .separator()
+        .item(&item(app, "view.zoomIn", "Zoom In", Some("CmdOrCtrl+="))?)
+        .item(&item(app, "view.zoomOut", "Zoom Out", Some("CmdOrCtrl+-"))?)
+        .item(&item(app, "view.zoomFit", "Zoom to Fit", Some("CmdOrCtrl+0"))?)
+        .separator()
+        .item(&item(app, "view.minimap", "Toggle Minimap", None)?)
+        .item(&item(app, "view.problems", "Toggle Problems Panel", Some("CmdOrCtrl+Shift+M"))?)
+        .item(&item(app, "view.presentation", "Presentation Mode", Some("F5"))?)
+        .build()?;
+
+    let insert = SubmenuBuilder::new(app, "Insert")
+        .item(&item(app, "insert.zone", "Zone", None)?)
+        .item(&item(app, "insert.text", "Text", None)?)
+        .item(&item(app, "insert.note", "Sticky Note", None)?)
+        .item(&item(app, "insert.image", "Image…", None)?)
+        .separator()
+        .item(&item(app, "insert.page", "New Page", None)?)
+        .build()?;
+
+    let arrange = SubmenuBuilder::new(app, "Arrange")
+        .item(&item(app, "arrange.layout", "Auto-Layout…", Some("CmdOrCtrl+Shift+L"))?)
+        .build()?;
+
+    let network = SubmenuBuilder::new(app, "Network")
+        .item(&item(app, "network.vlans", "VLAN Manager…", None)?)
+        .item(&item(app, "network.ipam", "Subnets & IPAM…", None)?)
+        .item(&item(app, "network.calculator", "Subnet Calculator…", None)?)
+        .separator()
+        .item(&item(app, "network.validate", "Validate Now", None)?)
+        .build()?;
+
+    let window = SubmenuBuilder::new(app, "Window")
+        .item(&PredefinedMenuItem::minimize(app, None)?)
+        .item(&PredefinedMenuItem::maximize(app, None)?)
+        .build()?;
+
+    let help = SubmenuBuilder::new(app, "Help")
+        .item(&item(app, "help.shortcuts", "Keyboard Shortcuts", Some("CmdOrCtrl+/"))?)
+        .item(&item(app, "help.docs", "Documentation", None)?)
+        .separator()
+        .item(&item(app, "help.updates", "Check for Updates…", None)?)
+        .item(&item(app, "help.logs", "Open Logs Folder", None)?)
+        .item(&item(app, "help.about", "About LineWise", None)?)
+        .build()?;
+
+    let mut top: Vec<Submenu<R>> = vec![];
+    if cfg!(target_os = "macos") {
+        let app_menu = SubmenuBuilder::new(app, "LineWise")
+            .item(&item(app, "help.about", "About LineWise", None)?)
+            .separator()
+            .item(&item(app, "edit.preferences", "Settings…", Some("Cmd+,"))?)
+            .separator()
+            .item(&PredefinedMenuItem::hide(app, None)?)
+            .item(&PredefinedMenuItem::hide_others(app, None)?)
+            .item(&PredefinedMenuItem::show_all(app, None)?)
+            .separator()
+            .item(&PredefinedMenuItem::quit(app, None)?)
+            .build()?;
+        top.push(app_menu);
+    }
+    top.extend([file, edit, view, insert, arrange, network, window, help]);
+    let refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = top.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<R>).collect();
+    Menu::with_items(app, &refs)
+}

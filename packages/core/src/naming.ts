@@ -21,7 +21,7 @@ const CISCO: InterfaceKind[] = [
     full: 'HundredGigE',
     short: 'Hu',
     type: 'hundredgige',
-    aliases: ['hundredgigabitethernet', 'hu'],
+    aliases: ['hundredgigabitethernet', 'hundredgig', 'hu'],
     speedMbps: 100000,
     media: 'fiber',
   },
@@ -29,7 +29,7 @@ const CISCO: InterfaceKind[] = [
     full: 'FortyGigabitEthernet',
     short: 'Fo',
     type: 'fortygigabitethernet',
-    aliases: ['fortygige', 'fo'],
+    aliases: ['fortygige', 'fortygig', 'fo'],
     speedMbps: 40000,
     media: 'fiber',
   },
@@ -45,21 +45,21 @@ const CISCO: InterfaceKind[] = [
     full: 'TenGigabitEthernet',
     short: 'Te',
     type: 'tengigabitethernet',
-    aliases: ['tengige', 'te', 't'],
+    aliases: ['tengige', 'tengig', 'ten', 'te', 't'],
     speedMbps: 10000,
   },
   {
     full: 'GigabitEthernet',
     short: 'Gi',
     type: 'gigabitethernet',
-    aliases: ['gige', 'gi', 'g'],
+    aliases: ['gige', 'gig', 'gigabit', 'gi', 'g'],
     speedMbps: 1000,
   },
   {
     full: 'FastEthernet',
     short: 'Fa',
     type: 'fastethernet',
-    aliases: ['fa', 'f'],
+    aliases: ['fastether', 'fast', 'fa', 'f'],
     speedMbps: 100,
     media: 'copper',
   },
@@ -95,19 +95,29 @@ const NAME_RE = /^\s*([A-Za-z][A-Za-z-]*?)\s*([0-9][0-9/:.]*)\s*$/;
 function lookupKind(prefix: string, vendor: string): InterfaceKind | undefined {
   const kinds = schemes.get(vendor.toLowerCase()) ?? CISCO;
   const p = prefix.toLowerCase();
+  // Only exact names and known aliases: guessing from prefixes turns "port1" into Port-channel1.
   return (
     kinds.find((k) => k.full.toLowerCase() === p || k.short.toLowerCase() === p) ??
-    kinds.find((k) => k.aliases.includes(p)) ??
-    // Unambiguous prefix of a full name, e.g. "Gigabit" → GigabitEthernet.
-    (() => {
-      const hits = kinds.filter((k) => k.full.toLowerCase().startsWith(p));
-      return hits.length === 1 ? hits[0] : undefined;
-    })()
+    kinds.find((k) => k.aliases.includes(p))
   );
 }
 
 /** Normalize any common spelling ("gi0/1", "G0/1", "GigabitEthernet0/1.10") to canonical form. */
 export function normalizeInterfaceName(input: string, vendor = 'cisco'): NormalizedName {
+  // Linux/host names ("eth0", "eth1.10") are real names, not Cisco abbreviations.
+  const linux = /^\s*(eth\d+)(?:\.(\d+))?\s*$/.exec(input);
+  if (linux) {
+    const name = input.trim();
+    const out: NormalizedName = {
+      name,
+      shortName: name,
+      type: linux[2] ? 'subinterface' : 'ethernet',
+      id: linux[1]?.slice(3) ?? '',
+      media: 'any',
+    };
+    if (linux[2]) out.dot1q = Number(linux[2]);
+    return out;
+  }
   const m = NAME_RE.exec(input);
   if (!m) {
     const name = input.trim();

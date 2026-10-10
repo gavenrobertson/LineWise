@@ -1,0 +1,3 @@
+﻿Hostname;Type;Management IP
+R1;router;10.1.1.1
+SW1;switch;10.1.1.2

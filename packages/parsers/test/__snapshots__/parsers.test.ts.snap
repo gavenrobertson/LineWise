@@ -1,0 +1,2553 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden outputs [FR-IMP-26] > cdp/01-ios-two-neighbors.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "name": "GigabitEthernet0/0",
+        },
+      ],
+    },
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/0/24",
+        },
+      ],
+      "mgmtIp": "10.10.0.2",
+      "model": "WS-C3850-24P",
+      "osVersion": "16.12.4",
+      "platform": "cisco WS-C3850-24P",
+      "role": "l3-switch",
+      "vendor": "Cisco",
+    },
+    {
+      "hostname": "R2",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/0/0",
+        },
+      ],
+      "mgmtIp": "10.0.12.2",
+      "model": "ISR4331/K9",
+      "osVersion": "17.03.04a",
+      "platform": "cisco ISR4331/K9",
+      "role": "router",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "cdp",
+  "links": [
+    {
+      "a": {
+        "hostname": "R1",
+        "iface": "GigabitEthernet0/1",
+      },
+      "b": {
+        "hostname": "SW1",
+        "iface": "GigabitEthernet1/0/24",
+      },
+    },
+    {
+      "a": {
+        "hostname": "R1",
+        "iface": "GigabitEthernet0/0",
+      },
+      "b": {
+        "hostname": "R2",
+        "iface": "GigabitEthernet0/0/0",
+      },
+    },
+  ],
+  "local": "R1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > cdp/02-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "name": "Ethernet1/49",
+        },
+        {
+          "name": "Ethernet1/50",
+        },
+      ],
+    },
+    {
+      "hostname": "N9K-2",
+      "interfaces": [
+        {
+          "name": "Ethernet1/49",
+        },
+        {
+          "name": "Ethernet1/50",
+        },
+      ],
+      "mgmtIp": "192.168.100.12",
+      "model": "N9K-C93180YC-EX",
+      "osVersion": "9.3(10)",
+      "platform": "N9K-C93180YC-EX",
+      "role": "l3-switch",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "cdp",
+  "links": [
+    {
+      "a": {
+        "hostname": "N9K-1",
+        "iface": "Ethernet1/49",
+      },
+      "b": {
+        "hostname": "N9K-2",
+        "iface": "Ethernet1/49",
+      },
+    },
+    {
+      "a": {
+        "hostname": "N9K-1",
+        "iface": "Ethernet1/50",
+      },
+      "b": {
+        "hostname": "N9K-2",
+        "iface": "Ethernet1/50",
+      },
+    },
+  ],
+  "local": "N9K-1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > cdp/03-no-prompt-ap-and-phone.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "AP-FLOOR2",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0",
+        },
+      ],
+      "mgmtIp": "10.20.30.40",
+      "model": "AIR-AP2802I-B-K9",
+      "platform": "cisco AIR-AP2802I-B-K9",
+      "role": "access-point",
+      "vendor": "Cisco",
+    },
+    {
+      "hostname": "SEP001122334455",
+      "interfaces": [
+        {
+          "name": "Port 1",
+        },
+      ],
+      "mgmtIp": "10.30.0.55",
+      "model": "IP Phone 8851",
+      "platform": "Cisco IP Phone 8851",
+      "role": "ip-phone",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "cdp",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The output has no prompt, so the local device is unknown. Choose the device it came from to create links.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > cdp/04-firewall-neighbor.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "CORE1",
+      "interfaces": [
+        {
+          "name": "TenGigabitEthernet1/1/1",
+        },
+      ],
+    },
+    {
+      "hostname": "FW-EDGE",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/1",
+        },
+      ],
+      "mgmtIp": "172.16.0.1",
+      "model": "ASA5516",
+      "platform": "cisco ASA5516",
+      "role": "firewall",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "cdp",
+  "links": [
+    {
+      "a": {
+        "hostname": "CORE1",
+        "iface": "TenGigabitEthernet1/1/1",
+      },
+      "b": {
+        "hostname": "FW-EDGE",
+        "iface": "GigabitEthernet1/1",
+      },
+    },
+  ],
+  "local": "CORE1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > cdp/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW9",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/0/1",
+        },
+      ],
+    },
+    {
+      "hostname": "OK-NEIGHBOR",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/1",
+        },
+      ],
+    },
+  ],
+  "kind": "cdp",
+  "links": [
+    {
+      "a": {
+        "hostname": "SW9",
+        "iface": "GigabitEthernet1/0/1",
+      },
+      "b": {
+        "hostname": "OK-NEIGHBOR",
+        "iface": "GigabitEthernet0/1",
+      },
+    },
+  ],
+  "local": "SW9",
+  "unparsed": 5,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > containerlab/01-srl.clab.yml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "leaf1",
+      "interfaces": [
+        {
+          "name": "e1-49",
+        },
+        {
+          "name": "e1-1",
+        },
+      ],
+      "mgmtIp": "172.20.20.11",
+      "platform": "ghcr.io/nokia/srlinux",
+      "role": "l3-switch",
+    },
+    {
+      "hostname": "leaf2",
+      "interfaces": [
+        {
+          "name": "e1-49",
+        },
+      ],
+      "platform": "ghcr.io/nokia/srlinux",
+      "role": "l3-switch",
+    },
+    {
+      "hostname": "client1",
+      "interfaces": [
+        {
+          "name": "eth1",
+        },
+      ],
+      "platform": "alpine:latest",
+      "role": "server",
+    },
+  ],
+  "kind": "containerlab",
+  "links": [
+    {
+      "a": {
+        "hostname": "leaf1",
+        "iface": "e1-49",
+      },
+      "b": {
+        "hostname": "leaf2",
+        "iface": "e1-49",
+      },
+      "medium": "virtual",
+    },
+    {
+      "a": {
+        "hostname": "client1",
+        "iface": "eth1",
+      },
+      "b": {
+        "hostname": "leaf1",
+        "iface": "e1-1",
+      },
+      "medium": "virtual",
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > containerlab/02-ceos-bridge.clab.yml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "spine1",
+      "interfaces": [
+        {
+          "name": "eth1",
+        },
+      ],
+      "platform": "ceos:4.30",
+      "role": "l3-switch",
+    },
+    {
+      "hostname": "br1",
+      "interfaces": [
+        {
+          "name": "eth1",
+        },
+        {
+          "name": "eth2",
+        },
+      ],
+      "role": "l2-switch",
+    },
+    {
+      "hostname": "r1",
+      "interfaces": [
+        {
+          "name": "Gi0-0-0-0",
+        },
+      ],
+      "platform": "ios-xr/xrd-control-plane",
+      "role": "router",
+    },
+  ],
+  "kind": "containerlab",
+  "links": [
+    {
+      "a": {
+        "hostname": "spine1",
+        "iface": "eth1",
+      },
+      "b": {
+        "hostname": "br1",
+        "iface": "eth1",
+      },
+      "medium": "virtual",
+    },
+    {
+      "a": {
+        "hostname": "r1",
+        "iface": "Gi0-0-0-0",
+      },
+      "b": {
+        "hostname": "br1",
+        "iface": "eth2",
+      },
+      "medium": "virtual",
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > containerlab/03-host-endpoint.clab.yml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "srv",
+      "interfaces": [
+        {
+          "name": "eth1",
+        },
+      ],
+      "role": "server",
+    },
+    {
+      "hostname": "host",
+      "interfaces": [
+        {
+          "name": "srv-eth1",
+        },
+      ],
+      "role": "server",
+    },
+  ],
+  "kind": "containerlab",
+  "links": [
+    {
+      "a": {
+        "hostname": "srv",
+        "iface": "eth1",
+      },
+      "b": {
+        "hostname": "host",
+        "iface": "srv-eth1",
+      },
+      "medium": "virtual",
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > containerlab/04-bad-endpoint.clab.yml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "a",
+      "interfaces": [],
+      "role": "server",
+    },
+  ],
+  "kind": "containerlab",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Skipped link with endpoints ["a-no-colon","b:eth1"].",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > containerlab/05-malformed.clab.yml 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "containerlab",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The Containerlab file is not valid YAML: Flow map in block collection must be sufficiently indented and end with a } at line 5, column 3:
+
+    a: {kind: linux
+  links: [
+  ^
+",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > csv/01-devices.csv 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "CORE1",
+      "interfaces": [],
+      "mgmtIp": "10.0.0.1",
+      "model": "C9500-24Y4C",
+      "role": "l3-switch",
+      "serial": "FCW0001",
+      "site": "Huntsville",
+      "vendor": "Cisco",
+    },
+    {
+      "hostname": "ACCESS-1",
+      "interfaces": [],
+      "mgmtIp": "10.0.0.11",
+      "model": "C9200L-48P-4G",
+      "role": "l2-switch",
+      "serial": "FCW0002",
+      "site": "Huntsville",
+      "vendor": "Cisco",
+    },
+    {
+      "hostname": "FW1",
+      "interfaces": [],
+      "mgmtIp": "10.0.0.254",
+      "model": "FortiGate 100F",
+      "role": "firewall",
+      "site": "Huntsville",
+      "vendor": "Fortinet",
+    },
+  ],
+  "kind": "csv",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > csv/02-links.csv 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "CORE1",
+      "interfaces": [
+        {
+          "name": "TenGigabitEthernet1/0/1",
+        },
+        {
+          "name": "TenGigabitEthernet1/0/2",
+        },
+        {
+          "name": "TenGigabitEthernet1/0/24",
+        },
+      ],
+    },
+    {
+      "hostname": "ACCESS-1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/1/1",
+        },
+      ],
+    },
+    {
+      "hostname": "ACCESS-2",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/1/1",
+        },
+      ],
+    },
+    {
+      "hostname": "FW1",
+      "interfaces": [
+        {
+          "name": "port1",
+        },
+      ],
+    },
+  ],
+  "kind": "csv",
+  "links": [
+    {
+      "a": {
+        "hostname": "CORE1",
+        "iface": "Te1/0/1",
+      },
+      "b": {
+        "hostname": "ACCESS-1",
+        "iface": "Gi1/1/1",
+      },
+      "label": "10G uplink",
+      "medium": "fiber-sm",
+    },
+    {
+      "a": {
+        "hostname": "CORE1",
+        "iface": "Te1/0/2",
+      },
+      "b": {
+        "hostname": "ACCESS-2",
+        "iface": "Gi1/1/1",
+      },
+      "medium": "fiber-mm",
+    },
+    {
+      "a": {
+        "hostname": "FW1",
+        "iface": "port1",
+      },
+      "b": {
+        "hostname": "CORE1",
+        "iface": "Te1/0/24",
+      },
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > csv/03-interfaces-quoted.csv 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "CORE1",
+      "interfaces": [
+        {
+          "description": "Users, floor 1",
+          "ipv4": [
+            {
+              "address": "10.10.0.1",
+              "prefix": 24,
+            },
+          ],
+          "name": "Vlan10",
+        },
+      ],
+    },
+    {
+      "hostname": "ACCESS-1",
+      "interfaces": [
+        {
+          "accessVlan": 10,
+          "description": "Desk "A"",
+          "mode": "access",
+          "name": "GigabitEthernet1/0/1",
+        },
+        {
+          "description": "Uplink",
+          "mode": "trunk",
+          "name": "GigabitEthernet1/0/49",
+        },
+      ],
+    },
+  ],
+  "kind": "csv",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > csv/04-semicolon-bom.csv 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [],
+      "mgmtIp": "10.1.1.1",
+      "role": "router",
+    },
+    {
+      "hostname": "SW1",
+      "interfaces": [],
+      "mgmtIp": "10.1.1.2",
+      "role": "l2-switch",
+    },
+  ],
+  "kind": "csv",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > csv/05-malformed.csv 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/2",
+        },
+        {
+          "name": "Gi0/3,unterminated",
+        },
+      ],
+    },
+  ],
+  "kind": "csv",
+  "links": [],
+  "local": null,
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Row 3: address 10.0.0.2 has no prefix or mask; skipped.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > drawio/01-uncompressed.drawio 1`] = `
+{
+  "annotations": 1,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/1",
+        },
+      ],
+      "position": {
+        "x": 140,
+        "y": 65,
+      },
+      "role": "router",
+    },
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/0/1",
+        },
+      ],
+      "position": {
+        "x": 150,
+        "y": 220,
+      },
+      "role": "l2-switch",
+    },
+  ],
+  "kind": "drawio",
+  "links": [
+    {
+      "a": {
+        "hostname": "R1",
+        "iface": "GigabitEthernet0/1",
+      },
+      "b": {
+        "hostname": "SW1",
+        "iface": "GigabitEthernet1/0/1",
+      },
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > drawio/02-compressed.drawio 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "FW1",
+      "interfaces": [],
+      "position": {
+        "x": 30,
+        "y": 30,
+      },
+      "role": "firewall",
+    },
+    {
+      "hostname": "Internet",
+      "interfaces": [],
+      "position": {
+        "x": 260,
+        "y": 40,
+      },
+      "role": "cloud",
+    },
+  ],
+  "kind": "drawio",
+  "links": [
+    {
+      "a": {
+        "hostname": "FW1",
+      },
+      "b": {
+        "hostname": "Internet",
+      },
+      "medium": "wireless",
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > drawio/03-object-wrapper.drawio 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SRV-1",
+      "interfaces": [],
+      "position": {
+        "x": 30,
+        "y": 40,
+      },
+      "role": "server",
+    },
+    {
+      "hostname": "SRV-1-2",
+      "interfaces": [],
+      "position": {
+        "x": 110,
+        "y": 40,
+      },
+      "role": "server",
+    },
+  ],
+  "kind": "drawio",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > drawio/04-only-shapes.drawio 1`] = `
+{
+  "annotations": 1,
+  "devices": [],
+  "kind": "drawio",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Only the first page of the draw.io file was imported.",
+    "No network shapes were recognized; shapes were imported as annotations.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > drawio/05-malformed.drawio 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "drawio",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Could not decompress the draw.io diagram.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > etherchannel-summary/01-ios.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "name": "Port-channel1",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 1,
+          },
+          "name": "GigabitEthernet1/0/49",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 1,
+          },
+          "name": "GigabitEthernet1/0/50",
+        },
+        {
+          "name": "Port-channel2",
+        },
+        {
+          "channelGroup": {
+            "mode": "on",
+            "number": 2,
+          },
+          "name": "TenGigabitEthernet1/1/1",
+        },
+        {
+          "channelGroup": {
+            "mode": "on",
+            "number": 2,
+          },
+          "name": "TenGigabitEthernet1/1/2",
+        },
+      ],
+    },
+  ],
+  "kind": "etherchannel-summary",
+  "links": [],
+  "local": "SW1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > etherchannel-summary/02-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "name": "Port-channel10",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 10,
+          },
+          "name": "Ethernet1/49",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 10,
+          },
+          "name": "Ethernet1/50",
+        },
+      ],
+    },
+  ],
+  "kind": "etherchannel-summary",
+  "links": [],
+  "local": "N9K-1",
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > etherchannel-summary/03-pagp.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW3",
+      "interfaces": [
+        {
+          "name": "Port-channel5",
+        },
+        {
+          "channelGroup": {
+            "mode": "pagp",
+            "number": 5,
+          },
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "channelGroup": {
+            "mode": "pagp",
+            "number": 5,
+          },
+          "name": "GigabitEthernet0/2",
+        },
+      ],
+    },
+  ],
+  "kind": "etherchannel-summary",
+  "links": [],
+  "local": "SW3",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > etherchannel-summary/04-no-prompt.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "",
+      "interfaces": [
+        {
+          "name": "Port-channel3",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 3,
+          },
+          "name": "TenGigabitEthernet1/0/1",
+        },
+        {
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 3,
+          },
+          "name": "TenGigabitEthernet1/0/2",
+        },
+      ],
+    },
+  ],
+  "kind": "etherchannel-summary",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The output has no prompt; choose the device it came from.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > etherchannel-summary/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW8",
+      "interfaces": [
+        {
+          "name": "Port-channel1",
+        },
+      ],
+    },
+  ],
+  "kind": "etherchannel-summary",
+  "links": [],
+  "local": "SW8",
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > gns3/01-basic.gns3 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [
+        {
+          "name": "FastEthernet0/0",
+        },
+        {
+          "name": "FastEthernet0/1",
+        },
+      ],
+      "position": {
+        "x": -200,
+        "y": 0,
+      },
+      "role": "router",
+    },
+    {
+      "hostname": "Switch1",
+      "interfaces": [
+        {
+          "name": "Ethernet0",
+        },
+        {
+          "name": "Ethernet1",
+        },
+      ],
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "role": "l2-switch",
+    },
+    {
+      "hostname": "PC1",
+      "interfaces": [
+        {
+          "name": "Ethernet0",
+        },
+      ],
+      "position": {
+        "x": 200,
+        "y": 0,
+      },
+      "role": "workstation",
+    },
+  ],
+  "kind": "gns3",
+  "links": [
+    {
+      "a": {
+        "hostname": "R1",
+        "iface": "FastEthernet0/0",
+      },
+      "b": {
+        "hostname": "Switch1",
+        "iface": "Ethernet0",
+      },
+    },
+    {
+      "a": {
+        "hostname": "Switch1",
+        "iface": "Ethernet1",
+      },
+      "b": {
+        "hostname": "PC1",
+        "iface": "Ethernet0",
+      },
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > gns3/02-labels-no-ports.gns3 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "ASAv",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/0",
+        },
+      ],
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "role": "firewall",
+    },
+    {
+      "hostname": "NAT1",
+      "interfaces": [
+        {
+          "name": "Ethernet0/0",
+        },
+      ],
+      "position": {
+        "x": 100,
+        "y": 0,
+      },
+      "role": "internet",
+    },
+  ],
+  "kind": "gns3",
+  "links": [
+    {
+      "a": {
+        "hostname": "ASAv",
+        "iface": "Gi0/0",
+      },
+      "b": {
+        "hostname": "NAT1",
+        "iface": "Ethernet0/0",
+      },
+    },
+  ],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > gns3/03-empty.gns3 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "gns3",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > gns3/04-dangling-link.gns3 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R9",
+      "interfaces": [],
+      "position": {
+        "x": 0,
+        "y": 0,
+      },
+      "role": "router",
+    },
+  ],
+  "kind": "gns3",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > gns3/05-malformed.gns3 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "gns3",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The GNS3 project is not valid JSON.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > interfaces-status/01-ios.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "accessVlan": 10,
+          "description": "Desk 101",
+          "enabled": true,
+          "media": "copper",
+          "mode": "access",
+          "name": "GigabitEthernet1/0/1",
+        },
+        {
+          "accessVlan": 10,
+          "enabled": true,
+          "media": "copper",
+          "mode": "access",
+          "name": "GigabitEthernet1/0/2",
+        },
+        {
+          "accessVlan": 30,
+          "description": "Printer",
+          "enabled": false,
+          "media": "copper",
+          "mode": "access",
+          "name": "GigabitEthernet1/0/3",
+        },
+        {
+          "description": "Uplink CORE1",
+          "duplex": "full",
+          "enabled": true,
+          "media": "fiber",
+          "mode": "trunk",
+          "name": "GigabitEthernet1/1/1",
+          "speedMbps": 10000,
+        },
+        {
+          "duplex": "full",
+          "enabled": true,
+          "media": "fiber",
+          "mode": "routed",
+          "name": "TenGigabitEthernet1/1/2",
+          "speedMbps": 10000,
+        },
+      ],
+    },
+  ],
+  "kind": "interfaces-status",
+  "links": [],
+  "local": "SW1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > interfaces-status/02-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "description": "--",
+          "duplex": "full",
+          "enabled": true,
+          "mode": "routed",
+          "name": "mgmt0",
+          "speedMbps": 1000,
+        },
+        {
+          "accessVlan": 10,
+          "description": "to-server-1",
+          "duplex": "full",
+          "enabled": true,
+          "media": "fiber",
+          "mode": "access",
+          "name": "Ethernet1/1",
+          "speedMbps": 10000,
+        },
+        {
+          "description": "--",
+          "duplex": "full",
+          "enabled": true,
+          "media": "fiber",
+          "mode": "trunk",
+          "name": "Ethernet1/49",
+          "speedMbps": 100000,
+        },
+      ],
+    },
+  ],
+  "kind": "interfaces-status",
+  "links": [],
+  "local": "N9K-1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > interfaces-status/03-err-disabled.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW2",
+      "interfaces": [
+        {
+          "accessVlan": 40,
+          "description": "Camera 4",
+          "enabled": false,
+          "media": "copper",
+          "mode": "access",
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "accessVlan": 40,
+          "description": "Camera 5",
+          "duplex": "full",
+          "enabled": true,
+          "media": "copper",
+          "mode": "access",
+          "name": "GigabitEthernet0/2",
+          "speedMbps": 100,
+        },
+      ],
+    },
+  ],
+  "kind": "interfaces-status",
+  "links": [],
+  "local": "SW2",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > interfaces-status/04-no-header.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "running-config",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Could not recognize this text. Supported: show cdp/lldp neighbors detail, show running-config, show ip interface brief, show interfaces status, show vlan brief, show etherchannel summary, CSV, draw.io, GNS3, Containerlab and Nmap XML.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > interfaces-status/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW6",
+      "interfaces": [
+        {
+          "description": "Desk 9",
+          "enabled": true,
+          "media": "copper",
+          "name": "GigabitEthernet1/0/9",
+        },
+      ],
+    },
+  ],
+  "kind": "interfaces-status",
+  "links": [],
+  "local": "SW6",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > ip-interface-brief/01-ios.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R1",
+      "interfaces": [
+        {
+          "enabled": true,
+          "name": "GigabitEthernet0/0",
+        },
+        {
+          "enabled": true,
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "enabled": false,
+          "name": "GigabitEthernet0/2",
+        },
+        {
+          "enabled": true,
+          "name": "Loopback0",
+        },
+      ],
+    },
+  ],
+  "kind": "ip-interface-brief",
+  "links": [],
+  "local": "R1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Interface brief output has no subnet masks; IP addresses were not imported. Import the running-config for addresses.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > ip-interface-brief/02-switch.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "enabled": false,
+          "name": "Vlan1",
+        },
+        {
+          "enabled": true,
+          "name": "Vlan99",
+        },
+        {
+          "enabled": true,
+          "name": "GigabitEthernet1/0/1",
+        },
+        {
+          "enabled": true,
+          "name": "GigabitEthernet1/0/2",
+        },
+      ],
+    },
+  ],
+  "kind": "ip-interface-brief",
+  "links": [],
+  "local": "SW1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Interface brief output has no subnet masks; IP addresses were not imported. Import the running-config for addresses.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > ip-interface-brief/03-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "enabled": true,
+          "name": "Vlan10",
+        },
+        {
+          "enabled": false,
+          "name": "Ethernet1/3",
+        },
+      ],
+    },
+  ],
+  "kind": "ip-interface-brief",
+  "links": [],
+  "local": "N9K-1",
+  "unparsed": 2,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Interface brief output has no subnet masks; IP addresses were not imported. Import the running-config for addresses.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > ip-interface-brief/04-no-prompt.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "",
+      "interfaces": [
+        {
+          "enabled": true,
+          "name": "GigabitEthernet0/0/0",
+        },
+      ],
+    },
+  ],
+  "kind": "ip-interface-brief",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The output has no prompt; choose the device it came from.",
+    "Interface brief output has no subnet masks; IP addresses were not imported. Import the running-config for addresses.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > ip-interface-brief/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "R9",
+      "interfaces": [],
+    },
+  ],
+  "kind": "ip-interface-brief",
+  "links": [],
+  "local": "R9",
+  "unparsed": 3,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > lldp/01-ios.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/0/48",
+        },
+        {
+          "name": "TenGigabitEthernet1/1/1",
+        },
+      ],
+    },
+    {
+      "hostname": "ACCESS-2",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet1/0/1",
+        },
+      ],
+      "mgmtIp": "10.10.0.22",
+      "osVersion": "15.2(7)E4",
+      "platform": "Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(7)E4, RELEASE SOFTWARE (fc2)",
+      "role": "l2-switch",
+      "vendor": "Cisco",
+    },
+    {
+      "hostname": "CORE1",
+      "interfaces": [
+        {
+          "name": "TenGigabitEthernet1/0/1",
+        },
+      ],
+      "mgmtIp": "10.10.0.1",
+      "osVersion": "17.3.5",
+      "platform": "Cisco IOS Software [Amsterdam], Catalyst L3 Switch Software, Version 17.3.5",
+      "role": "l3-switch",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "lldp",
+  "links": [
+    {
+      "a": {
+        "hostname": "SW1",
+        "iface": "GigabitEthernet1/0/48",
+      },
+      "b": {
+        "hostname": "ACCESS-2",
+        "iface": "GigabitEthernet1/0/1",
+      },
+    },
+    {
+      "a": {
+        "hostname": "SW1",
+        "iface": "TenGigabitEthernet1/1/1",
+      },
+      "b": {
+        "hostname": "CORE1",
+        "iface": "TenGigabitEthernet1/0/1",
+      },
+    },
+  ],
+  "local": "SW1",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > lldp/02-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "name": "Ethernet1/1",
+        },
+      ],
+    },
+    {
+      "hostname": "LEAF-1",
+      "interfaces": [
+        {
+          "name": "Ethernet1/1",
+        },
+      ],
+      "mgmtIp": "10.0.0.11",
+      "platform": "Cisco Nexus Operating System (NX-OS) Software 9.3(10)",
+      "role": "l3-switch",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "lldp",
+  "links": [
+    {
+      "a": {
+        "hostname": "N9K-1",
+        "iface": "Ethernet1/1",
+      },
+      "b": {
+        "hostname": "LEAF-1",
+        "iface": "Ethernet1/1",
+      },
+    },
+  ],
+  "local": "N9K-1",
+  "unparsed": 3,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > lldp/03-lldpctl.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "tor-sw1",
+      "interfaces": [
+        {
+          "name": "Ethernet12",
+        },
+      ],
+      "mgmtIp": "10.1.1.1",
+      "platform": "Arista Networks EOS version 4.30.1F",
+      "role": "l3-switch",
+    },
+  ],
+  "kind": "lldp",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "The output has no prompt, so the local device is unknown. Choose the device it came from to create links.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > lldp/04-no-sysname.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW3",
+      "interfaces": [],
+    },
+  ],
+  "kind": "lldp",
+  "links": [],
+  "local": "SW3",
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "Skipped a neighbor entry near line 4: no device name.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > lldp/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW4",
+      "interfaces": [],
+    },
+    {
+      "hostname": "ROUTER-X",
+      "interfaces": [],
+    },
+  ],
+  "kind": "lldp",
+  "links": [],
+  "local": "SW4",
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > nmap/01-scan.xml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "gw",
+      "interfaces": [],
+      "mgmtIp": "10.0.0.1",
+      "platform": "Cisco IOS 15.X",
+      "role": "router",
+      "vendor": "Cisco Systems",
+    },
+    {
+      "hostname": "10.0.0.5",
+      "interfaces": [],
+      "mgmtIp": "10.0.0.5",
+      "platform": "Linux 5.4 - 5.15",
+      "role": "server",
+    },
+  ],
+  "kind": "nmap",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > nmap/02-printer.xml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "printer-2f",
+      "interfaces": [],
+      "mgmtIp": "10.0.5.20",
+      "platform": "HP JetDirect printer",
+      "role": "printer",
+    },
+  ],
+  "kind": "nmap",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > nmap/03-windows.xml 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "10.0.9.9",
+      "interfaces": [],
+      "mgmtIp": "10.0.9.9",
+      "platform": "Microsoft Windows 10 1809 - 21H2",
+      "role": "workstation",
+    },
+  ],
+  "kind": "nmap",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > nmap/04-no-hosts.xml 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "nmap",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "No hosts that were up were found in the Nmap XML.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > nmap/05-malformed.xml 1`] = `
+{
+  "annotations": 0,
+  "devices": [],
+  "kind": "nmap",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "No hosts that were up were found in the Nmap XML.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/01-ios-access.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "ACCESS-1",
+      "interfaces": [
+        {
+          "accessVlan": 10,
+          "description": "Desk 101",
+          "mode": "access",
+          "name": "GigabitEthernet1/0/1",
+        },
+        {
+          "accessVlan": 10,
+          "enabled": false,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/2",
+        },
+        {
+          "allowedVlans": "10,20,99",
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 1,
+          },
+          "description": "Uplink to CORE1",
+          "mode": "trunk",
+          "name": "GigabitEthernet1/0/49",
+          "nativeVlan": 99,
+        },
+        {
+          "allowedVlans": "10,20,99",
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 1,
+          },
+          "description": "Uplink to CORE1",
+          "mode": "trunk",
+          "name": "GigabitEthernet1/0/50",
+          "nativeVlan": 99,
+        },
+        {
+          "allowedVlans": "10,20,99",
+          "mode": "trunk",
+          "name": "Port-channel1",
+          "nativeVlan": 99,
+        },
+        {
+          "ipv4": [
+            {
+              "address": "10.99.0.11",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "Vlan99",
+        },
+      ],
+      "mgmtIp": "10.99.0.11",
+      "osVersion": "15.2",
+      "role": "l2-switch",
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": "ACCESS-1",
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "USERS",
+      "number": 10,
+    },
+    {
+      "name": "VOICE",
+      "number": 20,
+    },
+    {
+      "name": "MGMT",
+      "number": 99,
+    },
+  ],
+  "vrfs": [],
+  "warnings": [
+    "4 line(s) containing secrets were removed and not imported.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/02-ios-router.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "EDGE-R1",
+      "interfaces": [
+        {
+          "ipv4": [
+            {
+              "address": "10.255.0.1",
+              "prefix": 32,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "Loopback0",
+        },
+        {
+          "description": "WAN to ISP (circuit 123456)",
+          "ipv4": [
+            {
+              "address": "203.0.113.2",
+              "prefix": 30,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "GigabitEthernet0/0/0",
+        },
+        {
+          "description": "LAN",
+          "fhrp": {
+            "group": 1,
+            "protocol": "hsrp",
+            "vip": "10.0.0.1",
+          },
+          "ipv4": [
+            {
+              "address": "10.0.0.2",
+              "prefix": 24,
+              "secondary": false,
+            },
+            {
+              "address": "10.0.1.2",
+              "prefix": 24,
+              "secondary": true,
+            },
+          ],
+          "ipv6": [
+            {
+              "address": "2001:DB8:0:1::2",
+              "prefix": 64,
+            },
+          ],
+          "mode": "routed",
+          "name": "GigabitEthernet0/0/1",
+        },
+        {
+          "dot1q": 200,
+          "ipv4": [
+            {
+              "address": "10.200.0.1",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "GigabitEthernet0/0/1.200",
+          "vrf": "CUSTOMER-A",
+        },
+        {
+          "ipv4": [
+            {
+              "address": "10.0.12.1",
+              "prefix": 30,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "Serial0/1/0",
+        },
+      ],
+      "mgmtIp": "10.255.0.1",
+      "role": "router",
+      "routing": [
+        {
+          "protocol": "ospf",
+          "value": "1",
+        },
+        {
+          "protocol": "bgp",
+          "value": "65000",
+        },
+        {
+          "protocol": "static",
+          "value": "",
+        },
+      ],
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": "EDGE-R1",
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [
+    {
+      "name": "CUSTOMER-A",
+      "rd": "65000:100",
+    },
+  ],
+  "warnings": [
+    "2 line(s) containing secrets were removed and not imported.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/03-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "LEAF-1",
+      "interfaces": [
+        {
+          "enabled": true,
+          "fhrp": {
+            "group": 10,
+            "protocol": "hsrp",
+            "vip": "10.1.10.1",
+          },
+          "ipv4": [
+            {
+              "address": "10.1.10.2",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "Vlan10",
+          "vrf": "PROD",
+        },
+        {
+          "allowedVlans": "10,20",
+          "mode": "trunk",
+          "name": "Port-channel10",
+        },
+        {
+          "accessVlan": 10,
+          "description": "to-server-1",
+          "duplex": "full",
+          "mode": "access",
+          "name": "Ethernet1/1",
+          "speedMbps": 10000,
+        },
+        {
+          "allowedVlans": "10,20",
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 10,
+          },
+          "mode": "trunk",
+          "name": "Ethernet1/49",
+        },
+        {
+          "allowedVlans": "10,20",
+          "channelGroup": {
+            "mode": "lacp-active",
+            "number": 10,
+          },
+          "mode": "trunk",
+          "name": "Ethernet1/50",
+        },
+        {
+          "ipv4": [
+            {
+              "address": "192.168.100.11",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "mgmt0",
+          "vrf": "management",
+        },
+      ],
+      "mgmtIp": "192.168.100.11",
+      "osVersion": "9.3(10)",
+      "role": "l3-switch",
+      "routing": [
+        {
+          "protocol": "ospf",
+          "value": "1",
+        },
+      ],
+      "vendor": "Cisco",
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": "LEAF-1",
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "",
+      "number": 1,
+    },
+    {
+      "name": "APP",
+      "number": 10,
+    },
+    {
+      "name": "DB",
+      "number": 20,
+    },
+  ],
+  "vrfs": [
+    {
+      "name": "PROD",
+      "rd": "65001:1",
+    },
+  ],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/04-trunk-add-remove.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "DIST-1",
+      "interfaces": [
+        {
+          "allowedVlans": "10,12,20,30",
+          "mode": "trunk",
+          "name": "TenGigabitEthernet1/1/1",
+        },
+        {
+          "allowedVlans": "100-4094",
+          "mode": "trunk",
+          "name": "TenGigabitEthernet1/1/2",
+        },
+        {
+          "ipv4": [
+            {
+              "address": "10.250.0.1",
+              "prefix": 31,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "mtu": 9100,
+          "name": "TenGigabitEthernet1/1/3",
+        },
+        {
+          "fhrp": {
+            "group": 10,
+            "protocol": "vrrp",
+            "vip": "10.10.0.254",
+          },
+          "ipv4": [
+            {
+              "address": "10.10.0.1",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "Vlan10",
+        },
+      ],
+      "mgmtIp": "10.10.0.1",
+      "role": "l3-switch",
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": "DIST-1",
+  "unparsed": 1,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "BROKEN",
+      "interfaces": [
+        {
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "description": "ok",
+          "name": "GigabitEthernet0/2",
+        },
+      ],
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": "BROKEN",
+  "unparsed": 6,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > running-config/06-no-hostname.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "",
+      "interfaces": [
+        {
+          "ipv4": [
+            {
+              "address": "192.0.2.1",
+              "prefix": 24,
+              "secondary": false,
+            },
+          ],
+          "mode": "routed",
+          "name": "GigabitEthernet0/1",
+        },
+      ],
+      "mgmtIp": "192.0.2.1",
+      "role": "router",
+    },
+  ],
+  "kind": "running-config",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [
+    "No hostname line found; choose the device this configuration belongs to.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > vlan-brief/01-ios.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW1",
+      "interfaces": [
+        {
+          "accessVlan": 1,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/5",
+        },
+        {
+          "accessVlan": 1,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/6",
+        },
+        {
+          "accessVlan": 10,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/1",
+        },
+        {
+          "accessVlan": 10,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/2",
+        },
+        {
+          "accessVlan": 10,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/3",
+        },
+        {
+          "accessVlan": 10,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/4",
+        },
+      ],
+    },
+  ],
+  "kind": "vlan-brief",
+  "links": [],
+  "local": "SW1",
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "default",
+      "number": 1,
+    },
+    {
+      "name": "USERS",
+      "number": 10,
+    },
+    {
+      "name": "VOICE",
+      "number": 20,
+    },
+    {
+      "name": "MGMT",
+      "number": 99,
+    },
+  ],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > vlan-brief/02-nxos.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "N9K-1",
+      "interfaces": [
+        {
+          "allowedVlans": "1,10,20",
+          "mode": "trunk",
+          "name": "Port-channel10",
+        },
+        {
+          "allowedVlans": "1,10,20",
+          "mode": "trunk",
+          "name": "Ethernet1/49",
+        },
+        {
+          "allowedVlans": "1,20",
+          "mode": "trunk",
+          "name": "Ethernet1/50",
+        },
+        {
+          "accessVlan": 10,
+          "mode": "access",
+          "name": "Ethernet1/1",
+        },
+      ],
+    },
+  ],
+  "kind": "vlan-brief",
+  "links": [],
+  "local": "N9K-1",
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "default",
+      "number": 1,
+    },
+    {
+      "name": "APP",
+      "number": 10,
+    },
+    {
+      "name": "DB",
+      "number": 20,
+    },
+  ],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > vlan-brief/03-suspended.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW2",
+      "interfaces": [
+        {
+          "accessVlan": 30,
+          "mode": "access",
+          "name": "GigabitEthernet0/1",
+        },
+        {
+          "accessVlan": 30,
+          "mode": "access",
+          "name": "GigabitEthernet0/2",
+        },
+      ],
+    },
+  ],
+  "kind": "vlan-brief",
+  "links": [],
+  "local": "SW2",
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "CAMERAS",
+      "number": 30,
+    },
+  ],
+  "vrfs": [],
+  "warnings": [],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > vlan-brief/04-no-prompt.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "",
+      "interfaces": [
+        {
+          "accessVlan": 50,
+          "mode": "access",
+          "name": "GigabitEthernet1/0/20",
+        },
+      ],
+    },
+  ],
+  "kind": "vlan-brief",
+  "links": [],
+  "local": null,
+  "unparsed": 0,
+  "vlans": [
+    {
+      "name": "GUEST",
+      "number": 50,
+    },
+  ],
+  "vrfs": [],
+  "warnings": [
+    "The output has no prompt; choose the device it came from.",
+  ],
+}
+`;
+
+exports[`golden outputs [FR-IMP-26] > vlan-brief/05-malformed.txt 1`] = `
+{
+  "annotations": 0,
+  "devices": [
+    {
+      "hostname": "SW7",
+      "interfaces": [],
+    },
+  ],
+  "kind": "vlan-brief",
+  "links": [],
+  "local": "SW7",
+  "unparsed": 2,
+  "vlans": [],
+  "vrfs": [],
+  "warnings": [],
+}
+`;

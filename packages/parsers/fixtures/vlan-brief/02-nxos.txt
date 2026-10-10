@@ -1,0 +1,7 @@
+N9K-1# show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Po10, Eth1/49, Eth1/50
+10   APP                              active    Po10, Eth1/1, Eth1/49
+20   DB                               active    Po10, Eth1/49, Eth1/50

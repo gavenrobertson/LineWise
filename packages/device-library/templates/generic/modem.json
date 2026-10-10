@@ -1,0 +1,17 @@
+{
+  "id": "generic/modem",
+  "name": "Modem \u2013 1\u00d7GE",
+  "vendor": "Generic",
+  "model": "Modem \u2013 1\u00d7GE",
+  "role": "modem",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0-1",
+      "speedMbps": 1000
+    }
+  ]
+}

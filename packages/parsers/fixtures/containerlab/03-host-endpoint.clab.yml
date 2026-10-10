@@ -1,0 +1,6 @@
+name: hostlink
+topology:
+  nodes:
+    srv: {kind: linux}
+  links:
+    - endpoints: ["srv:eth1", "host:srv-eth1"]

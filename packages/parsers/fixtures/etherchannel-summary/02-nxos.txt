@@ -1,0 +1,7 @@
+N9K-1# show port-channel summary
+Flags:  D - Down        P - Up in port-channel (members)
+--------------------------------------------------------------------------------
+Group Port-       Type     Protocol  Member Ports
+      Channel
+--------------------------------------------------------------------------------
+10    Po10(SU)    Eth      LACP      Eth1/49(P)   Eth1/50(P)

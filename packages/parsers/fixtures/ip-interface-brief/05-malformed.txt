@@ -1,0 +1,5 @@
+R9#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+this is not an interface line
+GigabitEthernet0/0
+??? ??? ???

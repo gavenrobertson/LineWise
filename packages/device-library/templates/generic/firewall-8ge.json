@@ -1,0 +1,19 @@
+{
+  "id": "generic/firewall-8ge",
+  "name": "Firewall \u2013 8\u00d7GE",
+  "vendor": "Generic",
+  "model": "Firewall \u2013 8\u00d7GE",
+  "role": "firewall",
+  "rackUnits": 1,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Gi0/0-7"
+    },
+    {
+      "range": "mgmt0"
+    }
+  ]
+}

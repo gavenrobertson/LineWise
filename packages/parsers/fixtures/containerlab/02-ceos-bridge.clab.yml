@@ -1,0 +1,9 @@
+name: lab2
+topology:
+  nodes:
+    spine1: {kind: ceos, image: ceos:4.30}
+    br1: {kind: bridge}
+    r1: {kind: cisco_xrd, image: ios-xr/xrd-control-plane}
+  links:
+    - endpoints: [spine1:eth1, br1:eth1]
+    - endpoints: [r1:Gi0-0-0-0, br1:eth2]

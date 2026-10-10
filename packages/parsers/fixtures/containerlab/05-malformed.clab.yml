@@ -1,0 +1,5 @@
+name: broken
+topology:
+  nodes:
+    a: {kind: linux
+  links: [

@@ -1,0 +1,4 @@
+hostname,interface,ip
+,Gi0/1,10.0.0.1
+R1,Gi0/2,10.0.0.2
+R1,"Gi0/3,"unterminated

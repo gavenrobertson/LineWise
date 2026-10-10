@@ -1,0 +1,12 @@
+{
+  "id": "generic/wan-cloud",
+  "name": "ISP / WAN cloud",
+  "vendor": "Generic",
+  "model": "ISP / WAN cloud",
+  "role": "wan-cloud",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": []
+}

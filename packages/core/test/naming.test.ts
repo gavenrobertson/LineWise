@@ -28,6 +28,7 @@ describe('normalizeInterfaceName [FR-NET-03]', () => {
     ['Tu100', 'Tunnel100', 'Tu100'],
     ['Se0/0/0', 'Serial0/0/0', 'Se0/0/0'],
     ['mgmt0', 'mgmt0', 'mgmt0'],
+    ['eth0', 'eth0', 'eth0'],
   ])('%s → %s (%s)', (input, full, short) => {
     const n = normalizeInterfaceName(input);
     expect(n.name).toBe(full);

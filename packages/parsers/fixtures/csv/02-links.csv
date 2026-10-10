@@ -1,0 +1,4 @@
+Device A,Interface A,Device B,Interface B,Medium,Label
+CORE1,Te1/0/1,ACCESS-1,Gi1/1/1,fiber,10G uplink
+CORE1,Te1/0/2,ACCESS-2,Gi1/1/1,fiber-mm,
+FW1,port1,CORE1,Te1/0/24,copper,

@@ -1,0 +1,16 @@
+{
+  "id": "generic/generic-device",
+  "name": "Generic device",
+  "vendor": "Generic",
+  "model": "Generic device",
+  "role": "generic",
+  "rackUnits": 0,
+  "generic": true,
+  "verified": true,
+  "contributor": "LineWise",
+  "interfaces": [
+    {
+      "range": "Eth0"
+    }
+  ]
+}
