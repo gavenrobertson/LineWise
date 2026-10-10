@@ -296,10 +296,18 @@ describe('robustness [NFR-SEC-05]', () => {
   });
 
   it('parses a pathological line in linear time', () => {
-    const t0 = performance.now();
-    parseText(`${'interface '.repeat(20000)}\n${'Device ID: '.repeat(20000)}`, {}, 'running-config');
-    parseText(`${'a,'.repeat(200000)}`, {}, 'csv');
-    expect(performance.now() - t0).toBeLessThan(1000);
+    // Compare against a quarter of the input rather than a wall-clock limit, so a slow runner
+    // (or coverage instrumentation) cannot fail it: linear work grows ~4×, quadratic ~16×.
+    const run = (n: number) => {
+      const t0 = performance.now();
+      parseText(`${'interface '.repeat(n)}\n${'Device ID: '.repeat(n)}`, {}, 'running-config');
+      parseText(`${'a,'.repeat(n * 10)}`, {}, 'csv');
+      return performance.now() - t0;
+    };
+    run(5000); // warm up
+    const small = Math.max(run(5000), 1);
+    const big = run(20000);
+    expect(big / small).toBeLessThan(10);
   });
 });
 
