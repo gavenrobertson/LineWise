@@ -119,7 +119,10 @@ export function Canvas() {
   const pageId = page?.id ?? '';
   const layer = useEditor((s) => s.layer);
   const highlight = useEditor((s) => s.highlight);
-  const issues = useEditor((s) => s.issues);
+  const allIssues = useEditor((s) => s.issues);
+  const showBadges = usePrefs((s) => s.showProblemBadges);
+  // Badges can be turned off (FR-VAL-03); the problems panel still lists everything.
+  const issues = useMemo(() => (showBadges ? allIssues : []), [showBadges, allIssues]);
   const selection = useEditor((s) => s.selection);
   const drag = useEditor((s) => s.dragPositions);
   const execute = useEditor((s) => s.execute);

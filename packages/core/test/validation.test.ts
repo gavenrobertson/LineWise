@@ -70,6 +70,17 @@ describe('rule registry [FR-VAL-04]', () => {
   });
 });
 
+describe('rule severities match the spec table (section 7)', () => {
+  it('VAL-001..020 have the specified severity', () => {
+    const want = 'EEEEEWWWWWWWWWWIIIII';
+    const sev = { E: 'error', W: 'warning', I: 'info' } as const;
+    for (let n = 1; n <= 20; n++) {
+      const id = `VAL-${String(n).padStart(3, '0')}`;
+      expect(listRules().find((r) => r.id === id)?.severity, id).toBe(sev[want[n - 1] as 'E' | 'W' | 'I']);
+    }
+  });
+});
+
 describe('addressing rules', () => {
   it('VAL-001 duplicate IP in the same VRF', () => {
     const t = pair();
@@ -143,6 +154,8 @@ describe('layer 2 rules', () => {
   it('VAL-007 trunk/access mismatch with a fix', () => {
     const t = pair('l2-switch', 'l2-switch');
     t.setA({ mode: 'trunk' });
+    t.setB({ mode: 'trunk' });
+    expect(t.ids('VAL-007')).toHaveLength(0);
     t.setB({ mode: 'access', accessVlan: 10 });
     const [issue] = t.ids('VAL-007');
     expect(issue).toBeTruthy();
@@ -153,7 +166,9 @@ describe('layer 2 rules', () => {
   it('VAL-008 native VLAN mismatch', () => {
     const t = pair('l2-switch', 'l2-switch');
     t.setA({ mode: 'trunk', nativeVlan: 99 });
-    t.setB({ mode: 'trunk' });
+    t.setB({ mode: 'trunk', nativeVlan: 99 });
+    expect(t.ids('VAL-008')).toHaveLength(0);
+    t.setB({ nativeVlan: undefined });
     const [issue] = t.ids('VAL-008');
     expect(issue?.message).toMatch(/99/);
     if (issue?.fixes[0]) t.ed.execute(applyFix(issue.fixes[0]));
@@ -176,8 +191,11 @@ describe('layer 2 rules', () => {
   it('VAL-010 access VLAN mismatch', () => {
     const t = pair('l2-switch', 'l2-switch');
     t.setA({ mode: 'access', accessVlan: 10 });
-    t.setB({ mode: 'access', accessVlan: 20 });
+    t.setB({ mode: 'access', accessVlan: 10 });
+    expect(t.ids('VAL-010')).toHaveLength(0);
+    t.setB({ accessVlan: 20 });
     const [issue] = t.ids('VAL-010');
+    expect(issue?.message).toMatch(/10.*20|20.*10/);
     if (issue?.fixes[0]) t.ed.execute(applyFix(issue.fixes[0]));
     expect(t.ids('VAL-010')).toHaveLength(0);
   });
@@ -191,6 +209,24 @@ describe('layer 2 rules', () => {
     expect(t.ids('VAL-012')).toHaveLength(0);
     t.ed.execute(updateInterface(t.a, members[1] as string, { mode: 'access' }));
     expect(t.ids('VAL-012')[0]?.message).toMatch(/settings differ/);
+  });
+
+  it('VAL-012 port-channel members on different neighbors', () => {
+    const t = pair('l2-switch', 'l2-switch');
+    const c = addDevice({
+      role: 'l2-switch',
+      pageId: t.pageId,
+      position: { x: 0, y: 0 },
+      template: switchTemplate,
+    });
+    t.ed.execute(c);
+    // Second member goes to a third switch instead of the same neighbor.
+    t.ed.execute(connect({ deviceId: t.a }, { deviceId: c.deviceId }));
+    const used = t.ed.doc.links
+      .filter((l) => l.endpointA.deviceId === t.a)
+      .map((l) => l.endpointA.interfaceId);
+    t.ed.execute(createPortChannel(t.a, 2, used));
+    expect(t.ids('VAL-012')[0]?.message).toMatch(/2 different neighbors/);
   });
 
   it('VAL-013 missing VLAN with a create fix', () => {
@@ -210,6 +246,7 @@ describe('layer 2 rules', () => {
 describe('physical and inventory rules', () => {
   it('VAL-005 interface on two links', () => {
     const t = pair();
+    expect(t.ids('VAL-005')).toHaveLength(0);
     const doc = structuredClone(t.ed.doc);
     const l = doc.links[0];
     if (!l) throw new Error('no link');
@@ -227,6 +264,7 @@ describe('physical and inventory rules', () => {
 
   it('VAL-011 speed and duplex mismatch', () => {
     const t = pair();
+    expect(t.ids('VAL-011')).toHaveLength(0);
     t.setA({ speedMbps: 100, duplex: 'full' });
     t.setB({ duplex: 'half' });
     expect(t.ids('VAL-011')[0]?.message).toMatch(/speed 100 vs 1000.*duplex full vs half/);
@@ -254,6 +292,11 @@ describe('physical and inventory rules', () => {
     t.ed.execute(orphan);
     expect(t.ids('VAL-016').map((i) => i.objectIds[0])).toEqual([orphan.deviceId]);
     expect(t.ids('VAL-019').map((i) => i.objectIds[0])).toEqual([orphan.deviceId]);
+    // Linked devices with a management IP are neither orphans nor missing one; a linked port's address is fine.
+    expect(t.ids('VAL-016').map((i) => i.objectIds[0])).not.toContain(t.a);
+    expect(t.ids('VAL-019').map((i) => i.objectIds[0])).not.toContain(t.a);
+    t.ed.execute(assignIp(t.a, t.ia, '192.0.2.9', 24));
+    expect(t.ids('VAL-017')).toHaveLength(0);
     const gi1 = t.ed.doc.devices.find((d) => d.id === orphan.deviceId)?.interfaces[1]?.id as string;
     t.ed.execute(assignIp(orphan.deviceId, gi1, '192.0.2.1', 24));
     expect(t.ids('VAL-017')).toHaveLength(1);
@@ -262,6 +305,10 @@ describe('physical and inventory rules', () => {
   it('VAL-020 fiber to copper', () => {
     const t = pair();
     t.setA({ media: 'fiber' });
+    t.setB({ media: 'fiber' });
+    expect(t.ids('VAL-020')).toHaveLength(0);
+    t.setB({ media: 'any' });
+    expect(t.ids('VAL-020')).toHaveLength(0);
     t.setB({ media: 'copper' });
     expect(t.ids('VAL-020')).toHaveLength(1);
   });

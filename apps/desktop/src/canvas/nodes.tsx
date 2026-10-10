@@ -99,6 +99,7 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
             className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
             style={{ background: SEV_COLOR[view.severity] }}
             aria-hidden="true"
+            data-lw-badge={view.severity}
           >
             {view.issueCount}
           </span>

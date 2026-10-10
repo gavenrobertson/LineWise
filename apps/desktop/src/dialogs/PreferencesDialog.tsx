@@ -176,6 +176,11 @@ export function PreferencesDialog() {
             checked={p.showMinimap}
             onChange={(v) => p.set({ showMinimap: v })}
           />
+          <Checkbox
+            label={t('prefs.problemBadges', 'Show problem badges on the canvas')}
+            checked={p.showProblemBadges}
+            onChange={(v) => p.set({ showProblemBadges: v })}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Field

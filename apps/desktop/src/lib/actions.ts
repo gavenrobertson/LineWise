@@ -725,6 +725,12 @@ export function commandList(): CommandDef[] {
       run: () => usePrefs.getState().set({ showMinimap: !usePrefs.getState().showMinimap }),
     },
     {
+      id: 'view.problemBadges',
+      group: 'View',
+      label: L('problemBadges', 'Toggle problem badges'),
+      run: () => usePrefs.getState().set({ showProblemBadges: !usePrefs.getState().showProblemBadges }),
+    },
+    {
       id: 'view.problems',
       group: 'View',
       label: L('problems', 'Toggle problems panel'),

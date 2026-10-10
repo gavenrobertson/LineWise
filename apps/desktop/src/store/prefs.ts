@@ -16,6 +16,8 @@ export interface Prefs {
   language: string;
   exportScale: number;
   showMinimap: boolean;
+  /** Problem badges on devices and links (FR-VAL-03). */
+  showProblemBadges: boolean;
   favorites: string[];
   recentTemplates: string[];
   customTemplates: DeviceTemplate[];
@@ -35,6 +37,7 @@ export const DEFAULT_PREFS: Prefs = {
   language: 'en',
   exportScale: 2,
   showMinimap: true,
+  showProblemBadges: true,
   favorites: [],
   recentTemplates: [],
   customTemplates: [],

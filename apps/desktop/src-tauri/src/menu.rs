@@ -180,6 +180,12 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item(app, "view.minimap", "Toggle Minimap", None)?)
         .item(&item(
             app,
+            "view.problemBadges",
+            "Toggle Problem Badges",
+            None,
+        )?)
+        .item(&item(
+            app,
             "view.problems",
             "Toggle Problems Panel",
             Some("CmdOrCtrl+Shift+M"),

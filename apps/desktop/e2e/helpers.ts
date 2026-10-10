@@ -52,11 +52,11 @@ export async function serialized(page: Page): Promise<string> {
   );
 }
 
-export async function issues(page: Page): Promise<{ ruleId: string; message: string }[]> {
+type TestIssue = { ruleId: string; message: string; severity: 'error' | 'warning' | 'info' };
+
+export async function issues(page: Page): Promise<TestIssue[]> {
   return page.evaluate(() =>
-    (
-      window as unknown as { __lwTest: { issues: () => { ruleId: string; message: string }[] } }
-    ).__lwTest.issues(),
+    (window as unknown as { __lwTest: { issues: () => TestIssue[] } }).__lwTest.issues(),
   );
 }
 

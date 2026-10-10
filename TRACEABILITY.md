@@ -107,31 +107,31 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-EXP-08 | SHOULD | | | todo |
 | FR-EXP-09 | MAY | | | todo |
 | FR-EXP-10 | MUST | | | todo |
-| VAL-001 | MUST | | | todo |
-| VAL-002 | MUST | | | todo |
-| VAL-003 | MUST | | | todo |
-| VAL-004 | MUST | | | todo |
-| VAL-005 | MUST | | | todo |
-| VAL-006 | MUST | | | todo |
-| VAL-007 | MUST | | | todo |
-| VAL-008 | MUST | | | todo |
-| VAL-009 | MUST | | | todo |
-| VAL-010 | MUST | | | todo |
-| VAL-011 | MUST | | | todo |
-| VAL-012 | MUST | | | todo |
-| VAL-013 | MUST | | | todo |
-| VAL-014 | MUST | | | todo |
-| VAL-015 | MUST | | | todo |
-| VAL-016 | MUST | | | todo |
-| VAL-017 | MUST | | | todo |
-| VAL-018 | MUST | | | todo |
-| VAL-019 | MUST | | | todo |
-| VAL-020 | MUST | | | todo |
-| FR-VAL-01 | MUST | | | todo |
-| FR-VAL-02 | MUST | | | todo |
-| FR-VAL-03 | MUST | | | todo |
-| FR-VAL-04 | MUST | | | todo |
-| FR-VAL-05 | MUST | | | todo |
+| VAL-001 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-002 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-003 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-004 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-005 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-006 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-007 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-008 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-009 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-010 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-011 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-012 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-013 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-014 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-015 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-016 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-017 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-018 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-019 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| VAL-020 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| FR-VAL-01 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts`, `apps/desktop/e2e/05-validation-fix.spec.ts` | done |
+| FR-VAL-02 | MUST | `apps/desktop/src/panels/ProblemsPanel.tsx`, `apps/desktop/src/panels/StatusBar.tsx` | `packages/core/test/validation.test.ts`, `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/05-validation-fix.spec.ts` | done |
+| FR-VAL-03 | MUST | `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/store/prefs.ts` | `apps/desktop/e2e/05-validation-fix.spec.ts` | done |
+| FR-VAL-04 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
+| FR-VAL-05 | MUST | `packages/core/src/validation.ts`, `apps/desktop/src/workers/validation.worker.ts` — 1,000 devices / 5,000+ interfaces under 200 ms | `packages/core/test/validation.test.ts` | done |
 | NFR-PERF-01 | MUST | | | todo |
 | NFR-PERF-02 | MUST | | | todo |
 | NFR-PERF-03 | MUST | | | todo |
