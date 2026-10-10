@@ -5,17 +5,9 @@
  * (fiber, serial zigzag, wireless, tunnel, console), trunk weight, interface
  * labels at each end, a mid label, and a bundle mark for port-channels.
  */
-import {
-  BaseEdge,
-  useInternalNode,
-  useReactFlow,
-  useStore,
-  type Edge,
-  type EdgeProps,
-  type InternalNode,
-} from '@xyflow/react';
+import { BaseEdge, useReactFlow, type Edge, type EdgeProps, type InternalNode } from '@xyflow/react';
 import { updateLinkStyle } from '@linewise/core';
-import { memo, useState, type PointerEvent, type ReactNode } from 'react';
+import { createContext, memo, useContext, useState, type PointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '../store/editor.ts';
@@ -96,19 +88,14 @@ function Waypoints({
 }
 
 /**
- * Like React Flow's EdgeLabelRenderer, but the label layer is looked up once per canvas rather
- * than with a DOM query per edge on every store update, which cost ~270 ms per edit with 800
- * links (NFR-PERF-04).
+ * Like React Flow's EdgeLabelRenderer, but the canvas finds the label layer once and hands it
+ * down: a DOM query or a store subscription per edge re-ran on every store update, which cost
+ * ~270 ms per edit with 800 links (NFR-PERF-04).
  */
-const labelLayers = new WeakMap<Element, Element>();
+export const EdgeLabelLayer = createContext<Element | null>(null);
 
 function EdgeLabels({ children }: { children: ReactNode }) {
-  const root = useStore((s) => s.domNode);
-  let layer = root ? (labelLayers.get(root) ?? null) : null;
-  if (root && !layer) {
-    layer = root.querySelector('.react-flow__edgelabel-renderer');
-    if (layer) labelLayers.set(root, layer);
-  }
+  const layer = useContext(EdgeLabelLayer);
   return layer ? createPortal(children, layer) : null;
 }
 
@@ -119,19 +106,21 @@ const SEV = { error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--in
 
 export const NetworkEdge = memo(function NetworkEdge({
   id,
-  source,
-  target,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
   data,
   selected,
 }: EdgeProps<NetworkEdgeType>) {
-  const s = useInternalNode(source);
-  const t = useInternalNode(target);
   const readOnly = useEditor((st) => st.readOnly);
   const [preview, setPreview] = useState<XY[] | null>(null);
-  if (!s || !t || !data) return null;
+  if (!data) return null;
   const view = preview ? { ...data.view, waypoints: preview } : data.view;
-  const a = anchorOf(s);
-  const b = anchorOf(t);
+  // React Flow places the ends on each node's centered anchor handle, the same point as anchorOf,
+  // without a node subscription per end (NFR-PERF-04).
+  const a = { x: sourceX, y: sourceY };
+  const b = { x: targetX, y: targetY };
   const { points, d, anchors } = edgeGeometry(a, b, view);
   const { mid, ux, uy } = midDirection(points);
   const px = -uy;

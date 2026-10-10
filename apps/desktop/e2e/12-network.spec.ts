@@ -242,6 +242,36 @@ test('FR-CAN-12 a second page shows an off-page connector to a device on the fir
   const r1 = d.devices.find((x) => x.hostname === 'R1')!.id;
   expect(d.pages.filter((p) => r1 in p.nodePositions)).toHaveLength(1);
   expect(d.pages.some((p) => p.offPageRefs.some((r) => r.deviceId === r1))).toBe(true);
+
+  // A device on this page linked to R1 draws its link to the connector. Devices live on one page,
+  // so the file is edited to move R1's neighbour here.
+  const text = await page.evaluate(() =>
+    (window as unknown as { __lwTest: { serialize: () => string } }).__lwTest.serialize(),
+  );
+  const file = JSON.parse(text) as {
+    links: { endpointA: { deviceId: string }; endpointB: { deviceId: string } }[];
+    pages: { nodePositions: Record<string, unknown> }[];
+  };
+  const l = file.links.find((x) => x.endpointA.deviceId === r1 || x.endpointB.deviceId === r1)!;
+  const peer = l.endpointA.deviceId === r1 ? l.endpointB.deviceId : l.endpointA.deviceId;
+  file.pages[1]!.nodePositions[peer] = file.pages[0]!.nodePositions[peer];
+  delete file.pages[0]!.nodePositions[peer];
+  await page.evaluate((t) => {
+    const w = window as unknown as {
+      __linewise: {
+        nextOpen: { path: string; name: string; text: string }[][];
+        emitMenu: (c: string) => void;
+      };
+    };
+    w.__linewise.nextOpen.push([{ path: 'moved.lwise', name: 'moved.lwise', text: t }]);
+    w.__linewise.emitMenu('file.open');
+  }, JSON.stringify(file));
+  await expect(page.getByRole('navigation', { name: 'Pages' }).getByRole('tab')).toHaveCount(2);
+  await page.getByRole('navigation', { name: 'Pages' }).getByRole('tab').nth(1).click();
+  await expect(page.locator('.react-flow__node-offpage').filter({ hasText: 'R1' })).toBeVisible();
+  await expect
+    .poll(() => page.locator('.react-flow__edge path.react-flow__edge-path').count())
+    .toBeGreaterThan(0);
 });
 
 test('FR-CAN-13 user layers hide and lock their annotations; network views are listed', async ({ page }) => {

@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Custom React Flow nodes: devices, zones, annotations and off-page references. */
-import { Handle, NodeResizer, Position, type Node, type NodeProps } from '@xyflow/react';
+import {
+  Handle,
+  NodeResizer,
+  Position,
+  useUpdateNodeInternals,
+  type Node,
+  type NodeProps,
+} from '@xyflow/react';
 import { iconMarkup, type IconStyle } from '@linewise/device-library';
-import { memo, useState, type CSSProperties } from 'react';
+import { memo, useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeZone, updateAnnotation, type Annotation, type DeviceRole } from '@linewise/core';
 import { iconRole } from './icons.ts';
@@ -76,15 +83,47 @@ const LABEL_POS: Record<string, CSSProperties> = {
   },
 };
 
-export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps<DeviceNodeType>) {
+/**
+ * The always-present link anchor, a zero-size handle at the link end point (anchorOf): React Flow
+ * draws a link only between nodes with a handle, and hands the edge this point.
+ */
+function Anchor({ top }: { top: number | string }) {
+  return (
+    <Handle
+      type="source"
+      position={Position.Top}
+      id="c"
+      className="lw-anchor"
+      isConnectable={false}
+      style={{ top, width: 0, height: 0, minWidth: 0, minHeight: 0, border: 0 }}
+    />
+  );
+}
+
+export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeProps<DeviceNodeType>) {
   const { t } = useTranslation();
   const { view, iconStyle, summary, iconUrl } = data;
   const d = view.device;
   const pos = LABEL_POS[d.labelPosition] ?? LABEL_POS.bottom;
+  // The four connection handles exist only on the device under the pointer: each handle is a
+  // store subscription that re-runs on every frame of a drag, 2,000 of them with 500 devices
+  // (NFR-PERF-04). Links are anchored on the device itself (anchorOf), not on a handle.
+  const [showHandles, setHover] = useState(false);
+  const updateInternals = useUpdateNodeInternals();
+  useEffect(() => {
+    // React Flow starts a connection only from a handle it has measured.
+    if (showHandles) updateInternals(id);
+  }, [showHandles, id, updateInternals]);
   return (
     <div
       className={cx('group relative flex flex-col items-center', view.dimmed && 'lw-dim')}
       style={{ width: DEVICE_W, height: ICON }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={(e) => {
+        // Keep the handle under a connection being drawn from this device until the button is up.
+        if (e.buttons === 0) setHover(false);
+        else window.addEventListener('mouseup', () => setHover(false), { once: true });
+      }}
       aria-label={`${roleLabel(d.role)} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
       title={summary}
     >
@@ -124,7 +163,7 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
           )}
         </div>
       </div>
-      <div className="pointer-events-none absolute flex flex-col" style={pos}>
+      <div className="lw-device-label pointer-events-none absolute flex flex-col" style={pos}>
         <div className="max-w-[140px] whitespace-pre-line rounded bg-[color-mix(in_srgb,var(--canvas)_85%,transparent)] px-1 text-center text-[12px] font-medium leading-tight text-ink">
           {view.label}
         </div>
@@ -138,20 +177,25 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
           </div>
         )}
       </div>
-      <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: -4 }} />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="r"
-        style={{ ...handleStyle, top: ICON / 2, right: 12 }}
-      />
-      <Handle type="source" position={Position.Bottom} id="b" style={{ ...handleStyle, top: ICON + 2 }} />
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="l"
-        style={{ ...handleStyle, top: ICON / 2, left: 12 }}
-      />
+      <Anchor top={ICON / 2} />
+      {showHandles && (
+        <>
+          <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: -4 }} />
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="r"
+            style={{ ...handleStyle, top: ICON / 2, right: 12 }}
+          />
+          <Handle type="source" position={Position.Bottom} id="b" style={{ ...handleStyle, top: ICON + 2 }} />
+          <Handle
+            type="source"
+            position={Position.Left}
+            id="l"
+            style={{ ...handleStyle, top: ICON / 2, left: 12 }}
+          />
+        </>
+      )}
     </div>
   );
 });
@@ -330,6 +374,7 @@ export const OffPageNode = memo(function OffPageNode({ data }: NodeProps<OffPage
       <span aria-hidden="true">↗</span>
       <span className="font-medium text-ink">{data.hostname}</span>
       <span>· {data.pageName}</span>
+      <Anchor top="50%" />
     </div>
   );
 });

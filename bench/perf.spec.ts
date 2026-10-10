@@ -82,9 +82,10 @@ async function frames(page: Page, action: () => Promise<void>) {
     w.__stop = false;
     let last = performance.now();
     const tick = (t: number) => {
+      if (w.__stop) return;
       w.__frames.push(t - last);
       last = t;
-      if (!w.__stop) requestAnimationFrame(tick);
+      requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   });
@@ -97,6 +98,8 @@ async function frames(page: Page, action: () => Promise<void>) {
     return w.__frames.slice(1);
   });
   const sorted = [...deltas].sort((a, b) => a - b);
+  if (process.env.BENCH_DEBUG)
+    console.log('FRAMES', deltas.length, elapsed, JSON.stringify(deltas.map((d) => Math.round(d))));
   return { fps: (deltas.length / elapsed) * 1000, p95: sorted[Math.floor(sorted.length * 0.95)] ?? 0 };
 }
 
@@ -131,18 +134,93 @@ test('NFR-PERF-02..06 with 500 devices / ~800 links', async ({ page }) => {
   results.pan500Fps = await pan(page);
 
   // Drag one device: frame times stay within a frame (NFR-PERF-04).
+  if (process.env.BENCH_CSS) await page.addStyleTag({ content: process.env.BENCH_CSS });
   await page.keyboard.press('Control+0');
   await page.waitForTimeout(400);
-  const firstNode = page.locator('.react-flow__node-device').filter({ visible: true }).first();
-  await firstNode.waitFor();
-  const nodeBox = (await firstNode.boundingBox())!;
-  const drag = await frames(page, async () => {
-    await page.mouse.move(nodeBox.x + nodeBox.width / 2, nodeBox.y + 20);
-    await page.mouse.down();
-    for (let i = 1; i <= 40; i++)
-      await page.mouse.move(nodeBox.x + nodeBox.width / 2 + i * 4, nodeBox.y + 20 + i * 2);
-    await page.mouse.up();
+  // The device nearest the middle of the canvas: one near an edge makes React Flow pan the whole
+  // view while dragging, which measures panning instead.
+  await page.locator('.react-flow__node-device').first().waitFor();
+  await page.evaluate(() => {
+    const pane = document.querySelector('.react-flow__pane')!.getBoundingClientRect();
+    const cx = pane.x + pane.width / 2;
+    const cy = pane.y + pane.height / 2;
+    let best: Element | null = null;
+    let bestD = Infinity;
+    for (const el of document.querySelectorAll('.react-flow__node-device')) {
+      const r = el.getBoundingClientRect();
+      const d = Math.hypot(r.x + r.width / 2 - cx, r.y + r.height / 2 - cy);
+      if (d < bestD) [best, bestD] = [el, d];
+    }
+    best?.setAttribute('data-bench-drag', '');
   });
+  const firstNode = page.locator('[data-bench-drag]');
+  const nodeBox = (await firstNode.boundingBox())!;
+  const dragStart = await firstNode.evaluate((el) => el.style.transform);
+  if (process.env.BENCH_DEBUG)
+    console.log(
+      'VIEWPORT',
+      await page.evaluate(() => document.querySelector('.react-flow__viewport')?.getAttribute('style')),
+    );
+  // Pointer moves are dispatched inside the page, one per frame like a real mouse: driving the
+  // drag through Playwright's input commands adds a round trip per move and measures that instead.
+  const cdp = process.env.BENCH_TRACE ? await page.context().newCDPSession(page) : null;
+  const trace: unknown[] = [];
+  if (cdp) {
+    cdp.on('Tracing.dataCollected' as never, (e: { value: unknown[] }) => trace.push(...e.value));
+    await cdp.send('Tracing.start', {
+      categories: 'devtools.timeline,disabled-by-default-devtools.timeline',
+      transferMode: 'ReportEvents',
+    });
+    await cdp.send('Profiler.enable');
+    await cdp.send('Profiler.setSamplingInterval', { interval: 100 });
+    await cdp.send('Profiler.start');
+  }
+  const drag = await frames(page, () =>
+    firstNode.evaluate(
+      async (el, start) => {
+        const frame = () => new Promise<number>((r) => requestAnimationFrame(r));
+        const at = (type: string, target: EventTarget, x: number, y: number) =>
+          target.dispatchEvent(
+            new MouseEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+              clientX: x,
+              clientY: y,
+              button: 0,
+              buttons: 1,
+            }),
+          );
+        const w = window as unknown as { __frames: number[]; __stop: boolean };
+        // Frames are counted while the device moves. The press (which selects it) and the drop
+        // (which commits the move to history) are single updates, held to the edit budget below.
+        at('mousedown', el, start.x, start.y);
+        await frame();
+        await frame();
+        w.__frames.length = 0;
+        for (let i = 1; i <= 40; i++) {
+          await frame();
+          at('mousemove', window, start.x + i * 4, start.y + i * 2);
+        }
+        await frame();
+        await frame();
+        w.__stop = true;
+        at('mouseup', window, start.x + 160, start.y + 80);
+        await frame();
+      },
+      { x: nodeBox.x + nodeBox.width / 2, y: nodeBox.y + 20 },
+    ),
+  );
+  if (cdp) {
+    const done = new Promise<void>((r) => cdp.once('Tracing.tracingComplete' as never, () => r()));
+    await cdp.send('Tracing.end');
+    await done;
+    writeFileSync(join(import.meta.dirname, 'results', 'drag-trace.json'), JSON.stringify(trace));
+    const { profile } = await cdp.send('Profiler.stop');
+    writeFileSync(join(import.meta.dirname, 'results', 'drag.cpuprofile'), JSON.stringify(profile));
+  }
+  // The device really moved (otherwise the measurement means nothing).
+  expect(await firstNode.evaluate((el) => el.style.transform)).not.toBe(dragStart);
   results.drag500FrameP95Ms = drag.p95;
 
   // Property edit to canvas update (NFR-PERF-04): median of five edits.

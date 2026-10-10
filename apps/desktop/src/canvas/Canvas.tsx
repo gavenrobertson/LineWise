@@ -13,7 +13,8 @@ import {
   ReactFlow,
   SelectionMode,
   useReactFlow,
-  ViewportPortal,
+  useStore as useFlowStore,
+  type ReactFlowProps,
   type Connection,
   type Edge,
   type Node,
@@ -24,12 +25,14 @@ import {
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type DragEvent,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   addOffPageRef,
@@ -44,7 +47,7 @@ import {
   type Command,
 } from '@linewise/core';
 import { getTemplate } from '@linewise/device-library';
-import { selectPage, useEditor } from '../store/editor.ts';
+import { selectPage, useDragPreview, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
 import {
@@ -58,7 +61,7 @@ import {
 } from './geometry.ts';
 import { assetDataUrl } from './icons.ts';
 import { buildPageModel } from './model.ts';
-import { anchorOf, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
+import { anchorOf, EdgeLabelLayer, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
 
 export const TEMPLATE_MIME = 'application/x-linewise-template';
@@ -109,11 +112,63 @@ interface Guide {
   y?: number;
 }
 
+/**
+ * Handlers with a fixed identity that call this render's version (NFR-PERF-04). React Flow copies
+ * every changed prop into its store, and each copy re-runs every node and edge selector, so a new
+ * callback on each pointer move doubled the cost of a drag.
+ */
+function useStableHandlers<T extends Record<string, (...args: never[]) => unknown>>(fns: T): T {
+  const latest = useRef(fns);
+  useLayoutEffect(() => {
+    latest.current = fns;
+  });
+  return useMemo(
+    () =>
+      Object.fromEntries(
+        Object.keys(fns).map((k) => [
+          k,
+          (...args: unknown[]) => (latest.current[k] as unknown as (...a: unknown[]) => unknown)(...args),
+        ]),
+      ) as unknown as T,
+    // The handler names never change; their bodies are read from `latest`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+}
+
+const minimapFill = (n: Node) => (n.type === 'zone' ? 'transparent' : 'var(--device)');
+const minimapStroke = (n: Node) => (n.type === 'zone' ? 'var(--accent)' : 'transparent');
+/**
+ * React Flow with the drag preview applied. A pointer move re-renders this and the moved nodes,
+ * not the whole canvas with its panels and overlays (NFR-PERF-04). Only the dragged (and carried)
+ * nodes get new objects.
+ */
+function DragPreviewFlow({ nodes: base = [], ...props }: ReactFlowProps<Node, NetworkEdgeType>) {
+  const drag = useDragPreview((s) => s.positions);
+  const nodes = useMemo(() => {
+    if (!drag) return base;
+    return base.map((n) => {
+      const p = drag[n.id];
+      if (!p) return n;
+      // Devices are stored by icon center; everything else by top-left.
+      return { ...n, position: n.type === 'device' ? nodeTopLeft(p) : p };
+    });
+  }, [base, drag]);
+  return <ReactFlow {...props} nodes={nodes} />;
+}
+
+const ZOOM_KEYS = ['Meta', 'Control'];
+const MULTI_SELECT_KEYS = ['Meta', 'Control', 'Shift'];
+const DELETE_KEYS = ['Delete', 'Backspace'];
+const PAN_BUTTONS = [1, 2];
+
 const SNAP_GUIDE = 6;
 
 export function Canvas() {
   const { t } = useTranslation();
   const rf = useReactFlow();
+  // Level of detail (NFR-PERF-04): below 40% zoom labels are unreadable, so they are not drawn.
+  const lowDetail = useFlowStore((s) => s.transform[2] < 0.4);
   const doc = useEditor((s) => s.doc);
   const page = useEditor(selectPage);
   const pageId = page?.id ?? '';
@@ -124,7 +179,6 @@ export function Canvas() {
   // Badges can be turned off (FR-VAL-03); the problems panel still lists everything.
   const issues = useMemo(() => (showBadges ? allIssues : []), [showBadges, allIssues]);
   const selection = useEditor((s) => s.selection);
-  const drag = useEditor((s) => s.dragPositions);
   const execute = useEditor((s) => s.execute);
   const setSelection = useEditor((s) => s.setSelection);
   const setDrag = useEditor((s) => s.setDragPositions);
@@ -148,9 +202,12 @@ export function Canvas() {
     canvasApi.instance = rf as unknown as ReactFlowInstance;
   }, [rf]);
 
+  // The model ignores drag previews: rebuilding it for 500 devices on every pointer move cost
+  // ~100 ms a frame (NFR-PERF-04). Dragged nodes are moved in `nodes` below, and links follow
+  // React Flow's own node positions; routing and labels catch up when the drag ends.
   const model = useMemo(
-    () => (page ? buildPageModel(doc, page, { layer, highlight, issues, overrides: drag }) : null),
-    [doc, page, layer, highlight, issues, drag],
+    () => (page ? buildPageModel(doc, page, { layer, highlight, issues }) : null),
+    [doc, page, layer, highlight, issues],
   );
 
   const sel = useMemo(
@@ -163,7 +220,7 @@ export function Canvas() {
     [page],
   );
 
-  const nodes: Node[] = useMemo(() => {
+  const baseNodes: Node[] = useMemo(() => {
     if (!model || !page) return [];
     const out: Node[] = [];
     for (const z of model.zones) {
@@ -180,12 +237,11 @@ export function Canvas() {
       });
     }
     for (const a of model.annotations) {
-      const o = drag?.[a.id];
       const assetUrl = assetDataUrl(a.assetId ? doc.assets[a.assetId] : undefined);
       out.push({
         id: a.id,
         type: 'annotation',
-        position: o ?? { x: a.geometry.x, y: a.geometry.y },
+        position: { x: a.geometry.x, y: a.geometry.y },
         width: a.geometry.w,
         height: a.geometry.h,
         draggable: !a.locked && !lockedLayers.has(a.layerId ?? ''),
@@ -241,7 +297,7 @@ export function Canvas() {
       out.push({
         id: `offpage:${o.deviceId}`,
         type: 'offpage',
-        position: drag?.[`offpage:${o.deviceId}`] ?? o.position,
+        position: o.position,
         draggable: !readOnly,
         selectable: false,
         data: { hostname: o.hostname, pageName: o.pageName },
@@ -251,7 +307,9 @@ export function Canvas() {
     return prevNodes.current;
     // dimsVersion re-runs this when the measured-size ref changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, page, pageId, sel, drag, doc, dimsVersion, lockedLayers, readOnly]);
+  }, [model, page, pageId, sel, doc, dimsVersion, lockedLayers, readOnly]);
+
+  const nodeTypeOf = useMemo(() => new Map(baseNodes.map((n) => [n.id, n.type])), [baseNodes]);
 
   const edges: NetworkEdgeType[] = useMemo(() => {
     const next: NetworkEdgeType[] = (model?.links ?? []).map((l) => ({
@@ -331,7 +389,7 @@ export function Canvas() {
     (changes: { id: string; selected: boolean }[], kind: 'nodes' | 'edges') => {
       if (!changes.length) return;
       const cur = useEditor.getState().selection;
-      const byId = new Map(nodes.map((n) => [n.id, n.type]));
+      const byId = nodeTypeOf;
       const next = {
         devices: new Set(cur.devices),
         zones: new Set(cur.zones),
@@ -360,7 +418,7 @@ export function Canvas() {
         links: [...next.links],
       });
     },
-    [nodes, setSelection],
+    [nodeTypeOf, setSelection],
   );
 
   const onEdgesChange = useCallback(
@@ -391,12 +449,12 @@ export function Canvas() {
         (c): c is Extract<NodeChange, { type: 'position' }> => c.type === 'position' && !!c.position,
       );
       if (!moves.length || !model) return;
-      const next: Record<string, XY> = { ...(drag ?? {}) };
+      const next: Record<string, XY> = { ...(useDragPreview.getState().positions ?? {}) };
       let guide: Guide = {};
       for (const m of moves) {
-        const node = nodes.find((n) => n.id === m.id);
-        if (!node || !m.position) continue;
-        if (node.type === 'device') {
+        const type = nodeTypeOf.get(m.id);
+        if (!type || !m.position) continue;
+        if (type === 'device') {
           let c = nodeCenter(m.position);
           // Smart alignment guides against other devices (FR-CAN-02).
           if (moves.length === 1) {
@@ -410,7 +468,7 @@ export function Canvas() {
           next[m.id] = c;
         } else {
           next[m.id] = m.position;
-          if (node.type === 'zone' && dragCtx.current) {
+          if (type === 'zone' && dragCtx.current) {
             const start = dragCtx.current.origin.get(m.id);
             if (start) {
               const dx = m.position.x - start.x;
@@ -420,15 +478,16 @@ export function Canvas() {
           }
         }
       }
-      setGuides(guide);
+      // Same guides, same state: the canvas itself does not re-render on a pointer move.
+      setGuides((g) => (g.x === guide.x && g.y === guide.y ? g : guide));
       setDrag(next);
     },
-    [readOnly, model, drag, nodes, centersExcept, setDrag, applySelect],
+    [readOnly, model, nodeTypeOf, centersExcept, setDrag, applySelect],
   );
 
   const onNodeDragStop = useCallback(() => {
     setGuides({});
-    const positions = useEditor.getState().dragPositions;
+    const positions = useDragPreview.getState().positions;
     setDrag(null);
     if (!positions || !page) return;
     const cmds: Command[] = [];
@@ -590,101 +649,135 @@ export function Canvas() {
     if (ids.length) window.dispatchEvent(new CustomEvent('linewise:delete', { detail: ids }));
   }, []);
 
+  const handlers = useStableHandlers({
+    onNodesChange,
+    onNodeDragStart,
+    onNodeDragStop,
+    onEdgesChange,
+    onNodeClick,
+    onNodeDoubleClick,
+    onEdgeDoubleClick,
+    onConnect,
+    onConnectEnd,
+    onDelete,
+    onMoveEnd: (_: unknown, vp: { zoom: number }) => setUi({ zoom: vp.zoom }),
+  });
+  const snapGrid = useMemo<[number, number]>(
+    () => [prefs.gridSize / 2, prefs.gridSize / 2],
+    [prefs.gridSize],
+  );
+  // React Flow's edge label and viewport layers, found once: its own EdgeLabelRenderer and
+  // ViewportPortal query the DOM on every store update (EdgeLabelLayer).
+  const wrapper = useRef<HTMLDivElement>(null);
+  const [layers, setLayers] = useState<{ labels: Element | null; viewport: Element | null }>({
+    labels: null,
+    viewport: null,
+  });
+  const hasPage = !!page;
+  useEffect(() => {
+    const el = wrapper.current;
+    setLayers({
+      labels: el?.querySelector('.react-flow__edgelabel-renderer') ?? null,
+      viewport: el?.querySelector('.react-flow__viewport-portal') ?? null,
+    });
+  }, [hasPage]);
+  const fitViewOptions = useMemo(
+    () => ({ padding: fitPadding(prefs.showMinimap), maxZoom: 1 }),
+    [prefs.showMinimap],
+  );
+
   if (!page) return null;
   return (
-    <div className="relative h-full w-full" onDragOver={onDragOver} onDrop={onDrop}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDragStop={onNodeDragStop}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onEdgeDoubleClick={onEdgeDoubleClick}
-        zoomOnDoubleClick={false}
-        disableKeyboardA11y
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        onDelete={onDelete}
-        connectionMode={ConnectionMode.Loose}
-        selectionMode={SelectionMode.Partial}
-        selectionOnDrag
-        // FR-CAN-01: wheel and two-finger scroll pan; Ctrl/Cmd+wheel and pinch zoom (10%–400%);
-        // middle- or right-button drag and Space+drag pan.
-        panOnScroll
-        zoomActivationKeyCode={['Meta', 'Control']}
-        zoomOnPinch
-        panOnDrag={[1, 2]}
-        panActivationKeyCode="Space"
-        multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
-        deleteKeyCode={readOnly ? null : ['Delete', 'Backspace']}
-        snapToGrid={prefs.snapToGrid}
-        snapGrid={[prefs.gridSize / 2, prefs.gridSize / 2]}
-        minZoom={0.1}
-        maxZoom={4}
-        onlyRenderVisibleElements
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        elevateEdgesOnSelect
-        fitView
-        fitViewOptions={{ padding: fitPadding(prefs.showMinimap), maxZoom: 1 }}
-        onMoveEnd={(_, vp) => setUi({ zoom: vp.zoom })}
-        attributionPosition="bottom-center"
-        aria-label={t('canvas.label', 'Diagram canvas')}
-      >
-        {prefs.showGrid && (
-          <Background
-            variant={page.background === 'grid' ? BackgroundVariant.Lines : BackgroundVariant.Dots}
-            gap={prefs.gridSize}
-            size={1.2}
-          />
-        )}
-        {prefs.showMinimap && (
-          <MiniMap
-            pannable
-            zoomable
-            ariaLabel={t('canvas.minimap', 'Minimap')}
-            nodeColor={(n) => (n.type === 'zone' ? 'transparent' : 'var(--device)')}
-            nodeStrokeColor={(n) => (n.type === 'zone' ? 'var(--accent)' : 'transparent')}
-          />
-        )}
-        <Controls showInteractive={false} position="bottom-left" />
-        <svg width="0" height="0" aria-hidden="true">
-          <defs>
-            <marker
-              id="lw-arrow"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="7"
-              markerHeight="7"
-              orient="auto-start-reverse"
-            >
-              <path d="M0 0L10 5L0 10z" fill="var(--text)" />
-            </marker>
-          </defs>
-        </svg>
-        <ViewportPortal>
-          {guides.x !== undefined && (
-            <div
-              data-lw-guide="x"
-              className="pointer-events-none absolute w-px bg-[var(--accent)]"
-              style={{ left: guides.x, top: -100000, height: 200000, opacity: 0.6 }}
+    <div ref={wrapper} className="relative h-full w-full" onDragOver={onDragOver} onDrop={onDrop}>
+      <EdgeLabelLayer.Provider value={layers.labels}>
+        <DragPreviewFlow
+          className={lowDetail ? 'lw-lod-low' : undefined}
+          nodes={baseNodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          {...handlers}
+          zoomOnDoubleClick={false}
+          disableKeyboardA11y
+          connectionMode={ConnectionMode.Loose}
+          selectionMode={SelectionMode.Partial}
+          selectionOnDrag
+          // FR-CAN-01: wheel and two-finger scroll pan; Ctrl/Cmd+wheel and pinch zoom (10%–400%);
+          // middle- or right-button drag and Space+drag pan.
+          panOnScroll
+          zoomActivationKeyCode={ZOOM_KEYS}
+          zoomOnPinch
+          panOnDrag={PAN_BUTTONS}
+          panActivationKeyCode="Space"
+          multiSelectionKeyCode={MULTI_SELECT_KEYS}
+          deleteKeyCode={readOnly ? null : DELETE_KEYS}
+          snapToGrid={prefs.snapToGrid}
+          snapGrid={snapGrid}
+          minZoom={0.1}
+          maxZoom={4}
+          onlyRenderVisibleElements
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
+          elevateEdgesOnSelect
+          fitView
+          fitViewOptions={fitViewOptions}
+          attributionPosition="bottom-center"
+          aria-label={t('canvas.label', 'Diagram canvas')}
+        >
+          {prefs.showGrid && (
+            <Background
+              variant={page.background === 'grid' ? BackgroundVariant.Lines : BackgroundVariant.Dots}
+              gap={prefs.gridSize}
+              size={1.2}
             />
           )}
-          {guides.y !== undefined && (
-            <div
-              data-lw-guide="y"
-              className="pointer-events-none absolute h-px bg-[var(--accent)]"
-              style={{ top: guides.y, left: -100000, width: 200000, opacity: 0.6 }}
+          {prefs.showMinimap && (
+            <MiniMap
+              pannable
+              zoomable
+              ariaLabel={t('canvas.minimap', 'Minimap')}
+              nodeColor={minimapFill}
+              nodeStrokeColor={minimapStroke}
             />
           )}
-        </ViewportPortal>
-      </ReactFlow>
+          <Controls showInteractive={false} position="bottom-left" />
+          <svg width="0" height="0" aria-hidden="true">
+            <defs>
+              <marker
+                id="lw-arrow"
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path d="M0 0L10 5L0 10z" fill="var(--text)" />
+              </marker>
+            </defs>
+          </svg>
+          {layers.viewport &&
+            createPortal(
+              <>
+                {guides.x !== undefined && (
+                  <div
+                    data-lw-guide="x"
+                    className="pointer-events-none absolute w-px bg-[var(--accent)]"
+                    style={{ left: guides.x, top: -100000, height: 200000, opacity: 0.6 }}
+                  />
+                )}
+                {guides.y !== undefined && (
+                  <div
+                    data-lw-guide="y"
+                    className="pointer-events-none absolute h-px bg-[var(--accent)]"
+                    style={{ top: guides.y, left: -100000, width: 200000, opacity: 0.6 }}
+                  />
+                )}
+              </>,
+              layers.viewport,
+            )}
+        </DragPreviewFlow>
+      </EdgeLabelLayer.Provider>
       {pathStart !== null && (
         <div
           role="status"

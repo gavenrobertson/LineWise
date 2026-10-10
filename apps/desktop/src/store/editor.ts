@@ -65,8 +65,6 @@ export interface EditorState {
   issuesRev: number;
   /** Revision at which this document was loaded or its tab activated; older worker results are ignored. */
   baseRev: number;
-  /** Positions while a drag is in progress (not yet in history). */
-  dragPositions: Record<string, XY> | null;
   lastError: string | null;
 
   execute: (cmd: Command) => boolean;
@@ -177,6 +175,12 @@ function pruneSelection(doc: NetworkDocument, pageId: string, sel: Selection): S
 
 const firstTab = newTabId();
 
+/**
+ * Positions while a drag is in progress (not yet in history). They live apart from the editor
+ * state so a pointer move wakes only the canvas, not every editor subscriber (NFR-PERF-04).
+ */
+export const useDragPreview = create<{ positions: Record<string, XY> | null }>(() => ({ positions: null }));
+
 export const useEditor = create<EditorState>((set, get) => ({
   tabs: [{ id: firstTab, fileName: 'Untitled.lwise', path: null, dirty: false }],
   activeTabId: firstTab,
@@ -197,7 +201,6 @@ export const useEditor = create<EditorState>((set, get) => ({
   suppressed: [],
   issuesRev: -1,
   baseRev: 0,
-  dragPositions: null,
   lastError: null,
 
   execute: (cmd) => {
@@ -278,9 +281,9 @@ export const useEditor = create<EditorState>((set, get) => ({
       suppressed: [],
       issuesRev: -1,
       baseRev: rev,
-      dragPositions: null,
       ...historyFlags(),
     });
+    useDragPreview.setState({ positions: null });
   },
 
   markSaved: (path, name) => set({ filePath: path, fileName: name, savedRev: get().rev }),
@@ -300,7 +303,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     set({ issues, suppressed, issuesRev: rev });
   },
 
-  setDragPositions: (p) => set({ dragPositions: p }),
+  setDragPositions: (p) => useDragPreview.setState({ positions: p }),
 
   clearError: () => set({ lastError: null }),
 
@@ -338,11 +341,11 @@ export const useEditor = create<EditorState>((set, get) => ({
       savedRev: dirty ? -1 : rev,
       issuesRev: -1,
       baseRev: rev,
-      dragPositions: null,
       activeTabId: id,
       tabs: s.tabs.map((t) => (t.id === s.activeTabId ? infoOf(t.id, snapshot(s)) : t)),
       ...historyFlags(),
     });
+    useDragPreview.setState({ positions: null });
   },
 
   closeTab: (id) => {

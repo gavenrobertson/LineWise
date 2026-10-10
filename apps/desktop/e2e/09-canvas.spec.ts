@@ -409,8 +409,10 @@ test('FR-LNK-01, FR-LNK-02 draw a link from a handle, filter ports, change its s
   });
   await expect.poll(async () => (await doc(page)).devices.length).toBe(2);
 
-  // Drag from SW1's bottom handle onto SW2: the connect dialog asks for the ports.
-  const handle = node(page, 'SW1').locator('.react-flow__handle').nth(2);
+  // Drag from SW1's bottom handle onto SW2: the connect dialog asks for the ports. Handles
+  // appear on the device under the pointer.
+  await node(page, 'SW1').hover();
+  const handle = node(page, 'SW1').locator('.react-flow__handle[data-handleid="b"]');
   const target = (await node(page, 'SW2').boundingBox())!;
   const h = (await handle.boundingBox())!;
   await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);

@@ -221,17 +221,29 @@ body {
   border-radius: 10px;
 }
 
+/* Hidden handles are not painted, which keeps 2,000 of them out of every drag frame (NFR-PERF-04);
+   they keep their layout, so React Flow still measures link anchors. */
 .react-flow__handle {
   width: 10px;
   height: 10px;
-  opacity: 0;
-  transition: opacity 120ms;
+  visibility: hidden;
 }
 
 .react-flow__node:hover .react-flow__handle,
 .react-flow__node.selected .react-flow__handle,
+.react-flow__node:focus-visible .react-flow__handle,
 .react-flow.connecting .react-flow__handle {
-  opacity: 1;
+  visibility: visible;
+}
+
+.react-flow__handle.lw-anchor {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lw-lod-low .lw-edge-label,
+.lw-lod-low .lw-device-label {
+  display: none;
 }
 
 .lw-edge-label {
