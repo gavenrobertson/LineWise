@@ -44,6 +44,16 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
   const c = await canvasCenter(page);
   await page.mouse.move(c.x, c.y);
 
+  // Let the opening fit animation finish before measuring.
+  let settled = await viewport(page);
+  await expect
+    .poll(async () => {
+      const v = await viewport(page);
+      const same = v.zoom === settled.zoom && v.x === settled.x && v.y === settled.y;
+      settled = v;
+      return same;
+    })
+    .toBe(true);
   const v0 = await viewport(page);
   await page.mouse.wheel(0, 200);
   await expect.poll(async () => (await viewport(page)).y).not.toBe(v0.y);

@@ -166,7 +166,9 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then
             cargo install --git https://github.com/chippers/msedgedriver-tool
             "$HOME/.cargo/bin/msedgedriver-tool.exe"
-            export PATH="$PWD:$PATH"
+            # A wrapper that keeps a verbose msedgedriver log for the diagnostics step.
+            printf '@"%%~dp0msedgedriver.exe" %%* --verbose --log-path="%%RUNNER_TEMP%%\\msedgedriver.log"\r\n' > msedgedriver-verbose.cmd
+            export PATH="$PWD:$PATH" LINEWISE_NATIVE_DRIVER="$(cygpath -w "$PWD/msedgedriver-verbose.cmd")"
             node --test apps/desktop/smoke/smoke.test.mjs
           else
             xvfb-run -a node --test apps/desktop/smoke/smoke.test.mjs
@@ -175,13 +177,19 @@ jobs:
         if: failure() && runner.os == 'Windows'
         shell: pwsh
         run: |
+          Get-Process linewise, msedgedriver, tauri-driver -ErrorAction SilentlyContinue | Format-Table Id, ProcessName, StartTime
+          Get-Process linewise, msedgedriver, tauri-driver -ErrorAction SilentlyContinue | Stop-Process -Force
+          "--- msedgedriver log (filtered) ---"
+          Select-String -Path "$env:RUNNER_TEMP\msedgedriver.log" -Pattern 'Launching|user-data|DevTools|WEBVIEW2|webview|error|Error' -ErrorAction SilentlyContinue | Select-Object -First 60 | ForEach-Object Line
+          "--- DevToolsActivePort files ---"
+          Get-ChildItem -Recurse -Filter DevToolsActivePort "$env:LOCALAPPDATA", "$env:TEMP" -ErrorAction SilentlyContinue | Select-Object FullName, LastWriteTime
+          "--- fresh launch with a remote debugging port ---"
           $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9333"
           $p = Start-Process -FilePath apps/desktop/src-tauri/target/debug/linewise.exe -PassThru
           Start-Sleep 12
           "still running: $(-not $p.HasExited); exit code: $($p.ExitCode)"
           try { (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:9333/json/version).Content } catch { "no DevTools endpoint: $_" }
-          Get-ChildItem -Recurse "$env:LOCALAPPDATA\dev.gavenrobertson.linewise" -ErrorAction SilentlyContinue | Select-Object -First 40 FullName
-          Get-Content "$env:LOCALAPPDATA\dev.gavenrobertson.linewise\logs\linewise.log" -ErrorAction SilentlyContinue | Select-Object -Last 40
+          Get-Content "$env:LOCALAPPDATA\dev.gavenrobertson.linewise\logs\linewise.log" -ErrorAction SilentlyContinue | Select-Object -Last 10
           if (-not $p.HasExited) { Stop-Process -Id $p.Id }
       - uses: actions/upload-artifact@v7
         with:

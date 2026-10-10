@@ -85,7 +85,9 @@ const script = (sid, fn) =>
 
 before(async () => {
   assert.ok(APP, 'Build the app first: pnpm tauri build --debug --no-bundle');
-  driver = spawn('tauri-driver', [], {
+  // LINEWISE_NATIVE_DRIVER points tauri-driver at a specific native driver (CI uses a logging wrapper).
+  const native = process.env.LINEWISE_NATIVE_DRIVER;
+  driver = spawn('tauri-driver', native ? ['--native-driver', native] : [], {
     stdio: 'inherit',
     env: { ...process.env, LINEWISE_SMOKE_DIR: smokeDir },
   });
@@ -126,9 +128,8 @@ test('launch, new diagram, save, reopen', { timeout: 180_000 }, async () => {
       'the router on the canvas',
     );
 
-    // Give the canvas keyboard focus (WebDriver keeps typing into the last input otherwise).
-    const node = await find(sid, "//div[contains(@class, 'react-flow__node-device')]");
-    await wd('POST', `/session/${sid}/element/${node}/click`, {});
+    // Leave the search box (WebDriver keeps typing into the last input otherwise).
+    await script(sid, () => /** @type {HTMLElement} */ (document.activeElement)?.blur());
     await keys(sid, [MOD, 's']);
     const saved = join(smokeDir, 'Untitled diagram.lwise');
     await until(() => existsSync(saved), `the saved file ${saved}`).catch(async (e) => {
