@@ -140,3 +140,14 @@ describe('FR-LNK-03 end labels spread apart instead of overlapping', () => {
     expect(new Set(atSwitch).size).toBe(3);
   });
 });
+
+describe('FR-LNK-01 dropping a link on a device body', () => {
+  it('finds the device under the drop point and ignores the source', async () => {
+    const { deviceAt } = await import('../src/canvas/geometry.ts');
+    const pos = { a: { x: 0, y: 0 }, b: { x: 200, y: 0 } };
+    expect(deviceAt(pos, { x: 210, y: 30 })).toBe('b');
+    expect(deviceAt(pos, { x: 5, y: 5 }, 'a')).toBeNull();
+    expect(deviceAt(pos, { x: 100, y: 0 })).toBeNull();
+    expect(deviceAt(pos, { x: 200, y: -40 })).toBeNull();
+  });
+});

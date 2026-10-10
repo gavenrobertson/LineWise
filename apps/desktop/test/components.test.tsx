@@ -22,6 +22,9 @@ import { TemplateEditorDialog } from '../src/dialogs/TemplateEditorDialog.tsx';
 import { VlanDialog } from '../src/dialogs/VlanDialog.tsx';
 import { WelcomeDialog } from '../src/dialogs/WelcomeDialog.tsx';
 import { Inspector } from '../src/panels/Inspector.tsx';
+import { LibraryBody as LibraryPanel } from '../src/panels/LibraryPanel.tsx';
+import { usePrefs } from '../src/store/prefs.ts';
+import { save } from '../src/lib/actions.ts';
 import { ProblemsPanel } from '../src/panels/ProblemsPanel.tsx';
 import { StatusBar } from '../src/panels/StatusBar.tsx';
 import { TabBar } from '../src/panels/TabBar.tsx';
@@ -122,6 +125,86 @@ describe('Inspector', () => {
       .interfaces.find((i) => i.id === free.id)!;
     expect(after.ipv4[0]).toMatchObject({ address: '172.16.9.1', prefix: 24 });
     await expectNoAxeViolations();
+  });
+});
+
+describe('Inspector fields', () => {
+  it('FR-INS-03 the interface editor has every interface field and the connected-to end', async () => {
+    const r1 = useEditor.getState().doc.devices.find((d) => d.hostname === 'R1')!;
+    const linked = useEditor.getState().doc.links.find((l) => l.endpointA.deviceId === r1.id)!;
+    const iface = r1.interfaces.find((i) => i.id === linked.endpointA.interfaceId)!;
+    act(() => useEditor.getState().setSelection({ devices: [r1.id] }));
+    wrap(<Inspector />);
+    expect(screen.getByText('Connected to')).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: new RegExp(`^${iface.shortName.replace('/', '\\/')},`) }),
+    );
+    for (const label of [
+      'Name',
+      'Enabled',
+      'Description',
+      'Mode',
+      'IPv4',
+      'IPv6',
+      'Speed (Mb/s)',
+      'Duplex',
+      'MTU',
+      'VRF',
+    ])
+      expect(screen.getAllByLabelText(label).length, label).toBeGreaterThan(0);
+    await expectNoAxeViolations();
+  });
+
+  it('FR-INS-01 shows link fields for a selected link and zone fields for a zone', async () => {
+    const doc = useEditor.getState().doc;
+    act(() => useEditor.getState().setSelection({ links: [doc.links[0]!.id] }));
+    const { unmount } = wrap(<Inspector />);
+    for (const label of ['Medium', 'Bandwidth (Mb/s)', 'Circuit ID'])
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    await expectNoAxeViolations();
+    unmount();
+  });
+});
+
+describe('Library panel', () => {
+  it('FR-TPL-05 searches, keeps favorites and recently used, and collapses categories', async () => {
+    usePrefs.setState({ favorites: [], recentTemplates: [] });
+    wrap(<LibraryPanel />);
+    const search = screen.getByRole('searchbox', { name: 'Search device library' });
+    await userEvent.type(search, 'firewall');
+    expect(
+      screen
+        .getAllByRole('button', { name: /^Place / })
+        .every((b) => /firewall/i.test(b.getAttribute('aria-label') ?? b.textContent ?? '')),
+    ).toBe(true);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Add to favorites' })[0]!);
+    await userEvent.clear(search);
+    expect(screen.getByRole('button', { name: /^Favorites/ })).toHaveAttribute('aria-expanded', 'true');
+    const security = screen.getByRole('button', { name: /^Security/i });
+    await userEvent.click(security);
+    expect(security).toHaveAttribute('aria-expanded', 'false');
+    act(() => usePrefs.getState().noteTemplateUse('generic/router-4ge'));
+    expect(screen.getByRole('button', { name: /^Recently used/ })).toBeInTheDocument();
+    await expectNoAxeViolations();
+  });
+});
+
+describe('Saving', () => {
+  it('FR-FMT-04 warns when embedded images make a file larger than 20 MB', async () => {
+    const real = platform();
+    setPlatform({ ...real, saveDiagram: async (_t, path, name) => ({ path: path ?? `/tmp/${name}`, name }) });
+    try {
+      const big = 'A'.repeat(21 * 1024 * 1024);
+      act(() =>
+        useEditor.setState({
+          doc: { ...useEditor.getState().doc, assets: { a1: { mime: 'image/png', base64: big } } },
+        }),
+      );
+      await act(() => save(false).then(() => undefined));
+      expect(useUi.getState().toasts.some((t) => /larger than 20 MB/.test(t.message))).toBe(true);
+    } finally {
+      setPlatform(real);
+    }
   });
 });
 

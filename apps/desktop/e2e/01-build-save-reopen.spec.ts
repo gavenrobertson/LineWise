@@ -19,7 +19,7 @@ async function connect(page: Page, from: string, to: string, portA: string, port
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').fill(to);
   await dialog.getByRole('button', { name: new RegExp(`^${to}`) }).click();
-  const ports = dialog.getByLabel('Port');
+  const ports = dialog.getByLabel('Port', { exact: true });
   await ports.nth(0).selectOption({ label: portA });
   await ports.nth(1).selectOption({ label: portB });
   await dialog.getByRole('button', { name: 'Connect', exact: true }).click();

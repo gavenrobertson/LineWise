@@ -65,14 +65,19 @@ function Waypoints({
   return (
     <>
       {current.map((p, i) => (
-        <div
+        <circle
           key={i}
           role="button"
           tabIndex={-1}
           aria-label="Bend point"
-          title="Drag to move; double-click to remove"
-          className="nodrag nopan absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full border-2 border-[var(--accent)] bg-[var(--surface)]"
-          style={{ left: p.x, top: p.y, pointerEvents: 'all' }}
+          className="nodrag nopan cursor-move"
+          cx={p.x}
+          cy={p.y}
+          r={6}
+          fill="var(--surface)"
+          stroke="var(--accent)"
+          strokeWidth={2}
+          style={{ pointerEvents: 'all' }}
           onPointerDown={(e) => down(e, i)}
           onPointerMove={move}
           onPointerUp={up}
@@ -80,7 +85,9 @@ function Waypoints({
             e.stopPropagation();
             execute(updateLinkStyle([linkId], { waypoints: points.filter((_, j) => j !== i) }));
           }}
-        />
+        >
+          <title>Drag to move; double-click to remove</title>
+        </circle>
       ))}
     </>
   );
@@ -173,10 +180,11 @@ export const NetworkEdge = memo(function NetworkEdge({
           strokeWidth={1.25}
         />
       )}
+      {/* Bend points are drawn in the edge's own group so they sit above its hit path. */}
+      {selected && !readOnly && view.waypoints.length > 0 && (
+        <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
+      )}
       <EdgeLabels>
-        {selected && !readOnly && view.waypoints.length > 0 && (
-          <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
-        )}
         {view.labelA && (
           <div
             className="lw-edge-label nodrag nopan"

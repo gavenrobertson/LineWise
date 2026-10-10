@@ -310,3 +310,57 @@ test('FR-CAN-14 hierarchical and orthogonal auto-layout run in a worker and undo
   await page.keyboard.press(`${MOD}+z`);
   await expect.poll(async () => positionOf(page, 'ACC1')).toEqual(before);
 });
+
+test('FR-LNK-01, FR-LNK-02 draw a link from a handle, filter ports, change its style and add and remove a bend', async ({
+  page,
+}) => {
+  await openApp(page);
+  await startBlank(page);
+  const library = page.getByRole('tabpanel', { name: 'Library' });
+  await library.getByRole('searchbox').fill('Access switch – 24×GE + 4×SFP');
+  const item = library.getByRole('button', { name: 'Place Access switch – 24×GE + 4×SFP' }).first();
+  const { box } = await canvasCenter(page);
+  await item.dragTo(page.locator('.react-flow__pane'), {
+    targetPosition: { x: box.width * 0.3, y: box.height * 0.4 },
+  });
+  await item.dragTo(page.locator('.react-flow__pane'), {
+    targetPosition: { x: box.width * 0.7, y: box.height * 0.6 },
+  });
+  await expect.poll(async () => (await doc(page)).devices.length).toBe(2);
+
+  // Drag from SW1's bottom handle onto SW2: the connect dialog asks for the ports.
+  const handle = node(page, 'SW1').locator('.react-flow__handle').nth(2);
+  const target = (await node(page, 'SW2').boundingBox())!;
+  const h = (await handle.boundingBox())!;
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + 20, { steps: 12 });
+  await page.mouse.up();
+  const dialog = page.getByRole('dialog', { name: 'Connect SW1 to SW2' });
+  await expect(dialog).toBeVisible();
+  // "Next free port" is the default; typing filters and picks the matching port.
+  await expect(dialog.getByLabel('Port', { exact: true }).first()).toHaveValue('');
+  await dialog.getByRole('textbox', { name: 'Filter SW1 ports' }).fill('gi1/0/7');
+  await expect(dialog.getByLabel('Port', { exact: true }).first()).not.toHaveValue('');
+  await dialog.getByRole('button', { name: 'Connect', exact: true }).click();
+  await expect.poll(async () => (await doc(page)).links.length).toBe(1);
+  const d1 = await doc(page);
+  const sw1 = d1.devices.find((d) => d.hostname === 'SW1')!;
+  const end = [d1.links[0]!.endpointA, d1.links[0]!.endpointB].find((e) => e.deviceId === sw1.id)!;
+  expect(sw1.interfaces.find((i) => i.id === end.interfaceId)?.shortName).toBe('Gi1/0/7');
+
+  // Per-link style: select the link and switch it to orthogonal.
+  await page.locator('.react-flow__edge').first().click({ force: true });
+  const inspector = page.getByRole('complementary', { name: 'Inspector' });
+  await inspector.getByLabel('Line style').selectOption('orthogonal');
+  const links = async () =>
+    (await doc(page)) as unknown as { links: { style: { routing?: string; waypoints?: unknown[] } }[] };
+  await expect.poll(async () => (await links()).links[0]!.style.routing).toBe('orthogonal');
+
+  // Double-click the link to add a bend point; double-click the bend point to remove it.
+  const path = page.locator('.react-flow__edge-interaction').first();
+  await path.dblclick({ force: true });
+  await expect.poll(async () => (await links()).links[0]!.style.waypoints?.length ?? 0).toBe(1);
+  await page.getByRole('button', { name: 'Bend point', exact: true }).dblclick();
+  await expect.poll(async () => (await links()).links[0]!.style.waypoints?.length ?? 0).toBe(0);
+});

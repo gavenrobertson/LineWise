@@ -47,7 +47,15 @@ import { getTemplate } from '@linewise/device-library';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
-import { distanceToPolyline, linkPoints, nodeCenter, nodeTopLeft, stabilize, type XY } from './geometry.ts';
+import {
+  deviceAt,
+  distanceToPolyline,
+  linkPoints,
+  nodeCenter,
+  nodeTopLeft,
+  stabilize,
+  type XY,
+} from './geometry.ts';
 import { buildPageModel } from './model.ts';
 import { anchorOf, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
@@ -74,7 +82,7 @@ export const canvasApi: {
   viewportCenter: () => XY;
 } = {
   instance: null,
-  fit: () => void canvasApi.instance?.fitView({ padding: fitPadding(), duration: 200 }),
+  fit: () => void canvasApi.instance?.fitView({ padding: fitPadding(), duration: 200, maxZoom: 1 }),
   zoomIn: () => void canvasApi.instance?.zoomIn({ duration: 150 }),
   zoomOut: () => void canvasApi.instance?.zoomOut({ duration: 150 }),
   focusOn: (ids) => {
@@ -502,6 +510,26 @@ export function Canvas() {
     [readOnly, doc, openDialog],
   );
 
+  // Dropping a link on a device body (not just near a handle) also connects (FR-LNK-01).
+  const onConnectEnd = useCallback(
+    (e: MouseEvent | TouchEvent, state: { isValid: boolean | null; fromNode: { id: string } | null }) => {
+      if (readOnly || state.isValid || !state.fromNode) return;
+      const p = 'changedTouches' in e ? e.changedTouches[0] : e;
+      if (!p) return;
+      // Hit-test by geometry: during a connection drag the nodes are not hit-testable in the DOM.
+      const f = rf.screenToFlowPosition({ x: p.clientX, y: p.clientY });
+      const devices = new Set(doc.devices.map((d) => d.id));
+      const positions = Object.fromEntries(
+        Object.entries(page?.nodePositions ?? {}).filter(([id]) => devices.has(id)),
+      );
+      const targetId = deviceAt(positions, f, state.fromNode.id);
+      if (!targetId || targetId === state.fromNode.id) return;
+      if (!doc.devices.some((d) => d.id === state.fromNode?.id)) return;
+      openDialog({ kind: 'connect', sourceId: state.fromNode.id, targetId });
+    },
+    [readOnly, doc, page, rf, openDialog],
+  );
+
   const onDragOver = useCallback((e: DragEvent) => {
     if (e.dataTransfer.types.includes(TEMPLATE_MIME)) {
       e.preventDefault();
@@ -554,6 +582,7 @@ export function Canvas() {
         zoomOnDoubleClick={false}
         disableKeyboardA11y
         onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
         onDelete={onDelete}
         connectionMode={ConnectionMode.Loose}
         selectionMode={SelectionMode.Partial}
@@ -576,7 +605,7 @@ export function Canvas() {
         nodesConnectable={!readOnly}
         elevateEdgesOnSelect
         fitView
-        fitViewOptions={{ padding: fitPadding(prefs.showMinimap) }}
+        fitViewOptions={{ padding: fitPadding(prefs.showMinimap), maxZoom: 1 }}
         onMoveEnd={(_, vp) => setUi({ zoom: vp.zoom })}
         attributionPosition="bottom-center"
         aria-label={t('canvas.label', 'Diagram canvas')}

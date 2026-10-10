@@ -20,6 +20,29 @@ export function nodeCenter(topLeft: XY): XY {
   return { x: topLeft.x + DEVICE_W / 2, y: topLeft.y + ICON_HALF };
 }
 
+/** Height of a device node's label area below the icon, for hit testing. */
+export const LABEL_H = 28;
+
+/**
+ * The device whose node box (icon plus label) contains `p`, nearest center first, or null.
+ * Used to connect when a link is dropped on a device body rather than a handle (FR-LNK-01).
+ */
+export function deviceAt(positions: Record<string, XY>, p: XY, exclude?: string): string | null {
+  let best: string | null = null;
+  let bestD = Infinity;
+  for (const [id, c] of Object.entries(positions)) {
+    if (id === exclude) continue;
+    if (Math.abs(p.x - c.x) > DEVICE_W / 2 || p.y < c.y - ICON_HALF || p.y > c.y + ICON_HALF + LABEL_H)
+      continue;
+    const d = Math.hypot(p.x - c.x, p.y - c.y);
+    if (d < bestD) {
+      bestD = d;
+      best = id;
+    }
+  }
+  return best;
+}
+
 /** Point where the ray from `c` toward `to` leaves a square of half-size `h` around `c`. */
 export function squareExit(c: XY, to: XY, h: number = LINK_CLEARANCE): XY {
   const dx = to.x - c.x;

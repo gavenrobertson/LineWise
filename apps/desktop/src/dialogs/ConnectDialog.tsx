@@ -44,7 +44,14 @@ function InterfacePicker({
   autoFocus?: boolean;
 }) {
   const { t } = useTranslation();
-  const ifaces = [...device.interfaces].sort((a, b) => compareInterfaceNames(a.name, b.name));
+  const [filter, setFilter] = useState('');
+  // Type-to-filter (FR-LNK-01): "gi1/0/2", "Gi1/0/2" and "GigabitEthernet1/0/2" all match.
+  const q = filter.trim().toLowerCase();
+  const matches = (i: Device['interfaces'][number]) =>
+    !q || i.name.toLowerCase().includes(q) || i.shortName.toLowerCase().includes(q);
+  const ifaces = [...device.interfaces]
+    .sort((a, b) => compareInterfaceNames(a.name, b.name))
+    .filter((i) => matches(i) || i.id === value);
   const free = ifaces.filter((i) => !used.has(i.id) && (isPhysical(i) || i.type === 'tunnel'));
   const busy = ifaces.filter((i) => used.has(i.id) && i.type !== 'tunnel');
   const tunnels = ifaces.filter((i) => used.has(i.id) && i.type === 'tunnel');
@@ -56,6 +63,27 @@ function InterfacePicker({
           {[ROLE_LABELS[device.role], device.model].filter(Boolean).join(' · ')}
         </div>
       </div>
+      <TextInput
+        aria-label={t('connect.filter', 'Filter {{host}} ports', { host: device.hostname })}
+        placeholder={t('connect.filterHint', 'Filter ports, e.g. gi1/0/2')}
+        className="font-mono"
+        value={filter}
+        onChange={(e) => {
+          const next = e.target.value;
+          setFilter(next);
+          const nq = next.trim().toLowerCase();
+          const hits = device.interfaces.filter(
+            (i) =>
+              nq &&
+              !used.has(i.id) &&
+              (isPhysical(i) || i.type === 'tunnel') &&
+              (i.name.toLowerCase().includes(nq) || i.shortName.toLowerCase().includes(nq)),
+          );
+          const exact = hits.find((i) => i.name.toLowerCase() === nq || i.shortName.toLowerCase() === nq);
+          if (exact) onChange(exact.id);
+          else if (hits.length === 1) onChange((hits[0] as (typeof hits)[number]).id);
+        }}
+      />
       <Field label={label}>
         {(id) => (
           <Select id={id} value={value} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)}>
