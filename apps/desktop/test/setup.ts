@@ -29,3 +29,4 @@ if (!window.matchMedia)
       removeEventListener() {},
       dispatchEvent: () => false,
     }) as MediaQueryList;
+import '../src/i18n/index.ts';

@@ -188,7 +188,13 @@ function useAppEffects(): void {
   useEffect(() => {
     if (!autosaveSeconds) return;
     const id = setInterval(() => void autosaveNow(), autosaveSeconds * 1000);
-    return () => clearInterval(id);
+    // Also when the window loses focus (FR-FMT-07).
+    const onBlur = () => void autosaveNow();
+    window.addEventListener('blur', onBlur);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('blur', onBlur);
+    };
   }, [autosaveSeconds]);
 
   // Canvas delete key, editor errors.

@@ -19,7 +19,8 @@
     "e2e": "pnpm --filter @linewise/desktop e2e",
     "licenses:check": "node scripts/check-licenses.mjs",
     "notices": "node scripts/third-party-notices.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "schema": "pnpm --filter @linewise/core exec cross-env UPDATE_SCHEMA=1 vitest run test/jsonSchema.test.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -27,6 +28,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^5.0.3",
+    "cross-env": "^10.1.0",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",

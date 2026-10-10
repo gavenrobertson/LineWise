@@ -5,6 +5,10 @@ import { iconMarkup, ROLE_LABELS, type IconStyle } from '@linewise/device-librar
 import { memo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeZone, updateAnnotation, type Annotation, type DeviceRole } from '@linewise/core';
+import { iconRole } from './icons.ts';
+
+export { customIconUrl, iconRole } from './icons.ts';
+import { Lock, StickyNote } from 'lucide-react';
 import { cx } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { DEVICE_W, ICON } from './geometry.ts';
@@ -14,11 +18,25 @@ export function DeviceIcon({
   role,
   style,
   size = ICON,
+  url,
 }: {
   role: DeviceRole;
   style: IconStyle;
   size?: number;
+  url?: string;
 }) {
+  if (url)
+    return (
+      <img
+        src={url}
+        width={size}
+        height={size}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        style={{ display: 'block', objectFit: 'contain' }}
+      />
+    );
   // Icon markup is project-authored (not user content), so injecting it is safe.
   return (
     <svg
@@ -34,19 +52,39 @@ export function DeviceIcon({
 
 const SEV_COLOR = { error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--info)' } as const;
 
-export type DeviceNodeData = { view: DeviceView; iconStyle: IconStyle; summary: string };
+export type DeviceNodeData = { view: DeviceView; iconStyle: IconStyle; summary: string; iconUrl?: string };
 export type DeviceNodeType = Node<DeviceNodeData, 'device'>;
 
 const handleStyle: CSSProperties = { background: 'var(--accent)', border: '2px solid var(--surface)' };
 
+/** Label placement around the icon; the node box stays the icon so link anchors never move. */
+const LABEL_POS: Record<string, CSSProperties> = {
+  bottom: { top: ICON + 4, left: '50%', transform: 'translateX(-50%)', alignItems: 'center' },
+  top: { bottom: ICON + 4, left: '50%', transform: 'translateX(-50%)', alignItems: 'center' },
+  left: {
+    right: DEVICE_W / 2 + ICON / 2 + 6,
+    top: ICON / 2,
+    transform: 'translateY(-50%)',
+    alignItems: 'flex-end',
+  },
+  right: {
+    left: DEVICE_W / 2 + ICON / 2 + 6,
+    top: ICON / 2,
+    transform: 'translateY(-50%)',
+    alignItems: 'flex-start',
+  },
+};
+
 export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps<DeviceNodeType>) {
-  const { view, iconStyle, summary } = data;
+  const { t } = useTranslation();
+  const { view, iconStyle, summary, iconUrl } = data;
   const d = view.device;
+  const pos = LABEL_POS[d.labelPosition] ?? LABEL_POS.bottom;
   return (
     <div
       className={cx('group relative flex flex-col items-center', view.dimmed && 'lw-dim')}
-      style={{ width: DEVICE_W }}
-      aria-label={`${ROLE_LABELS[d.role]} ${d.hostname}${view.issueCount ? `, ${view.issueCount} problems` : ''}`}
+      style={{ width: DEVICE_W, height: ICON }}
+      aria-label={`${ROLE_LABELS[d.role]} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
       title={summary}
     >
       <div
@@ -55,7 +93,7 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
           selected && 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--canvas)]',
         )}
       >
-        <DeviceIcon role={d.role} style={iconStyle} />
+        <DeviceIcon role={iconRole(d.role, d.iconOverride)} style={iconStyle} url={iconUrl} />
         {view.severity && (
           <span
             className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
@@ -65,19 +103,39 @@ export const DeviceNode = memo(function DeviceNode({ data, selected }: NodeProps
             {view.issueCount}
           </span>
         )}
-      </div>
-      <div className="mt-1 max-w-[120px] whitespace-pre-line rounded bg-[color-mix(in_srgb,var(--canvas)_85%,transparent)] px-1 text-center text-[12px] font-medium leading-tight text-ink">
-        {view.label}
-      </div>
-      {view.badges.length > 0 && (
-        <div className="mt-0.5 flex flex-wrap justify-center gap-0.5">
-          {view.badges.map((b) => (
-            <span key={b} className="rounded bg-accent-soft px-1 font-mono text-[9px] text-accent">
-              {b}
+        <div className="absolute -bottom-1.5 -right-2 flex gap-0.5" aria-hidden="true">
+          {d.colorTag && (
+            <span
+              className="h-3 w-3 rounded-full border-2 border-[var(--canvas)]"
+              style={{ background: d.colorTag }}
+            />
+          )}
+          {d.notes && (
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm">
+              <StickyNote size={9} />
             </span>
-          ))}
+          )}
+          {d.locked && (
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm">
+              <Lock size={9} />
+            </span>
+          )}
         </div>
-      )}
+      </div>
+      <div className="pointer-events-none absolute flex flex-col" style={pos}>
+        <div className="max-w-[140px] whitespace-pre-line rounded bg-[color-mix(in_srgb,var(--canvas)_85%,transparent)] px-1 text-center text-[12px] font-medium leading-tight text-ink">
+          {view.label}
+        </div>
+        {view.badges.length > 0 && (
+          <div className="mt-0.5 flex flex-wrap justify-center gap-0.5">
+            {view.badges.map((b) => (
+              <span key={b} className="rounded bg-accent-soft px-1 font-mono text-[9px] text-accent">
+                {b}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
       <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: -4 }} />
       <Handle
         type="source"
@@ -105,7 +163,7 @@ export const ZoneNode = memo(function ZoneNode({ data, selected }: NodeProps<Zon
   return (
     <>
       <NodeResizer
-        isVisible={selected}
+        isVisible={selected && !zone.locked}
         minWidth={80}
         minHeight={60}
         color="var(--accent)"

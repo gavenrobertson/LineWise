@@ -9,7 +9,8 @@ import type { NetworkDocument, ViewLayer, Issue } from '@linewise/core';
 import { iconMarkup } from '@linewise/device-library';
 import { edgeGeometryPure } from '../canvas/edgeGeometry.ts';
 import { ICON, midDirection, type XY } from '../canvas/geometry.ts';
-import { buildPageModel, pageBounds, type PageModel } from '../canvas/model.ts';
+import { buildPageModel, labelBox, offPageBox, pageBounds, type PageModel } from '../canvas/model.ts';
+import { customIconUrl, iconRole } from '../canvas/icons.ts';
 
 export type ExportTheme = 'light' | 'dark';
 
@@ -205,7 +206,11 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
   }
 
   // Links.
-  const centers = new Map(model.devices.map((d) => [d.device.id, d.center]));
+  const centers = new Map<string, XY>(model.devices.map((d) => [d.device.id, d.center]));
+  for (const o of model.offPage) {
+    const r = offPageBox(o);
+    centers.set(`offpage:${o.deviceId}`, { x: r.x + r.w / 2, y: r.y + r.h / 2 });
+  }
   const labels: string[] = [];
   for (const l of model.links) {
     const a = centers.get(l.sourceId);
@@ -261,27 +266,46 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
     const style = doc.settings.iconStyle;
     const color = style === 'classic' ? pal['--device'] : pal['--device-line'];
     const s = ICON / 64;
+    const url = customIconUrl(doc, dv.device.iconOverride);
+    const icon = url
+      ? `<image x="${f(x - ICON / 2)}" y="${f(y - ICON / 2)}" width="${ICON}" height="${ICON}" href="${url}" preserveAspectRatio="xMidYMid meet"/>`
+      : `<g transform="translate(${f(x - ICON / 2)} ${f(y - ICON / 2)}) scale(${s})" color="${color}" style="color:${color}">${iconMarkup(iconRole(dv.device.role, dv.device.iconOverride), style).replace(/currentColor/g, color ?? '#1f6fb2')}</g>`;
+    const lb = labelBox(dv);
+    const tx = lb.anchor === 'middle' ? lb.x + lb.w / 2 : lb.anchor === 'start' ? lb.x + 4 : lb.x + lb.w - 4;
     out.push(
-      `<g data-device="${escapeXml(dv.device.hostname)}"><g transform="translate(${f(x - ICON / 2)} ${f(y - ICON / 2)}) scale(${s})" color="${color}" style="color:${color}">${iconMarkup(dv.device.role, style).replace(/currentColor/g, color ?? '#1f6fb2')}</g>`,
+      `<g data-device="${escapeXml(dv.device.hostname)}">${icon}`,
       textLines(
-        x,
-        y + ICON / 2 + 15,
+        tx,
+        lb.y + 12,
         dv.label,
-        `font-size="12" font-weight="500" text-anchor="middle" fill="${pal['--text']}"`,
+        `font-size="12" font-weight="500" text-anchor="${lb.anchor}" fill="${pal['--text']}"`,
         14,
       ),
     );
     if (dv.badges.length) {
       out.push(
         textLines(
-          x,
-          y + ICON / 2 + 15 + dv.label.split('\n').length * 14,
+          tx,
+          lb.y + 12 + dv.label.split('\n').length * 14,
           dv.badges.join(' · '),
-          `font-size="9" text-anchor="middle" fill="${pal['--accent']}" font-family="Menlo, Consolas, monospace"`,
+          `font-size="9" text-anchor="${lb.anchor}" fill="${pal['--accent']}" font-family="Menlo, Consolas, monospace"`,
         ),
       );
     }
+    if (dv.device.colorTag)
+      out.push(
+        `<circle cx="${f(x + ICON / 2)}" cy="${f(y + ICON / 2)}" r="5" fill="${escapeXml(dv.device.colorTag)}" stroke="${pal['--canvas']}" stroke-width="2"/>`,
+      );
     out.push('</g>');
+  }
+
+  // Off-page references (FR-CAN-12).
+  for (const o of model.offPage) {
+    const r = offPageBox(o);
+    out.push(
+      `<g data-offpage="${escapeXml(o.hostname)}"><rect x="${f(r.x)}" y="${f(r.y)}" width="${f(r.w)}" height="${f(r.h)}" rx="${f(r.h / 2)}" fill="${pal['--canvas']}" stroke="${pal['--border-strong']}"/>`,
+      `<text x="${f(r.x + 10)}" y="${f(r.y + 15)}" font-size="11" fill="${pal['--text']}">↗ <tspan font-weight="600">${escapeXml(o.hostname)}</tspan><tspan fill="${pal['--text-muted']}"> · ${escapeXml(o.pageName)}</tspan></text></g>`,
+    );
   }
 
   if (opts.titleBlock) {

@@ -32,6 +32,14 @@ const CATEGORY_ORDER: RoleCategory[] = [
   'Other',
 ];
 
+/** Focus a canvas node once React Flow has rendered it. */
+export function focusNode(id: string, tries = 30): void {
+  const el = document.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`);
+  // React Flow keeps new nodes hidden until measured; focus only sticks once visible.
+  el?.focus();
+  if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1));
+}
+
 export function placeTemplate(tpl: DeviceTemplate): void {
   const ed = useEditor.getState();
   if (ed.readOnly) return;
@@ -45,7 +53,11 @@ export function placeTemplate(tpl: DeviceTemplate): void {
     position: { x: Math.round(c.x + n * 24), y: Math.round(c.y + n * 24) },
     template: tpl,
   });
-  if (ed.execute(cmd)) ed.setSelection({ devices: [cmd.deviceId] });
+  if (ed.execute(cmd)) {
+    ed.setSelection({ devices: [cmd.deviceId] });
+    // Keyboard users continue on the canvas: arrows nudge, L links, Enter renames.
+    focusNode(cmd.deviceId);
+  }
 }
 
 function Item({
@@ -70,6 +82,7 @@ function Item({
       <button
         type="button"
         draggable
+        data-lw-library-item=""
         onDragStart={onDragStart}
         onClick={() => placeTemplate(tpl)}
         className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left"
@@ -189,6 +202,18 @@ export function LibraryBody() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('library.search', 'Search name, model, role, vendor')}
+          id="lw-library-search"
+          onKeyDown={(e) => {
+            // Enter places the best match; ArrowDown moves into the list (FR-KEY-02).
+            if (e.key === 'Enter' && results[0]) {
+              e.preventDefault();
+              placeTemplate(results[0]);
+            }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              document.querySelector<HTMLElement>('[data-lw-library-item]')?.focus();
+            }
+          }}
           aria-label={t('library.searchLabel', 'Search device library')}
           className="h-8 w-full rounded-md border border-line bg-surface-2 pl-7 pr-2 text-[12.5px] text-ink placeholder:text-subtle focus:border-accent focus:outline-none"
         />

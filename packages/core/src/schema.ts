@@ -136,7 +136,11 @@ export const Device = z.object({
   tags: z.array(z.string()).default([]),
   notes: z.string().default(''),
   interfaces: z.array(Interface).default([]),
+  /** Another role's icon ("router") or an embedded custom icon ("asset:<assetId>", FR-ICO-05/06). */
   iconOverride: z.string().optional(),
+  /** User-chosen color tag shown as a badge (FR-ICO-04). */
+  colorTag: z.string().optional(),
+  locked: z.boolean().default(false),
   labelPosition: z.enum(['bottom', 'top', 'left', 'right']).default('bottom'),
   /** Routing annotations (FR-NET-11). */
   routing: z
@@ -199,6 +203,7 @@ export const Zone = z.object({
   parentZoneId: Id.optional(),
   color: z.string().default('#0D9488'),
   description: z.string().default(''),
+  locked: z.boolean().default(false),
 });
 export type Zone = z.infer<typeof Zone>;
 

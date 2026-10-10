@@ -320,7 +320,9 @@ function VlsmTab() {
             <th scope="col" className="py-1">
               {t('ipam.result', 'Subnet')}
             </th>
-            <th scope="col" className="w-8" />
+            <th scope="col" className="w-8">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>

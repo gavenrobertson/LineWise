@@ -27,7 +27,27 @@ function isTyping(el: EventTarget | null): boolean {
   );
 }
 
-function matches(e: KeyboardEvent, shortcut: string): boolean {
+const CODES: Record<string, string> = {
+  '[': 'BracketLeft',
+  ']': 'BracketRight',
+  '=': 'Equal',
+  '-': 'Minus',
+  ',': 'Comma',
+  '/': 'Slash',
+  '.': 'Period',
+};
+
+/** Physical key code for a shortcut key, so Shift+0 or Shift+] still match. */
+function codeFor(key: string): string | undefined {
+  if (/^[a-z]$/.test(key)) return `Key${key.toUpperCase()}`;
+  if (/^[0-9]$/.test(key)) return `Digit${key}`;
+  return CODES[key];
+}
+
+export function matches(
+  e: Pick<KeyboardEvent, 'key' | 'code' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'>,
+  shortcut: string,
+): boolean {
   const parts = shortcut.toLowerCase().split('+');
   const key = parts.at(-1) as string;
   const mod = parts.includes('mod');
@@ -36,9 +56,9 @@ function matches(e: KeyboardEvent, shortcut: string): boolean {
   const modDown = e.metaKey || e.ctrlKey;
   if (mod !== modDown || shift !== e.shiftKey || alt !== e.altKey) return false;
   const k = e.key.toLowerCase();
-  if (key === '=') return k === '=' || k === '+';
+  if (key === '=') return k === '=' || k === '+' || e.code === 'Equal';
   if (key === 'delete') return k === 'delete' || k === 'backspace';
-  return k === key;
+  return k === key || (!!e.code && e.code === codeFor(key));
 }
 
 const MAC_EDIT_KEYS = new Set([
@@ -71,6 +91,23 @@ export function useKeyboard(): void {
         return;
       }
       if (isTyping(e.target)) return;
+      // Canvas keys apply when focus is on the canvas (or nowhere), not on toolbar or panel controls.
+      const target = e.target as HTMLElement | null;
+      const onCanvas = !target || target === document.body || !!target.closest?.('.react-flow');
+      // A device focused with Tab becomes the selection, so Enter/L/arrows act on it.
+      const focusedNode = target?.closest?.('.react-flow__node-device') as HTMLElement | null;
+      const focusedId = focusedNode?.dataset.id;
+      if (
+        focusedId &&
+        !useEditor.getState().selection.devices.includes(focusedId) &&
+        ['Enter', ' ', 'l', 'L'].includes(e.key)
+      ) {
+        useEditor.getState().setSelection({ devices: [focusedId] });
+        if (e.key === ' ') {
+          e.preventDefault();
+          return;
+        }
+      }
       // Presentation mode: step through pages.
       if (ui.presentation && (e.key === 'PageDown' || e.key === 'PageUp' || e.key === ' ')) {
         const ed = useEditor.getState();
@@ -81,7 +118,7 @@ export function useKeyboard(): void {
         e.preventDefault();
         return;
       }
-      if (e.key.startsWith('Arrow')) {
+      if (e.key.startsWith('Arrow') && onCanvas) {
         const dir = e.key.slice(5).toLowerCase() as 'up' | 'down' | 'left' | 'right';
         if (e.altKey) focusNearest(dir);
         else {
@@ -95,13 +132,14 @@ export function useKeyboard(): void {
         return;
       }
       const ed = useEditor.getState();
-      if (e.key === 'Enter' && ed.selection.devices.length === 1) {
+      if (e.key === 'Enter' && onCanvas && ed.selection.devices.length === 1) {
         document.getElementById('inspector-hostname')?.focus();
         e.preventDefault();
         return;
       }
       if (
         e.key.toLowerCase() === 'l' &&
+        (onCanvas || !!target?.closest?.('[data-lw-selection-proxy]')) &&
         !e.metaKey &&
         !e.ctrlKey &&
         !e.altKey &&

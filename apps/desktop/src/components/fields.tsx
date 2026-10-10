@@ -28,10 +28,13 @@ interface RowProps {
   hint?: string;
   children: (id: string, describedBy: string | undefined) => ReactNode;
   wide?: boolean;
+  /** Use this id for the control (e.g. #inspector-hostname) so the label stays associated. */
+  id?: string;
 }
 
-export function Row({ label, error, hint, children, wide }: RowProps) {
-  const id = useId();
+export function Row({ label, error, hint, children, wide, id: forced }: RowProps) {
+  const auto = useId();
+  const id = forced ?? auto;
   const desc = error || hint ? `${id}-d` : undefined;
   return (
     <div className={cx('grid items-start gap-x-2 gap-y-0.5', wide ? 'grid-cols-1' : 'grid-cols-[96px_1fr]')}>
@@ -87,10 +90,10 @@ export function TextField({
     if (draft !== initial || (value === MIXED && draft !== '')) onCommit(draft);
   };
   return (
-    <Row label={label} error={error} hint={hint} wide={multiline}>
+    <Row label={label} error={error} hint={hint} wide={multiline} id={forcedId}>
       {(id, desc) => {
         const common = {
-          id: forcedId ?? id,
+          id,
           value: draft,
           disabled,
           placeholder: value === MIXED ? t('field.mixed', 'Mixed') : placeholder,

@@ -326,7 +326,9 @@ export function TemplateEditorDialog({ templateId }: { templateId?: string }) {
                 <th scope="col" className="w-12 py-1">
                   PoE
                 </th>
-                <th scope="col" className="w-8" />
+                <th scope="col" className="w-8">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>

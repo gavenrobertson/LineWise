@@ -86,6 +86,7 @@ export function createDevice(role: DeviceRole, hostname: string, extra: Partial<
     interfaces: [],
     labelPosition: 'bottom',
     routing: [],
+    locked: false,
     ...extra,
   };
 }

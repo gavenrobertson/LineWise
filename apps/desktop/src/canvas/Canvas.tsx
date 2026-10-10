@@ -21,9 +21,19 @@ import {
   type NodeChange,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  addOffPageRef,
+  updateLinkStyle,
   addDevice,
   batch,
   deviceSummary,
@@ -39,8 +49,8 @@ import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
 import { distanceToPolyline, linkPoints, nodeCenter, nodeTopLeft, type XY } from './geometry.ts';
 import { buildPageModel } from './model.ts';
-import { edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
-import { nodeTypes } from './nodes.tsx';
+import { anchorOf, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
+import { customIconUrl, nodeTypes } from './nodes.tsx';
 
 export const TEMPLATE_MIME = 'application/x-linewise-template';
 
@@ -139,6 +149,7 @@ export function Canvas() {
         width: z.box.w,
         height: z.box.h,
         zIndex: -1,
+        draggable: !z.zone.locked,
         selected: sel.has(z.zone.id),
         data: { view: z, pageId },
       });
@@ -168,12 +179,14 @@ export function Canvas() {
         id: dv.device.id,
         type: 'device',
         position: nodeTopLeft(dv.center),
+        draggable: !dv.device.locked,
         selected: sel.has(dv.device.id),
         zIndex: 1,
         ariaLabel: `${dv.device.hostname}`,
         data: {
           view: dv,
           iconStyle: doc.settings.iconStyle,
+          iconUrl: customIconUrl(doc, dv.device.iconOverride),
           summary: [
             s.hostname,
             s.role,
@@ -194,8 +207,8 @@ export function Canvas() {
       out.push({
         id: `offpage:${o.deviceId}`,
         type: 'offpage',
-        position: o.position,
-        draggable: false,
+        position: drag?.[`offpage:${o.deviceId}`] ?? o.position,
+        draggable: !readOnly,
         selectable: false,
         data: { hostname: o.hostname, pageName: o.pageName },
       });
@@ -203,7 +216,7 @@ export function Canvas() {
     return out;
     // dimsVersion re-runs this when the measured-size ref changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, page, pageId, sel, drag, doc, dimsVersion, lockedLayers]);
+  }, [model, page, pageId, sel, drag, doc, dimsVersion, lockedLayers, readOnly]);
 
   const edges: NetworkEdgeType[] = useMemo(
     () =>
@@ -366,6 +379,8 @@ export function Canvas() {
     for (const [id, p] of Object.entries(positions)) {
       const ann = page.annotations.find((a) => a.id === id);
       if (ann) cmds.push(updateAnnotation(pageId, id, { geometry: { ...ann.geometry, x: p.x, y: p.y } }));
+      else if (id.startsWith('offpage:'))
+        cmds.push(addOffPageRef(pageId, id.slice(8), { x: Math.round(p.x), y: Math.round(p.y) }));
       else moveMap[id] = p;
     }
     if (Object.keys(moveMap).length) cmds.unshift(moveNodes(pageId, moveMap));
@@ -406,6 +421,50 @@ export function Canvas() {
       }
     },
     [pathStart, setUi, setHighlight],
+  );
+
+  // Off-page reference: double-click jumps to the device's own page (FR-CAN-12).
+  const onNodeDoubleClick = useCallback(
+    (_: unknown, node: Node) => {
+      if (node.type !== 'offpage') return;
+      const deviceId = node.id.slice(8);
+      const home = doc.pages.find((p) => p.nodePositions[deviceId]);
+      if (!home) return;
+      useEditor.getState().setPage(home.id);
+      useEditor.getState().setSelection({ devices: [deviceId] });
+      requestAnimationFrame(() => canvasApi.focusOn([deviceId]));
+    },
+    [doc],
+  );
+
+  // Double-click a link to add a bend point where you clicked (FR-LNK-02).
+  const onEdgeDoubleClick = useCallback(
+    (e: ReactMouseEvent, edge: Edge) => {
+      if (readOnly) return;
+      const view = model?.links.find((l) => l.link.id === edge.id);
+      const inst = canvasApi.instance;
+      if (!view || !inst) return;
+      const sNode = inst.getInternalNode(view.sourceId);
+      const tNode = inst.getInternalNode(view.targetId);
+      if (!sNode || !tNode) return;
+      const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      const pts = linkPoints(anchorOf(sNode), anchorOf(tNode), view.routing, view.offset, view.waypoints);
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 1; i < pts.length; i++) {
+        const dd = distanceToPolyline(p, [pts[i - 1] as XY, pts[i] as XY]);
+        if (dd < bestD) {
+          bestD = dd;
+          best = i - 1;
+        }
+      }
+      // With no bends yet, orthogonal and curved links become straight segments through the new point.
+      const wps = [...view.waypoints];
+      wps.splice(view.waypoints.length ? best : 0, 0, { x: Math.round(p.x), y: Math.round(p.y) });
+      execute(updateLinkStyle([view.link.id], { waypoints: wps }));
+      setSelection({ links: [view.link.id] });
+    },
+    [readOnly, model, rf, execute, setSelection],
   );
 
   // ---------------------------------------------------------------- connect & drop
@@ -467,6 +526,10 @@ export function Canvas() {
         onNodeDragStop={onNodeDragStop}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
+        onEdgeDoubleClick={onEdgeDoubleClick}
+        zoomOnDoubleClick={false}
+        disableKeyboardA11y
         onConnect={onConnect}
         onDelete={onDelete}
         connectionMode={ConnectionMode.Loose}

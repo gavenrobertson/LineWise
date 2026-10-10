@@ -17,13 +17,26 @@ import {
   paste,
   removeItems,
   serializeDocument,
+  LARGE_FILE_BYTES,
   type ClipboardPayload,
   type NetworkDocument,
 } from '@linewise/core';
 import { detectKind } from '@linewise/parsers';
 import i18n from '../i18n/index.ts';
+import { sanitizeSvg } from './sanitize.ts';
 import { platform, type MenuCommand } from '../platform/index.ts';
 import { canvasApi } from '../canvas/Canvas.tsx';
+import {
+  bring,
+  copyStyle,
+  group,
+  lock,
+  pasteStyle,
+  selectConnected,
+  selectSameType,
+  ungroup,
+  zoomToSelection,
+} from './arrange.ts';
 import { selectDirty, selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -80,12 +93,10 @@ export async function openText(text: string, path: string | null, name: string):
         issues: r.issues,
         onRecover: r.recovered
           ? () => {
-              useEditor
-                .getState()
-                .loadDocument(r.recovered as NetworkDocument, {
-                  path: null,
-                  name: `${name.replace(/\.lwise$/i, '')} (recovered).lwise`,
-                });
+              useEditor.getState().loadDocument(r.recovered as NetworkDocument, {
+                path: null,
+                name: `${name.replace(/\.lwise$/i, '')} (recovered).lwise`,
+              });
               useUi.getState().close();
             }
           : null,
@@ -115,6 +126,16 @@ export async function save(asNew = false): Promise<boolean> {
   const ed = useEditor.getState();
   if (ed.readOnly) asNew = true;
   const text = serializeDocument(ed.doc);
+  if (text.length > LARGE_FILE_BYTES)
+    useUi
+      .getState()
+      .toast(
+        t(
+          'save.large',
+          'This diagram is larger than 20 MB, mostly from embedded images. Consider smaller images.',
+        ),
+        'info',
+      );
   try {
     const target = asNew ? null : ed.filePath;
     const suggested = ed.fileName.endsWith('.lwise') ? ed.fileName : `${ed.doc.name || 'diagram'}.lwise`;
@@ -264,7 +285,7 @@ export function focusNearest(dir: 'up' | 'down' | 'left' | 'right'): void {
 
 // ---------------------------------------------------------------- insert
 
-export function insert(kind: 'zone' | 'text' | 'note'): void {
+export function insert(kind: 'zone' | 'text' | 'note' | 'rect' | 'ellipse' | 'line'): void {
   const ed = useEditor.getState();
   const c = canvasApi.viewportCenter();
   if (kind === 'zone') {
@@ -277,11 +298,22 @@ export function insert(kind: 'zone' | 'text' | 'note'): void {
     if (ed.execute(cmd)) ed.setSelection({ zones: [cmd.zoneId] });
     return;
   }
+  const size = { text: [160, 40], note: [160, 100], rect: [160, 100], ellipse: [140, 100], line: [160, 20] }[
+    kind
+  ];
+  const text = {
+    text: t('insert.text', 'Text'),
+    note: t('insert.noteText', 'Note'),
+    rect: '',
+    ellipse: '',
+    line: '',
+  }[kind];
+  const [w = 160, h = 40] = size;
   const cmd = addAnnotation(ed.pageId, {
     kind,
-    geometry: { x: c.x - 80, y: c.y - 30, w: 160, h: kind === 'note' ? 100 : 40, rotation: 0 },
-    style: {},
-    text: kind === 'note' ? t('insert.noteText', 'Note') : t('insert.text', 'Text'),
+    geometry: { x: c.x - w / 2, y: c.y - h / 2, w, h, rotation: 0 },
+    style: kind === 'line' ? { arrowEnd: true } : {},
+    text,
     locked: false,
   });
   if (ed.execute(cmd)) ed.setSelection({ annotations: [cmd.annotationId] });
@@ -294,7 +326,6 @@ export async function insertImage(): Promise<void> {
   const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'png' ? 'image/png' : 'image/jpeg';
   let bytes = f.bytes;
   if (mime === 'image/svg+xml') {
-    const { sanitizeSvg } = await import('./sanitize.ts');
     bytes = new TextEncoder().encode(sanitizeSvg(new TextDecoder().decode(f.bytes)));
   }
   let bin = '';
@@ -449,6 +480,33 @@ export function commandList(): CommandDef[] {
       run: selectAll,
     },
     {
+      id: 'edit.selectSameType',
+      group: 'Edit',
+      label: L('selectSameType', 'Select all of the same type'),
+      shortcut: 'mod+shift+A',
+      run: selectSameType,
+    },
+    {
+      id: 'edit.selectConnected',
+      group: 'Edit',
+      label: L('selectConnected', 'Select connected devices'),
+      run: selectConnected,
+    },
+    {
+      id: 'edit.copyStyle',
+      group: 'Edit',
+      label: L('copyStyle', 'Copy style'),
+      shortcut: 'mod+alt+C',
+      run: copyStyle,
+    },
+    {
+      id: 'edit.pasteStyle',
+      group: 'Edit',
+      label: L('pasteStyle', 'Paste style'),
+      shortcut: 'mod+alt+V',
+      run: pasteStyle,
+    },
+    {
       id: 'edit.find',
       group: 'Edit',
       label: L('find', 'Find…'),
@@ -468,6 +526,26 @@ export function commandList(): CommandDef[] {
       label: L('palette', 'Command palette'),
       shortcut: 'mod+K',
       run: () => ui.setPalette(true),
+    },
+    {
+      id: 'view.library',
+      group: 'View',
+      label: L('library', 'Search device library'),
+      shortcut: 'mod+shift+D',
+      run: () => {
+        useUi.setState({ libraryOpen: true, presentation: false });
+        try {
+          localStorage.setItem('linewise.sidetab', 'library');
+        } catch {
+          // ignore
+        }
+        window.dispatchEvent(new Event('linewise:library'));
+        requestAnimationFrame(() => {
+          const el = document.getElementById('lw-library-search') as HTMLInputElement | null;
+          el?.focus();
+          el?.select();
+        });
+      },
     },
     {
       id: 'view.l1',
@@ -512,6 +590,13 @@ export function commandList(): CommandDef[] {
       run: () => canvasApi.fit(),
     },
     {
+      id: 'view.zoomSelection',
+      group: 'View',
+      label: L('zoomSelection', 'Zoom to selection'),
+      shortcut: 'mod+shift+0',
+      run: zoomToSelection,
+    },
+    {
       id: 'view.minimap',
       group: 'View',
       label: L('minimap', 'Toggle minimap'),
@@ -535,6 +620,14 @@ export function commandList(): CommandDef[] {
     { id: 'insert.text', group: 'Insert', label: L('text', 'Insert text'), run: () => insert('text') },
     { id: 'insert.note', group: 'Insert', label: L('note', 'Insert sticky note'), run: () => insert('note') },
     { id: 'insert.image', group: 'Insert', label: L('image', 'Insert image…'), run: () => insertImage() },
+    { id: 'insert.rect', group: 'Insert', label: L('rect', 'Insert rectangle'), run: () => insert('rect') },
+    {
+      id: 'insert.ellipse',
+      group: 'Insert',
+      label: L('ellipse', 'Insert ellipse'),
+      run: () => insert('ellipse'),
+    },
+    { id: 'insert.arrow', group: 'Insert', label: L('arrow', 'Insert arrow'), run: () => insert('line') },
     { id: 'insert.page', group: 'Insert', label: L('page', 'New page'), run: newPage },
     {
       id: 'arrange.layout',
@@ -542,6 +635,42 @@ export function commandList(): CommandDef[] {
       label: L('layout', 'Auto-layout…'),
       shortcut: 'mod+shift+L',
       run: () => ui.open({ kind: 'layout' }),
+    },
+    {
+      id: 'arrange.front',
+      group: 'Arrange',
+      label: L('front', 'Bring to front'),
+      shortcut: 'mod+shift+]',
+      run: () => bring('front'),
+    },
+    {
+      id: 'arrange.back',
+      group: 'Arrange',
+      label: L('back', 'Send to back'),
+      shortcut: 'mod+shift+[',
+      run: () => bring('back'),
+    },
+    { id: 'arrange.group', group: 'Arrange', label: L('group', 'Group'), shortcut: 'mod+G', run: group },
+    {
+      id: 'arrange.ungroup',
+      group: 'Arrange',
+      label: L('ungroup', 'Ungroup'),
+      shortcut: 'mod+shift+G',
+      run: ungroup,
+    },
+    {
+      id: 'arrange.lock',
+      group: 'Arrange',
+      label: L('lock', 'Lock'),
+      shortcut: 'mod+L',
+      run: () => lock(true),
+    },
+    {
+      id: 'arrange.unlock',
+      group: 'Arrange',
+      label: L('unlock', 'Unlock'),
+      shortcut: 'mod+shift+K',
+      run: () => lock(false),
     },
     {
       id: 'network.vlans',

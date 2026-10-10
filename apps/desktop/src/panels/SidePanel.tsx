@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Left sidebar: device library, outline and layers in tabs. */
 import * as Tabs from '@radix-ui/react-tabs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LayersPanel } from './LayersPanel.tsx';
 import { LibraryBody } from './LibraryPanel.tsx';
@@ -19,6 +19,11 @@ export function SidePanel() {
       return 'library';
     }
   });
+  useEffect(() => {
+    const show = () => setTab('library');
+    window.addEventListener('linewise:library', show);
+    return () => window.removeEventListener('linewise:library', show);
+  }, []);
   const change = (v: string) => {
     setTab(v);
     try {

@@ -79,6 +79,18 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 
+// Read-only state access for automated tests in the browser build (never in the desktop app).
+if (!('__TAURI_INTERNALS__' in window) && (import.meta.env.DEV || navigator.webdriver)) {
+  void Promise.all([import('./store/editor.ts'), import('@linewise/core')]).then(([{ useEditor }, core]) => {
+    (window as unknown as { __lwTest: unknown }).__lwTest = {
+      doc: () => useEditor.getState().doc,
+      issues: () => useEditor.getState().issues,
+      serialize: () => core.serializeDocument(useEditor.getState().doc),
+      dirty: () => useEditor.getState().rev !== useEditor.getState().savedRev,
+    };
+  });
+}
+
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root');
 createRoot(root).render(

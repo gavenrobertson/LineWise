@@ -4,6 +4,7 @@
  * alternative to the canvas (NFR-A11Y-01). Selecting an entry selects and
  * reveals the device.
  */
+import { addOffPageRef, removeOffPageRef } from '@linewise/core';
 import { ROLE_LABELS } from '@linewise/device-library';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,8 @@ export function OutlinePanel() {
   const page = useEditor(selectPage);
   const sel = useEditor((s) => s.selection);
   const setSelection = useEditor((s) => s.setSelection);
+  const execute = useEditor((s) => s.execute);
+  const readOnly = useEditor((s) => s.readOnly);
   const [q, setQ] = useState('');
   const groups = useMemo(() => {
     const onPage = doc.devices.filter((d) => page?.nodePositions[d.id]);
@@ -31,6 +34,19 @@ export function OutlinePanel() {
       list.sort((a, b) => a.hostname.localeCompare(b.hostname, undefined, { numeric: true }));
     return [...m.entries()].sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : 0));
   }, [doc.devices, page, q]);
+  const elsewhere = useMemo(() => {
+    if (!page) return [];
+    const query = q.trim().toLowerCase();
+    return doc.devices
+      .filter((d) => !page.nodePositions[d.id] && (!query || d.hostname.toLowerCase().includes(query)))
+      .map((d) => ({
+        d,
+        home: doc.pages.find((p) => p.nodePositions[d.id]),
+        ref: page.offPageRefs.some((r) => r.deviceId === d.id),
+      }))
+      .filter((x) => x.home)
+      .sort((a, b) => a.d.hostname.localeCompare(b.d.hostname, undefined, { numeric: true }));
+  }, [doc, page, q]);
   const zoneName = (id: string) =>
     doc.zones.find((z) => z.id === id)?.name ?? t('outline.noZone', 'Not in a zone');
   return (
@@ -56,13 +72,14 @@ export function OutlinePanel() {
             <h3 className="px-1 py-1 text-[11px] font-semibold uppercase tracking-wide text-subtle">
               {zoneName(zoneId)} <span className="font-normal normal-case">({list.length})</span>
             </h3>
-            <ul role="listbox" aria-label={zoneName(zoneId)} aria-multiselectable="true">
+            <ul data-lw-selection-proxy="" aria-label={zoneName(zoneId)}>
               {list.map((d) => {
                 const selected = sel.devices.includes(d.id);
                 return (
-                  <li key={d.id} role="option" aria-selected={selected}>
+                  <li key={d.id}>
                     <button
                       type="button"
+                      aria-pressed={selected}
                       onClick={(e) => {
                         const add = e.metaKey || e.ctrlKey || e.shiftKey;
                         setSelection({
@@ -95,6 +112,44 @@ export function OutlinePanel() {
             </ul>
           </section>
         ))}
+        {elsewhere.length > 0 && (
+          <section className="mb-2">
+            <h3 className="px-1 py-1 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+              {t('outline.otherPages', 'On other pages')}
+            </h3>
+            <ul>
+              {elsewhere.map(({ d, home, ref }) => (
+                <li key={d.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-surface-3">
+                  <DeviceIcon role={d.role} style={doc.settings.iconStyle} size={18} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[12.5px] text-ink">{d.hostname}</span>
+                    <span className="block truncate text-[11px] text-subtle">{home?.name}</span>
+                  </span>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-accent hover:bg-accent-soft"
+                      title={t('outline.refHint', 'Show a connector to this device on the current page')}
+                      onClick={() => {
+                        if (ref) execute(removeOffPageRef(page?.id ?? '', d.id));
+                        else {
+                          const c = canvasApi.viewportCenter();
+                          execute(
+                            addOffPageRef(page?.id ?? '', d.id, { x: Math.round(c.x), y: Math.round(c.y) }),
+                          );
+                        }
+                      }}
+                    >
+                      {ref
+                        ? t('outline.removeRef', 'Remove connector')
+                        : t('outline.addRef', 'Add connector')}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </div>
   );

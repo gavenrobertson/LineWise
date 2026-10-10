@@ -32,6 +32,7 @@ function InterfacePicker({
   onNewName,
   used,
   label,
+  autoFocus,
 }: {
   device: Device;
   value: string;
@@ -40,6 +41,7 @@ function InterfacePicker({
   onNewName: (v: string) => void;
   used: Set<string>;
   label: string;
+  autoFocus?: boolean;
 }) {
   const { t } = useTranslation();
   const ifaces = [...device.interfaces].sort((a, b) => compareInterfaceNames(a.name, b.name));
@@ -56,7 +58,7 @@ function InterfacePicker({
       </div>
       <Field label={label}>
         {(id) => (
-          <Select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+          <Select id={id} value={value} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)}>
             <option value="">{t('connect.auto', 'Next free port')}</option>
             {free.length > 0 && (
               <optgroup label={t('connect.free', 'Free')}>
@@ -133,15 +135,19 @@ function PeerPicker({ sourceId, onPick }: { sourceId: string; onPick: (id: strin
         placeholder={t('connect.searchPeer', 'Find the device to connect to')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && list[0] && onPick(list[0].id)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' || !list[0]) return;
+          // Cancel the key's default so the port picker that takes focus next doesn't receive it.
+          e.preventDefault();
+          onPick(list[0].id);
+        }}
       />
       <ul
         className="max-h-72 overflow-y-auto rounded-lg border border-line"
-        role="listbox"
         aria-label={t('connect.devices', 'Devices')}
       >
         {list.map((d) => (
-          <li key={d.id} role="option" aria-selected={false}>
+          <li key={d.id}>
             <button
               type="button"
               className="flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] hover:bg-surface-3"
@@ -278,6 +284,13 @@ export function ConnectDialog({
             e.preventDefault();
             create();
           }}
+          onKeyDown={(e) => {
+            // Enter in any field connects, as the dialog's primary action (keyboard flow, FR-KEY-02).
+            if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'BUTTON') {
+              e.preventDefault();
+              create();
+            }
+          }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <InterfacePicker
@@ -288,6 +301,7 @@ export function ConnectDialog({
               onNewName={setNa}
               used={used}
               label={t('connect.port', 'Port')}
+              autoFocus
             />
             <InterfacePicker
               device={b}
@@ -318,9 +332,6 @@ export function ConnectDialog({
               </Select>
             )}
           </Field>
-          <button type="submit" className="sr-only">
-            {t('connect.create', 'Connect')}
-          </button>
         </form>
       )}
     </Dialog>

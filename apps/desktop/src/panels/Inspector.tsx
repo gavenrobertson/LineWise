@@ -23,11 +23,13 @@ import {
 } from '@linewise/core';
 import { ROLE_LABELS } from '@linewise/device-library';
 import { Plus, Trash2 } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoolField, ColorField, NumberField, SelectField, shared, TextField } from '../components/fields.tsx';
-import { Badge, IconButton } from '../components/ui.tsx';
+import { Badge, Button, IconButton } from '../components/ui.tsx';
+import { p2pCommand } from '../lib/ipam.ts';
 import { selectPage, useEditor } from '../store/editor.ts';
+import { IconPicker } from '../components/IconPicker.tsx';
 import { InterfaceTable } from './InterfaceTable.tsx';
 
 function Group({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
@@ -132,6 +134,17 @@ function DeviceFields({ devices }: { devices: Device[] }) {
                 .filter(Boolean),
             })
           }
+        />
+        <IconPicker devices={devices} />
+        <ColorField
+          label={t('field.colorTag', 'Color tag')}
+          value={shared(devices, (d) => d.colorTag)}
+          onCommit={(v) => set({ colorTag: v })}
+        />
+        <BoolField
+          label={t('field.locked', 'Locked')}
+          value={shared(devices, (d) => d.locked)}
+          onCommit={(v) => set({ locked: v })}
         />
         <SelectField
           label={t('field.labelPos', 'Label')}
@@ -317,7 +330,81 @@ function LinkFields({ links }: { links: Link[] }) {
           {t('inspector.clearBends', 'Remove bend points')}
         </button>
       )}
+      <p className="text-[11px] text-subtle">
+        {t(
+          'inspector.bendHint',
+          'Double-click a link to add a bend; drag bends to move them; double-click a bend to remove it.',
+        )}
+      </p>
+      {single && <P2pHelper linkId={single.id} />}
     </Group>
+  );
+}
+
+const ROUTED = new Set(['router', 'l3-switch', 'firewall', 'vpn-concentrator']);
+
+/** "Assign /30 (or /31) from pool…" for router-to-router links (FR-NET-08). */
+function P2pHelper({ linkId }: { linkId: string }) {
+  const { t } = useTranslation();
+  const doc = useEditor((s) => s.doc);
+  const execute = useEditor((s) => s.execute);
+  const [pool, setPool] = useState(() => {
+    try {
+      return localStorage.getItem('linewise.p2pPool') ?? '10.255.0.0/24';
+    } catch {
+      return '10.255.0.0/24';
+    }
+  });
+  const [prefix, setPrefix] = useState<30 | 31>(30);
+  const [err, setErr] = useState<string | null>(null);
+  const link = doc.links.find((l) => l.id === linkId);
+  const a = doc.devices.find((d) => d.id === link?.endpointA.deviceId);
+  const b = doc.devices.find((d) => d.id === link?.endpointB.deviceId);
+  if (!link || !a || !b || !ROUTED.has(a.role) || !ROUTED.has(b.role)) return null;
+  const run = () => {
+    try {
+      execute(p2pCommand(doc, linkId, pool.trim(), prefix).cmd);
+      setErr(null);
+      try {
+        localStorage.setItem('linewise.p2pPool', pool.trim());
+      } catch {
+        // remembered for this session only
+      }
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  };
+  return (
+    <div className="mt-1 rounded-md border border-line p-2">
+      <p className="mb-1 text-[11.5px] font-medium text-ink">
+        {t('inspector.p2p', 'Point-to-point addressing')}
+      </p>
+      <div className="flex items-center gap-1">
+        <input
+          aria-label={t('ipam.pool', 'Pool')}
+          className="h-7 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 font-mono text-[12px]"
+          value={pool}
+          onChange={(e) => setPool(e.target.value)}
+        />
+        <select
+          aria-label={t('ipam.size', 'Size')}
+          className="h-7 rounded-md border border-line bg-surface px-1 text-[12px]"
+          value={prefix}
+          onChange={(e) => setPrefix(Number(e.target.value) as 30 | 31)}
+        >
+          <option value={30}>/30</option>
+          <option value={31}>/31</option>
+        </select>
+        <Button size="sm" onClick={run}>
+          {t('ipam.assignP2p', 'Assign /{{p}}', { p: prefix })}
+        </Button>
+      </div>
+      {err && (
+        <p role="alert" className="mt-1 text-[11px] text-danger">
+          {err}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -368,6 +455,11 @@ function ZoneFields({ zones }: { zones: Zone[] }) {
         label={t('field.color', 'Color')}
         value={shared(zones, (z) => z.color)}
         onCommit={(v) => set({ color: v ?? '#0D9488' })}
+      />
+      <BoolField
+        label={t('field.locked', 'Locked')}
+        value={shared(zones, (z) => z.locked)}
+        onCommit={(v) => set({ locked: v })}
       />
       <TextField
         label={t('field.description', 'Description')}

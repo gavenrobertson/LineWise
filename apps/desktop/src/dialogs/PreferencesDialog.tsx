@@ -1,11 +1,96 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Preferences (FR-APP-07). Telemetry is off by default and nothing is sent without opt-in (NFR-PRIV-02). */
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { buildPack, deletePack, listPacks, savePack, unzipFiles, type IconPack } from '../lib/iconPacks.ts';
 import { Button, Checkbox, Dialog, Field, Segmented, Select, TextInput } from '../components/ui.tsx';
 import i18n, { LANGUAGES } from '../i18n/index.ts';
 import { platform } from '../platform/index.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+
+function IconPacks() {
+  const { t } = useTranslation();
+  const toast = useUi((s) => s.toast);
+  const [packs, setPacks] = useState<IconPack[]>([]);
+  const refresh = () => void listPacks().then(setPacks);
+  useEffect(refresh, []);
+  const importPack = async () => {
+    const files = await platform().pickBinaryFiles([
+      {
+        name: t('prefs.packFiles', 'Icon pack (.zip, .svg, .png, manifest.json)'),
+        extensions: ['zip', 'svg', 'png', 'json'],
+      },
+    ]);
+    if (!files.length) return;
+    const warnings: string[] = [];
+    const expanded: { name: string; bytes: Uint8Array }[] = [];
+    for (const f of files) {
+      if (f.name.toLowerCase().endsWith('.zip')) expanded.push(...(await unzipFiles(f.bytes)));
+      else expanded.push(f);
+    }
+    const name =
+      files.length === 1 && files[0]
+        ? files[0].name.replace(/\.zip$/i, '')
+        : t('prefs.packDefault', 'Imported icons');
+    const pack = buildPack(expanded, name, warnings);
+    if (!pack.icons.length) {
+      toast(t('prefs.packEmpty', 'No SVG or PNG icons were found.'), 'error');
+      return;
+    }
+    await savePack(pack);
+    refresh();
+    toast(
+      t('prefs.packDone', 'Imported {{n}} icons into “{{name}}”.', {
+        n: pack.icons.length,
+        name: pack.name,
+      }) + (warnings.length ? ` ${warnings.join(' ')}` : ''),
+      warnings.length ? 'info' : 'success',
+    );
+  };
+  return (
+    <div className="rounded-lg border border-line p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted">{t('prefs.packs', 'Icon packs')}</span>
+        <Button
+          size="sm"
+          onClick={() => void importPack().catch((e: unknown) => toast((e as Error).message, 'error'))}
+        >
+          {t('prefs.importPack', 'Import…')}
+        </Button>
+      </div>
+      {packs.length === 0 ? (
+        <p className="text-xs text-subtle">
+          {t(
+            'prefs.noPacks',
+            'Import a .zip or a set of SVG/PNG files (with an optional manifest.json) to use your own icons. Icons you use are embedded in the diagram.',
+          )}
+        </p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-line">
+          {packs.map((p) => (
+            <li key={p.id} className="flex items-center gap-2 py-1 text-[12.5px]">
+              <span className="flex-1 truncate">{p.name}</span>
+              <span className="text-[11px] text-subtle">
+                {t('prefs.packCount', '{{n}} icons', { n: p.icons.length })}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async () => {
+                  await deletePack(p.id);
+                  refresh();
+                }}
+              >
+                {t('prefs.removePack', 'Remove')}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function PreferencesDialog() {
   const { t } = useTranslation();
@@ -170,6 +255,7 @@ export function PreferencesDialog() {
             </Field>
           </div>
         )}
+        <IconPacks />
         <div className="rounded-lg border border-line p-3">
           <Checkbox
             label={t('prefs.telemetry', 'Send anonymous crash reports')}

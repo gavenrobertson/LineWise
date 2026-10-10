@@ -148,6 +148,14 @@ export function createBrowserPlatform(): PlatformAdapter {
       return f ? { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) } : null;
     },
 
+    async pickBinaryFiles(filters) {
+      if (automated) return [];
+      const files = await pickWithInput(accept(filters), true);
+      return Promise.all(
+        files.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })),
+      );
+    },
+
     async exportFile(data, suggestedName) {
       hooks.exports.push({ name: suggestedName, data });
       if (!automated) download(data, suggestedName);

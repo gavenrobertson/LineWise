@@ -460,6 +460,7 @@ export function InterfaceTable({ device }: { device: Device }) {
                     <button
                       type="button"
                       aria-expanded={isOpen}
+                      aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
                       onClick={() => setOpen(isOpen ? null : i.id)}
                       className="flex w-full items-center gap-1 text-left font-mono"
                     >
@@ -472,13 +473,7 @@ export function InterfaceTable({ device }: { device: Device }) {
                           'h-1.5 w-1.5 shrink-0 rounded-full',
                           !i.enabled ? 'bg-danger' : peer ? 'bg-accent' : 'bg-line-strong',
                         )}
-                        aria-label={
-                          !i.enabled
-                            ? t('iface.shutdown', 'shut down')
-                            : peer
-                              ? t('iface.up', 'connected')
-                              : t('iface.free', 'free')
-                        }
+                        aria-hidden="true"
                       />
                       <span className="truncate" title={i.name}>
                         {i.shortName}

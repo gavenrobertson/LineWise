@@ -1,0 +1,1374 @@
+{
+  "$id": "https://raw.githubusercontent.com/gavenrobertson/linewise/main/schema/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A LineWise network diagram (.lwise). See docs/file-format.md.",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "assets": {
+      "additionalProperties": {
+        "properties": {
+          "base64": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mime",
+          "base64"
+        ],
+        "type": "object"
+      },
+      "default": {},
+      "propertyNames": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "author": {
+      "default": "",
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "type": "string"
+    },
+    "devices": {
+      "default": [],
+      "items": {
+        "properties": {
+          "assetTag": {
+            "default": "",
+            "type": "string"
+          },
+          "colorTag": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "hostname": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "iconOverride": {
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "interfaces": {
+            "default": [],
+            "items": {
+              "properties": {
+                "accessVlan": {
+                  "maximum": 4094,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "allowedVlans": {
+                  "default": "",
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "customFields": {
+                  "additionalProperties": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean"
+                    ]
+                  },
+                  "default": {},
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "description": {
+                  "default": "",
+                  "type": "string"
+                },
+                "deviceId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dot1q": {
+                  "maximum": 4094,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "duplex": {
+                  "default": "auto",
+                  "enum": [
+                    "auto",
+                    "full",
+                    "half"
+                  ],
+                  "type": "string"
+                },
+                "enabled": {
+                  "default": true,
+                  "type": "boolean"
+                },
+                "fhrp": {
+                  "properties": {
+                    "group": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "protocol": {
+                      "enum": [
+                        "hsrp",
+                        "vrrp",
+                        "glbp"
+                      ],
+                      "type": "string"
+                    },
+                    "vip": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "protocol",
+                    "group",
+                    "vip"
+                  ],
+                  "type": "object"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "ipv4": {
+                  "default": [],
+                  "items": {
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "prefix": {
+                        "maximum": 128,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "secondary": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "prefix"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "ipv6": {
+                  "default": [],
+                  "items": {
+                    "properties": {
+                      "address": {
+                        "type": "string"
+                      },
+                      "prefix": {
+                        "maximum": 128,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "secondary": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "prefix"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "mac": {
+                  "type": "string"
+                },
+                "media": {
+                  "default": "any",
+                  "enum": [
+                    "copper",
+                    "fiber",
+                    "any"
+                  ],
+                  "type": "string"
+                },
+                "mode": {
+                  "default": "unset",
+                  "enum": [
+                    "access",
+                    "trunk",
+                    "routed",
+                    "unset"
+                  ],
+                  "type": "string"
+                },
+                "mtu": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "nativeVlan": {
+                  "maximum": 4094,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "poe": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "portChannelId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "shortName": {
+                  "type": "string"
+                },
+                "speedMbps": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "type": {
+                  "enum": [
+                    "ethernet",
+                    "fastethernet",
+                    "gigabitethernet",
+                    "tengigabitethernet",
+                    "twentyfivegige",
+                    "fortygigabitethernet",
+                    "hundredgige",
+                    "serial",
+                    "loopback",
+                    "vlan",
+                    "tunnel",
+                    "port-channel",
+                    "management",
+                    "wireless",
+                    "subinterface",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string"
+                },
+                "vrfId": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "createdAt",
+                "updatedAt",
+                "deviceId",
+                "name",
+                "shortName",
+                "type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "labelPosition": {
+            "default": "bottom",
+            "enum": [
+              "bottom",
+              "top",
+              "left",
+              "right"
+            ],
+            "type": "string"
+          },
+          "locked": {
+            "default": false,
+            "type": "boolean"
+          },
+          "mgmtIp": {
+            "default": "",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "type": "string"
+          },
+          "notes": {
+            "default": "",
+            "type": "string"
+          },
+          "osVersion": {
+            "default": "",
+            "type": "string"
+          },
+          "platform": {
+            "default": "",
+            "type": "string"
+          },
+          "rack": {
+            "default": "",
+            "type": "string"
+          },
+          "rackUnit": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "role": {
+            "enum": [
+              "router",
+              "l2-switch",
+              "l3-switch",
+              "firewall",
+              "wlc",
+              "access-point",
+              "load-balancer",
+              "server",
+              "virtual-machine",
+              "hypervisor",
+              "workstation",
+              "laptop",
+              "ip-phone",
+              "printer",
+              "iot",
+              "storage",
+              "cloud",
+              "internet",
+              "wan-cloud",
+              "mpls-cloud",
+              "modem",
+              "vpn-concentrator",
+              "ids-ips",
+              "proxy",
+              "dns-dhcp",
+              "patch-panel",
+              "generic"
+            ],
+            "type": "string"
+          },
+          "routing": {
+            "default": [],
+            "items": {
+              "properties": {
+                "protocol": {
+                  "enum": [
+                    "ospf",
+                    "eigrp",
+                    "bgp",
+                    "isis",
+                    "rip",
+                    "static"
+                  ],
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "protocol",
+                "value"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "serial": {
+            "default": "",
+            "type": "string"
+          },
+          "site": {
+            "default": "",
+            "type": "string"
+          },
+          "tags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "templateId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "vendor": {
+            "default": "",
+            "type": "string"
+          },
+          "zoneId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "hostname",
+          "role"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "format": {
+      "const": "LineWise",
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "links": {
+      "default": [],
+      "items": {
+        "properties": {
+          "bandwidthMbps": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "cableId": {
+            "default": "",
+            "type": "string"
+          },
+          "circuitId": {
+            "default": "",
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "endpointA": {
+            "properties": {
+              "deviceId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "interfaceId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "deviceId",
+              "interfaceId"
+            ],
+            "type": "object"
+          },
+          "endpointB": {
+            "properties": {
+              "deviceId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "interfaceId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "deviceId",
+              "interfaceId"
+            ],
+            "type": "object"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "type": "string"
+          },
+          "medium": {
+            "default": "copper",
+            "enum": [
+              "copper",
+              "fiber-sm",
+              "fiber-mm",
+              "serial",
+              "wireless",
+              "virtual",
+              "console"
+            ],
+            "type": "string"
+          },
+          "provider": {
+            "default": "",
+            "type": "string"
+          },
+          "style": {
+            "default": {},
+            "properties": {
+              "color": {
+                "type": "string"
+              },
+              "routing": {
+                "enum": [
+                  "straight",
+                  "orthogonal",
+                  "curved"
+                ],
+                "type": "string"
+              },
+              "waypoints": {
+                "items": {
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "endpointA",
+          "endpointB"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": {},
+      "default": {},
+      "propertyNames": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "name": {
+      "type": "string"
+    },
+    "pages": {
+      "items": {
+        "properties": {
+          "annotations": {
+            "default": [],
+            "items": {
+              "properties": {
+                "assetId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "customFields": {
+                  "additionalProperties": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean"
+                    ]
+                  },
+                  "default": {},
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "geometry": {
+                  "properties": {
+                    "h": {
+                      "type": "number"
+                    },
+                    "rotation": {
+                      "default": 0,
+                      "type": "number"
+                    },
+                    "w": {
+                      "type": "number"
+                    },
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "w",
+                    "h"
+                  ],
+                  "type": "object"
+                },
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "text",
+                    "rect",
+                    "ellipse",
+                    "line",
+                    "note",
+                    "image"
+                  ],
+                  "type": "string"
+                },
+                "layerId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "locked": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "style": {
+                  "default": {},
+                  "properties": {
+                    "arrowEnd": {
+                      "type": "boolean"
+                    },
+                    "fill": {
+                      "type": "string"
+                    },
+                    "fontSize": {
+                      "type": "number"
+                    },
+                    "stroke": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "text": {
+                  "default": "",
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "createdAt",
+                "updatedAt",
+                "kind",
+                "geometry"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "background": {
+            "default": "dots",
+            "enum": [
+              "grid",
+              "dots",
+              "plain"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "layers": {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "locked": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "order": {
+                  "type": "number"
+                },
+                "visible": {
+                  "default": true,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "order"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "nodePositions": {
+            "additionalProperties": {
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ],
+              "type": "object"
+            },
+            "default": {},
+            "propertyNames": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "offPageRefs": {
+            "default": [],
+            "items": {
+              "properties": {
+                "deviceId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "position": {
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "deviceId",
+                "position"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "order": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "viewport": {
+            "default": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            },
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "zoom": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "zoom"
+            ],
+            "type": "object"
+          },
+          "zoneBoxes": {
+            "additionalProperties": {
+              "properties": {
+                "h": {
+                  "type": "number"
+                },
+                "w": {
+                  "type": "number"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "w",
+                "h"
+              ],
+              "type": "object"
+            },
+            "default": {},
+            "propertyNames": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "name",
+          "order"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "portChannels": {
+      "default": [],
+      "items": {
+        "properties": {
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "deviceId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "logicalInterfaceId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "memberInterfaceIds": {
+            "default": [],
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "lacp-active",
+              "lacp-passive",
+              "on",
+              "pagp"
+            ],
+            "type": "string"
+          },
+          "number": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "deviceId",
+          "number",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schemaVersion": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "settings": {
+      "default": {
+        "defaultLinkRouting": "straight",
+        "disabledRules": [],
+        "iconStyle": "classic",
+        "labelTemplate": "{hostname}",
+        "showInterfaceIps": false,
+        "showInterfaceNames": true,
+        "showVlans": false,
+        "suppressions": []
+      },
+      "properties": {
+        "defaultLinkRouting": {
+          "default": "straight",
+          "enum": [
+            "straight",
+            "orthogonal",
+            "curved"
+          ],
+          "type": "string"
+        },
+        "disabledRules": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "iconStyle": {
+          "default": "classic",
+          "enum": [
+            "classic",
+            "line"
+          ],
+          "type": "string"
+        },
+        "labelTemplate": {
+          "default": "{hostname}",
+          "type": "string"
+        },
+        "showInterfaceIps": {
+          "default": false,
+          "type": "boolean"
+        },
+        "showInterfaceNames": {
+          "default": true,
+          "type": "boolean"
+        },
+        "showVlans": {
+          "default": false,
+          "type": "boolean"
+        },
+        "suppressions": {
+          "default": [],
+          "items": {
+            "properties": {
+              "objectIds": {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "ruleId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ruleId",
+              "objectIds",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "subnets": {
+      "default": [],
+      "items": {
+        "properties": {
+          "cidr": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "gatewayIp": {
+            "default": "",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "type": "string"
+          },
+          "reserved": {
+            "default": [],
+            "items": {
+              "properties": {
+                "end": {
+                  "type": "string"
+                },
+                "note": {
+                  "default": "",
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "vlanId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "vrfId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "cidr"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "vlans": {
+      "default": [],
+      "items": {
+        "properties": {
+          "color": {
+            "default": "#2563EB",
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "type": "string"
+          },
+          "number": {
+            "maximum": 4094,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "site": {
+            "type": "string"
+          },
+          "subnetIds": {
+            "default": [],
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "number"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "vrfs": {
+      "default": [],
+      "items": {
+        "properties": {
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "rd": {
+            "default": "",
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "zones": {
+      "default": [],
+      "items": {
+        "properties": {
+          "color": {
+            "default": "#0D9488",
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customFields": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "default": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "description": {
+            "default": "",
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "site",
+              "building",
+              "floor",
+              "security-zone",
+              "cloud-vpc",
+              "custom"
+            ],
+            "type": "string"
+          },
+          "locked": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "parentZoneId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "name",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "id",
+    "name",
+    "createdAt",
+    "updatedAt",
+    "pages"
+  ],
+  "title": "LineWise diagram (schema version 1)",
+  "type": "object"
+}

@@ -130,7 +130,16 @@ export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOpti
   }
 
   // Parallel links between the same two devices fan out; port-channel members get a bundle mark.
-  const ends = resolveLinks(doc).filter((e) => visible.has(e.a.device.id) && visible.has(e.b.device.id));
+  // A link to a device on another page ends at its off-page reference, when the page has one (FR-CAN-12).
+  const refs = new Set(
+    page.offPageRefs.filter((r) => !page.nodePositions[r.deviceId]).map((r) => r.deviceId),
+  );
+  const endId = (id: string) => (visible.has(id) ? id : refs.has(id) ? `offpage:${id}` : null);
+  const ends = resolveLinks(doc).filter((e) => {
+    const a = endId(e.a.device.id);
+    const b = endId(e.b.device.id);
+    return a && b && !(a.startsWith('offpage:') && b.startsWith('offpage:'));
+  });
   const groups = new Map<string, typeof ends>();
   for (const e of ends) {
     const k = [e.a.device.id, e.b.device.id].sort().join('|');
@@ -167,8 +176,8 @@ export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOpti
       const isBundle = bundled.length > 1 && bundled.includes(e);
       links.push({
         link: e.link,
-        sourceId: e.a.device.id,
-        targetId: e.b.device.id,
+        sourceId: endId(e.a.device.id) as string,
+        targetId: endId(e.b.device.id) as string,
         routing: e.link.style.routing ?? s.defaultLinkRouting,
         offset: parallelOffset(i, group.length) * (e.a.device.id < e.b.device.id ? 1 : -1),
         color,
@@ -217,17 +226,62 @@ export function fmtBandwidth(mbps: number): string {
   return `${mbps}M`;
 }
 
+/** Off-page reference pill geometry (mirrors the canvas node). */
+export function offPageBox(o: { hostname: string; pageName: string; position: XY }): {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+} {
+  return {
+    x: o.position.x,
+    y: o.position.y,
+    w: (o.hostname.length + o.pageName.length + 5) * 6.4 + 20,
+    h: 22,
+  };
+}
+
+/** Approximate label box (no DOM measurement) for bounds and the SVG exporter. */
+export function labelBox(d: Pick<DeviceView, 'center' | 'label' | 'badges' | 'device'>): {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  anchor: 'middle' | 'start' | 'end';
+} {
+  const lines = d.label.split('\n');
+  const w = Math.max(...lines.map((l) => l.length)) * 7 + 8;
+  const h = lines.length * 14 + (d.badges.length ? 14 : 0) + 2;
+  const { x, y } = d.center;
+  switch (d.device.labelPosition) {
+    case 'top':
+      return { x: x - w / 2, y: y - 28 - 4 - h, w, h, anchor: 'middle' };
+    case 'left':
+      return { x: x - 28 - 6 - w, y: y - h / 2, w, h, anchor: 'end' };
+    case 'right':
+      return { x: x + 28 + 6, y: y - h / 2, w, h, anchor: 'start' };
+    default:
+      return { x: x - w / 2, y: y + 28 + 4, w, h, anchor: 'middle' };
+  }
+}
+
 /** Bounding box of everything on a page (for zoom-to-fit and export). */
 export function pageBounds(model: PageModel, pad = 40): { x: number; y: number; w: number; h: number } {
   const xs: number[] = [];
   const ys: number[] = [];
   for (const d of model.devices) {
-    xs.push(d.center.x - 48, d.center.x + 48);
-    ys.push(d.center.y - 28, d.center.y + 28 + 16 * Math.max(1, d.label.split('\n').length) + 4);
+    const lb = labelBox(d);
+    xs.push(d.center.x - 48, d.center.x + 48, lb.x, lb.x + lb.w);
+    ys.push(d.center.y - 28, d.center.y + 28, lb.y, lb.y + lb.h);
   }
   for (const z of model.zones) {
     xs.push(z.box.x, z.box.x + z.box.w);
     ys.push(z.box.y, z.box.y + z.box.h);
+  }
+  for (const o of model.offPage) {
+    const r = offPageBox(o);
+    xs.push(r.x, r.x + r.w);
+    ys.push(r.y, r.y + r.h);
   }
   for (const a of model.annotations) {
     xs.push(a.geometry.x, a.geometry.x + a.geometry.w);

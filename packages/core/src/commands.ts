@@ -472,7 +472,7 @@ export function addZone(
   box: { x: number; y: number; w: number; h: number },
   parentZoneId?: string,
 ): Command & { zoneId: string } {
-  const zone: Zone = { ...base(), name, kind, color: '#0D9488', description: '' };
+  const zone: Zone = { ...base(), name, kind, color: '#0D9488', description: '', locked: false };
   if (parentZoneId) zone.parentZoneId = parentZoneId;
   return {
     label: 'Add zone',
@@ -649,6 +649,63 @@ export function setPageLayers(pageId: string, layers: Page['layers']): Command {
       page.layers = layers.map((l, i) => ({ ...l, order: i }));
       const ids = new Set(layers.map((l) => l.id));
       for (const a of page.annotations) if (a.layerId && !ids.has(a.layerId)) delete a.layerId;
+    },
+  };
+}
+
+/** Place a reference to a device that lives on another page (FR-CAN-12). */
+export function addOffPageRef(pageId: string, deviceId: string, position: XY): Command {
+  return {
+    label: 'Add off-page reference',
+    run: (d) => {
+      const page = findPage(d, pageId);
+      if (page.nodePositions[deviceId]) throw new Error('The device is already on this page');
+      if (!d.pages.some((p) => p.nodePositions[deviceId]))
+        throw new Error('The device is not placed on any page');
+      const existing = page.offPageRefs.find((r) => r.deviceId === deviceId);
+      if (existing) existing.position = { ...position };
+      else page.offPageRefs.push({ deviceId, position: { ...position } });
+    },
+  };
+}
+
+export function removeOffPageRef(pageId: string, deviceId: string): Command {
+  return {
+    label: 'Remove off-page reference',
+    run: (d) => {
+      const page = findPage(d, pageId);
+      page.offPageRefs = page.offPageRefs.filter((r) => r.deviceId !== deviceId);
+    },
+  };
+}
+
+/** Bring annotations and zones to the front or send them to the back (FR-CAN-06). */
+export function reorderItems(pageId: string, ids: string[], where: 'front' | 'back'): Command {
+  const set = new Set(ids);
+  const move = <T extends { id: string }>(list: T[]): T[] => {
+    const picked = list.filter((x) => set.has(x.id));
+    const rest = list.filter((x) => !set.has(x.id));
+    return where === 'front' ? [...rest, ...picked] : [...picked, ...rest];
+  };
+  return {
+    label: where === 'front' ? 'Bring to front' : 'Send to back',
+    run: (d) => {
+      const page = findPage(d, pageId);
+      page.annotations = move(page.annotations);
+      d.zones = move(d.zones);
+    },
+  };
+}
+
+/** Lock or unlock devices, zones and annotations so they cannot be moved (FR-CAN-06). */
+export function setLocked(pageId: string, ids: string[], locked: boolean): Command {
+  const set = new Set(ids);
+  return {
+    label: locked ? 'Lock' : 'Unlock',
+    run: (d) => {
+      for (const dev of d.devices) if (set.has(dev.id)) dev.locked = locked;
+      for (const z of d.zones) if (set.has(z.id)) z.locked = locked;
+      for (const a of findPage(d, pageId).annotations) if (set.has(a.id)) a.locked = locked;
     },
   };
 }

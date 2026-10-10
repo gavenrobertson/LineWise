@@ -19,14 +19,12 @@ import { useUi } from '../store/ui.ts';
 export function restoreRecovery(r: RecoveryEntry): void {
   const res = parseDocument(r.text);
   if (res.status !== 'ok' && res.status !== 'newer') {
-    useUi
-      .getState()
-      .toast(
-        i18n.t('welcome.damaged', {
-          defaultValue: 'That recovery copy is damaged and could not be restored.',
-        }),
-        'error',
-      );
+    useUi.getState().toast(
+      i18n.t('welcome.damaged', {
+        defaultValue: 'That recovery copy is damaged and could not be restored.',
+      }),
+      'error',
+    );
     return;
   }
   const ed = useEditor.getState();

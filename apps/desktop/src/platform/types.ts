@@ -59,24 +59,39 @@ export type MenuCommand =
   | 'edit.duplicate'
   | 'edit.delete'
   | 'edit.selectAll'
+  | 'edit.selectSameType'
+  | 'edit.selectConnected'
+  | 'edit.copyStyle'
+  | 'edit.pasteStyle'
   | 'edit.find'
   | 'edit.preferences'
   | 'view.zoomIn'
   | 'view.zoomOut'
   | 'view.zoomFit'
+  | 'view.zoomSelection'
   | 'view.l1'
   | 'view.l2'
   | 'view.l3'
   | 'view.minimap'
   | 'view.problems'
   | 'view.commandPalette'
+  | 'view.library'
   | 'view.presentation'
   | 'insert.zone'
   | 'insert.text'
   | 'insert.note'
   | 'insert.image'
+  | 'insert.rect'
+  | 'insert.ellipse'
+  | 'insert.arrow'
   | 'insert.page'
   | 'arrange.layout'
+  | 'arrange.front'
+  | 'arrange.back'
+  | 'arrange.group'
+  | 'arrange.ungroup'
+  | 'arrange.lock'
+  | 'arrange.unlock'
   | 'network.vlans'
   | 'network.ipam'
   | 'network.calculator'
@@ -99,6 +114,7 @@ export interface PlatformAdapter {
   /** Pick text files for import (multiple allowed). */
   pickTextFiles(filters: FileFilter[], multiple: boolean): Promise<OpenedFile[]>;
   pickBinaryFile(filters: FileFilter[]): Promise<{ name: string; bytes: Uint8Array } | null>;
+  pickBinaryFiles(filters: FileFilter[]): Promise<{ name: string; bytes: Uint8Array }[]>;
   /** Ask where to save an export and write it. Returns false when cancelled. */
   exportFile(data: Uint8Array | string, suggestedName: string, filters: FileFilter[]): Promise<boolean>;
 

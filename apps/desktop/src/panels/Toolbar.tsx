@@ -180,7 +180,7 @@ export function Toolbar() {
   const ui = useUi();
   const sc = formatShortcut;
   return (
-    <header
+    <div
       role="toolbar"
       aria-label={t('toolbar.label', 'Main toolbar')}
       className="lw-no-print flex h-11 shrink-0 items-center gap-0.5 border-b border-line bg-surface px-2"
@@ -333,6 +333,6 @@ export function Toolbar() {
       >
         <PanelRight size={16} className={cx()} />
       </IconButton>
-    </header>
+    </div>
   );
 }

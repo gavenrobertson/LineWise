@@ -5,11 +5,85 @@
  * (fiber, serial zigzag, wireless, tunnel, console), trunk weight, interface
  * labels at each end, a mid label, and a bundle mark for port-channels.
  */
-import { BaseEdge, EdgeLabelRenderer, useInternalNode, type Edge, type EdgeProps } from '@xyflow/react';
-import { memo } from 'react';
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  useInternalNode,
+  useReactFlow,
+  type Edge,
+  type EdgeProps,
+  type InternalNode,
+} from '@xyflow/react';
+import { updateLinkStyle } from '@linewise/core';
+import { memo, useState, type PointerEvent } from 'react';
+import { useEditor } from '../store/editor.ts';
 import { edgeGeometryPure as edgeGeometry } from './edgeGeometry.ts';
-import { midDirection, nodeCenter } from './geometry.ts';
+import { midDirection, nodeCenter, type XY } from './geometry.ts';
 import type { LinkView } from './model.ts';
+
+/** Link anchor for a node: device icon center, or the middle of an off-page reference pill. */
+export function anchorOf(n: InternalNode): XY {
+  const p = n.internals.positionAbsolute;
+  if (n.type === 'offpage')
+    return { x: p.x + (n.measured.width ?? 120) / 2, y: p.y + (n.measured.height ?? 24) / 2 };
+  return nodeCenter(p);
+}
+
+/** Drag a bend point; double-click removes it (FR-LNK-02). */
+function Waypoints({
+  linkId,
+  points,
+  onPreview,
+}: {
+  linkId: string;
+  points: XY[];
+  onPreview: (p: XY[] | null) => void;
+}) {
+  const rf = useReactFlow();
+  const execute = useEditor((s) => s.execute);
+  const [drag, setDrag] = useState<{ index: number; pts: XY[] } | null>(null);
+  const current = drag?.pts ?? points;
+  const down = (e: PointerEvent, index: number) => {
+    e.stopPropagation();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setDrag({ index, pts: points });
+  };
+  const move = (e: PointerEvent) => {
+    if (!drag) return;
+    const f = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+    const pts = drag.pts.map((p, i) => (i === drag.index ? { x: Math.round(f.x), y: Math.round(f.y) } : p));
+    setDrag({ ...drag, pts });
+    onPreview(pts);
+  };
+  const up = () => {
+    if (!drag) return;
+    execute(updateLinkStyle([linkId], { waypoints: drag.pts }));
+    setDrag(null);
+    onPreview(null);
+  };
+  return (
+    <>
+      {current.map((p, i) => (
+        <div
+          key={i}
+          role="button"
+          tabIndex={-1}
+          aria-label="Bend point"
+          title="Drag to move; double-click to remove"
+          className="nodrag nopan absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full border-2 border-[var(--accent)] bg-[var(--surface)]"
+          style={{ left: p.x, top: p.y, pointerEvents: 'all' }}
+          onPointerDown={(e) => down(e, i)}
+          onPointerMove={move}
+          onPointerUp={up}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            execute(updateLinkStyle([linkId], { waypoints: points.filter((_, j) => j !== i) }));
+          }}
+        />
+      ))}
+    </>
+  );
+}
 
 export type NetworkEdgeData = { view: LinkView };
 export type NetworkEdgeType = Edge<NetworkEdgeData, 'network'>;
@@ -25,10 +99,12 @@ export const NetworkEdge = memo(function NetworkEdge({
 }: EdgeProps<NetworkEdgeType>) {
   const s = useInternalNode(source);
   const t = useInternalNode(target);
+  const readOnly = useEditor((st) => st.readOnly);
+  const [preview, setPreview] = useState<XY[] | null>(null);
   if (!s || !t || !data) return null;
-  const view = data.view;
-  const a = nodeCenter(s.internals.positionAbsolute);
-  const b = nodeCenter(t.internals.positionAbsolute);
+  const view = preview ? { ...data.view, waypoints: preview } : data.view;
+  const a = anchorOf(s);
+  const b = anchorOf(t);
   const { points, d, anchors } = edgeGeometry(a, b, view);
   const { mid, ux, uy } = midDirection(points);
   const px = -uy;
@@ -80,6 +156,9 @@ export const NetworkEdge = memo(function NetworkEdge({
         />
       )}
       <EdgeLabelRenderer>
+        {selected && !readOnly && view.waypoints.length > 0 && (
+          <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
+        )}
         {view.labelA && (
           <div
             className="lw-edge-label nodrag nopan"

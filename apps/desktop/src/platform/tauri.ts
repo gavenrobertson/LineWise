@@ -87,6 +87,17 @@ export function createTauriPlatform(): PlatformAdapter {
       return { name: baseName(p), bytes: new Uint8Array(bytes) };
     },
 
+    async pickBinaryFiles(filters) {
+      const paths = await pickOpen(filters, true);
+      const out: { name: string; bytes: Uint8Array }[] = [];
+      for (const p of paths)
+        out.push({
+          name: baseName(p),
+          bytes: new Uint8Array(await invoke<number[]>('read_binary_file', { path: p })),
+        });
+      return out;
+    },
+
     async exportFile(data, suggestedName, filters) {
       const target = await pickSave(suggestedName, filters);
       if (!target) return false;

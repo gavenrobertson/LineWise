@@ -178,3 +178,20 @@ export function endLabel(
   }
   return [...new Set(parts)].join('\n');
 }
+
+/** Devices directly linked to any of `ids` (FR-CAN-04 "select connected"), including the originals. */
+export function connectedDevices(doc: NetworkDocument, ids: Iterable<string>): string[] {
+  const start = new Set(ids);
+  const out = new Set(start);
+  for (const l of doc.links) {
+    if (start.has(l.endpointA.deviceId)) out.add(l.endpointB.deviceId);
+    if (start.has(l.endpointB.deviceId)) out.add(l.endpointA.deviceId);
+  }
+  return [...out];
+}
+
+/** Devices that share a role with any of `ids` (FR-CAN-04 "select by type"). */
+export function devicesWithSameRole(doc: NetworkDocument, ids: Iterable<string>): string[] {
+  const roles = new Set(doc.devices.filter((d) => [...ids].includes(d.id)).map((d) => d.role));
+  return doc.devices.filter((d) => roles.has(d.role)).map((d) => d.id);
+}

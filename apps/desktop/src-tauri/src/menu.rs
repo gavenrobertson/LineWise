@@ -71,7 +71,14 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             .item(&item(app, "edit.delete", "Delete", Some("Delete"))?)
             .item(&item(app, "edit.selectAll", "Select All", Some("CmdOrCtrl+A"))?);
     }
-    edit_b = edit_b.separator().item(&item(app, "edit.find", "Find…", Some("CmdOrCtrl+F"))?);
+    edit_b = edit_b
+        .item(&item(app, "edit.selectSameType", "Select Same Type", Some("CmdOrCtrl+Shift+A"))?)
+        .item(&item(app, "edit.selectConnected", "Select Connected", None)?)
+        .separator()
+        .item(&item(app, "edit.copyStyle", "Copy Style", Some("CmdOrCtrl+Alt+C"))?)
+        .item(&item(app, "edit.pasteStyle", "Paste Style", Some("CmdOrCtrl+Alt+V"))?)
+        .separator()
+        .item(&item(app, "edit.find", "Find…", Some("CmdOrCtrl+F"))?);
     if !cfg!(target_os = "macos") {
         edit_b = edit_b.separator().item(&item(app, "edit.preferences", "Preferences…", Some("CmdOrCtrl+,"))?);
     }
@@ -79,6 +86,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     let view = SubmenuBuilder::new(app, "View")
         .item(&item(app, "view.commandPalette", "Command Palette…", Some("CmdOrCtrl+K"))?)
+        .item(&item(app, "view.library", "Search Device Library", Some("CmdOrCtrl+Shift+D"))?)
         .separator()
         .item(&item(app, "view.l1", "Physical (L1)", Some("CmdOrCtrl+1"))?)
         .item(&item(app, "view.l2", "Data Link (L2)", Some("CmdOrCtrl+2"))?)
@@ -87,6 +95,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item(app, "view.zoomIn", "Zoom In", Some("CmdOrCtrl+="))?)
         .item(&item(app, "view.zoomOut", "Zoom Out", Some("CmdOrCtrl+-"))?)
         .item(&item(app, "view.zoomFit", "Zoom to Fit", Some("CmdOrCtrl+0"))?)
+        .item(&item(app, "view.zoomSelection", "Zoom to Selection", Some("CmdOrCtrl+Shift+0"))?)
         .separator()
         .item(&item(app, "view.minimap", "Toggle Minimap", None)?)
         .item(&item(app, "view.problems", "Toggle Problems Panel", Some("CmdOrCtrl+Shift+M"))?)
@@ -97,6 +106,9 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item(app, "insert.zone", "Zone", None)?)
         .item(&item(app, "insert.text", "Text", None)?)
         .item(&item(app, "insert.note", "Sticky Note", None)?)
+        .item(&item(app, "insert.rect", "Rectangle", None)?)
+        .item(&item(app, "insert.ellipse", "Ellipse", None)?)
+        .item(&item(app, "insert.arrow", "Arrow", None)?)
         .item(&item(app, "insert.image", "Image…", None)?)
         .separator()
         .item(&item(app, "insert.page", "New Page", None)?)
@@ -104,6 +116,15 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     let arrange = SubmenuBuilder::new(app, "Arrange")
         .item(&item(app, "arrange.layout", "Auto-Layout…", Some("CmdOrCtrl+Shift+L"))?)
+        .separator()
+        .item(&item(app, "arrange.front", "Bring to Front", Some("CmdOrCtrl+Shift+]"))?)
+        .item(&item(app, "arrange.back", "Send to Back", Some("CmdOrCtrl+Shift+["))?)
+        .separator()
+        .item(&item(app, "arrange.group", "Group", Some("CmdOrCtrl+G"))?)
+        .item(&item(app, "arrange.ungroup", "Ungroup", Some("CmdOrCtrl+Shift+G"))?)
+        .separator()
+        .item(&item(app, "arrange.lock", "Lock", Some("CmdOrCtrl+L"))?)
+        .item(&item(app, "arrange.unlock", "Unlock", Some("CmdOrCtrl+Shift+K"))?)
         .build()?;
 
     let network = SubmenuBuilder::new(app, "Network")

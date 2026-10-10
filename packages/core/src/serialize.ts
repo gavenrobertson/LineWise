@@ -9,18 +9,12 @@ export const FILE_EXTENSION = 'lwise';
 export const SCHEMA_URL = `https://raw.githubusercontent.com/gavenrobertson/linewise/main/schema/v${SCHEMA_VERSION}.json`;
 export const LARGE_FILE_BYTES = 20 * 1024 * 1024;
 
-/** Entity arrays whose order carries no meaning: sorted by id on save. */
-const SORTED_ARRAYS = new Set([
-  'devices',
-  'links',
-  'portChannels',
-  'zones',
-  'vlans',
-  'vrfs',
-  'subnets',
-  'annotations',
-  'layers',
-]);
+/**
+ * Entity arrays whose order carries no meaning: sorted by id on save.
+ * `zones` and `annotations` are not here: their order is the drawing order
+ * (bring to front / send to back), so it is preserved.
+ */
+const SORTED_ARRAYS = new Set(['devices', 'links', 'portChannels', 'vlans', 'vrfs', 'subnets']);
 
 function sortValue(value: unknown, key?: string): unknown {
   if (Array.isArray(value)) {
@@ -30,7 +24,7 @@ function sortValue(value: unknown, key?: string): unknown {
         String((a as { id?: string }).id ?? '').localeCompare(String((b as { id?: string }).id ?? '')),
       );
     }
-    if (key === 'pages')
+    if (key === 'pages' || key === 'layers')
       items.sort((a, b) => ((a as { order: number }).order ?? 0) - ((b as { order: number }).order ?? 0));
     return items;
   }
