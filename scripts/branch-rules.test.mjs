@@ -15,10 +15,10 @@ const rule = (type) => ruleset.rules.find((r) => r.type === type);
 function jobNames() {
   const ci = read('.github/workflows/ci.yml');
   const names = [];
-  for (const job of ci.split(/\n  (?=[a-z][\w-]*:\n)/).slice(1)) {
-    const name = /\n    name: (.+)/.exec(job)?.[1];
+  for (const job of ci.split(/\n {2}(?=[a-z][\w-]*:\n)/).slice(1)) {
+    const name = /\n {4}name: (.+)/.exec(job)?.[1];
     if (!name) continue;
-    const list = /\n        os: \[([^\]]+)\]/.exec(job);
+    const list = /\n {8}os: \[([^\]]+)\]/.exec(job);
     const include = [...job.matchAll(/- \{ os: ([\w.-]+), browser: (\w+) \}/g)];
     if (include.length)
       for (const [, os, browser] of include)
@@ -31,7 +31,7 @@ function jobNames() {
 
 test('every required check is a job that CI or the DCO workflow runs, and every CI job is required', () => {
   const required = rule('required_status_checks').parameters.required_status_checks.map((c) => c.context);
-  const dco = /\n    name: (.+)/.exec(read('.github/workflows/dco.yml'))[1];
+  const dco = /\n {4}name: (.+)/.exec(read('.github/workflows/dco.yml'))[1];
   const known = [...jobNames(), dco];
   for (const c of required) assert.ok(known.includes(c), `${c} is not a job name`);
   for (const j of known) assert.ok(required.includes(j), `${j} is not required`);

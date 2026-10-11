@@ -66,6 +66,11 @@ describe('REL-04 checksums and SBOM', () => {
   });
 });
 
+// The first line of a Tauri (minisign) secret key file, split so this file does not match itself.
+const KEY_HEADER = new RegExp(
+  ['rsign encrypted', 'secret key'].join(' ') + '|' + ['minisign encrypted', 'secret key'].join(' '),
+);
+
 describe('NFR-SEC-06 signed updates', () => {
   it('the updater private key exists only as a CI secret', () => {
     assert.match(release, /secrets\.TAURI_SIGNING_PRIVATE_KEY\b/);
@@ -75,11 +80,7 @@ describe('NFR-SEC-06 signed updates', () => {
     for (const f of files) {
       if (/\.(png|ico|icns|bmp|woff2?|gz|zip)$/.test(f)) continue;
       const text = readFileSync(join(ROOT, f), 'utf8');
-      assert.doesNotMatch(
-        text,
-        /rsign encrypted secret key|untrusted comment: minisign encrypted secret key/,
-        f,
-      );
+      assert.doesNotMatch(text, KEY_HEADER, f);
     }
   });
   it('the app checks HTTPS feeds on GitHub Releases and verifies against the release public key', () => {
