@@ -132,13 +132,13 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-VAL-03 | MUST | `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/store/prefs.ts` | `apps/desktop/e2e/05-validation-fix.spec.ts` | done |
 | FR-VAL-04 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
 | FR-VAL-05 | MUST | `packages/core/src/validation.ts`, `apps/desktop/src/workers/validation.worker.ts` — 1,000 devices / 5,000+ interfaces under 200 ms | `packages/core/test/validation.test.ts` | done |
-| NFR-PERF-01 | MUST | | | todo |
-| NFR-PERF-02 | MUST | | | todo |
-| NFR-PERF-03 | MUST | | | todo |
-| NFR-PERF-04 | MUST | | | todo |
-| NFR-PERF-05 | MUST | | | todo |
-| NFR-PERF-06 | MUST | | | todo |
-| NFR-PERF-07 | MUST | `bench/src/generate.ts`, `bench/perf.spec.ts`, `.github/workflows/nightly.yml` — fixtures and gates exist; the 20% regression gate needs a baseline recorded on the CI runner (M5) | `bench/test/generate.test.ts`, `bench/perf.spec.ts` | partial |
+| NFR-PERF-01 | MUST | `bench/perf.spec.ts`, `bench/src/gate.ts` — nightly on GitHub's runner, median of 3: 537 ms (≤ 2,000) | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
+| NFR-PERF-02 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `bench/perf.spec.ts` — nightly: 500 devices 425 ms (≤ 2,000), 2,000 devices 1,374 ms (≤ 5,000) | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
+| NFR-PERF-03 | MUST | `apps/desktop/src/canvas/Canvas.tsx` (`onlyRenderVisibleElements`, stable props, level of detail), `bench/perf.spec.ts` — nightly: 59.8 fps with 500 devices, 59.0 with 2,000 | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
+| NFR-PERF-04 | MUST | `apps/desktop/src/canvas/Canvas.tsx` (`DragPreviewFlow`, `useDragPreview`), `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/NetworkEdge.tsx`, `apps/desktop/src/canvas/Minimap.tsx` — nightly: drag p95 16.7 ms per frame (all 3 runs), edit 19 ms (≤ 50) | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
+| NFR-PERF-05 | MUST | `apps/desktop/src/workers/layout.worker.ts`, `bench/perf.spec.ts` — nightly: 800 ms (≤ 3,000), in a worker | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
+| NFR-PERF-06 | MUST | `bench/perf.spec.ts` — JS heap with 500 devices 65 MB (≤ 250); native process memory and installer size (< 25 MB) are checked on release builds in M6 | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | partial |
+| NFR-PERF-07 | MUST | `bench/scripts/generate.ts` (100/500/2,000/5,000), `bench/scripts/run.ts`, `bench/src/gate.ts`, `bench/baseline.json`, `.github/workflows/nightly.yml` | `bench/test/generate.test.ts`, `bench/test/gate.test.ts` | done |
 | NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
 | NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts` (DOMPurify, SVG profile), `apps/desktop/src/lib/iconPacks.ts`, `apps/desktop/src/canvas/icons.ts`, `packages/parsers/src/formats.ts` (draw.io HTML reduced to text) | `apps/desktop/test/pure.test.ts`, `packages/parsers/test/parsers.test.ts` | done |
