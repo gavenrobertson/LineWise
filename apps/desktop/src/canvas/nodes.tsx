@@ -129,7 +129,7 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
     >
       <div
         className={cx(
-          'relative rounded-lg p-0',
+          'lw-device-icon relative rounded-lg p-0',
           selected && 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--canvas)]',
         )}
       >

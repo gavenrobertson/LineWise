@@ -19,7 +19,7 @@ Polish, accessibility and performance (milestone M5).
 
 - Problem badges show a glyph (✕ error, ▲ warning, i information) as well as a color, on devices and now also on links (NFR-A11Y-03).
 - Default VLAN colors are a color-blind-safe palette (NFR-A11Y-03).
-- Dragging with 500 devices does several times less work per frame, and a property edit shows on the canvas about three times sooner (NFR-PERF-04). Labels are hidden below 40% zoom.
+- Dragging with 500 devices does several times less work per frame, and a property edit shows on the canvas about three times sooner (NFR-PERF-04). Labels are hidden below 40% zoom, and below 25% devices are drawn as plain shapes. The minimap is drawn from the diagram itself.
 - Connection handles appear on the device under the pointer only.
 
 ### Fixed

@@ -108,7 +108,30 @@ test('profile a property edit', async ({ page }) => {
     });
   }
   if (full) await step('press');
-  if (drag) await step('move');
+  if (process.env.BENCH_LAYERS) {
+    // Composited layers and why they exist, sampled during the drag.
+    let layers: { layerId: string; drawsContent: boolean; width: number; height: number }[] = [];
+    cdp.on('LayerTree.layerTreeDidChange' as never, (e: { layers?: typeof layers }) => {
+      if (e.layers) layers = e.layers;
+    });
+    await cdp.send('LayerTree.enable' as never);
+    await step('move');
+    const reasons = new Map<string, number>();
+    for (const l of layers.slice(0, 400)) {
+      const r = (await cdp.send(
+        'LayerTree.compositingReasons' as never,
+        { layerId: l.layerId } as never,
+      )) as {
+        compositingReasonIds?: string[];
+      };
+      for (const id of r.compositingReasonIds ?? ['(none)']) reasons.set(id, (reasons.get(id) ?? 0) + 1);
+    }
+    console.log(
+      'LAYERS',
+      layers.length,
+      JSON.stringify([...reasons].sort((a, b) => b[1] - a[1]).slice(0, 15)),
+    );
+  } else if (drag) await step('move');
   else {
     await page.locator('#inspector-hostname').press('Enter');
     await page.waitForTimeout(600);

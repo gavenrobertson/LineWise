@@ -275,6 +275,25 @@ body {
   display: none;
 }
 
+/* Below 25% zoom a device is a plain rounded square: one painted shape instead of an icon and its
+   marks, which keeps the per-frame cost of a drag down with hundreds of devices (NFR-PERF-04). */
+.lw-lod-min .lw-device-icon {
+  display: none;
+}
+.lw-lod-min .react-flow__node-device > div::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 0;
+  bottom: 0;
+  border-radius: 10px;
+  background: var(--device);
+}
+.lw-lod-min .react-flow__node-device.selected > div::before {
+  outline: 6px solid var(--accent);
+}
+
 .lw-edge-label {
   position: absolute;
   pointer-events: none;

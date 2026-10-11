@@ -9,7 +9,6 @@ import {
   BackgroundVariant,
   ConnectionMode,
   Controls,
-  MiniMap,
   ReactFlow,
   SelectionMode,
   useReactFlow,
@@ -61,7 +60,9 @@ import {
   type XY,
 } from './geometry.ts';
 import { assetDataUrl } from './icons.ts';
-import { buildPageModel } from './model.ts';
+import { buildPageModel, type PageModel } from './model.ts';
+import { Minimap } from './Minimap.tsx';
+import { cx } from '../components/ui.tsx';
 import { anchorOf, EdgeLabelLayer, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
 
@@ -145,8 +146,7 @@ function useStableHandlers<T extends Record<string, (...args: never[]) => unknow
   );
 }
 
-const minimapFill = (n: Node) => (n.type === 'zone' ? 'transparent' : 'var(--device)');
-const minimapStroke = (n: Node) => (n.type === 'zone' ? 'var(--accent)' : 'transparent');
+const EMPTY_MODEL: PageModel = { devices: [], links: [], zones: [], annotations: [], offPage: [] };
 /**
  * React Flow with the drag preview applied. A pointer move re-renders this and the moved nodes,
  * not the whole canvas with its panels and overlays (NFR-PERF-04). Only the dragged (and carried)
@@ -178,6 +178,8 @@ export function Canvas() {
   const rf = useReactFlow();
   // Level of detail (NFR-PERF-04): below 40% zoom labels are unreadable, so they are not drawn.
   const lowDetail = useFlowStore((s) => s.transform[2] < 0.4);
+  // Below 25% zoom icons are about 14 px and unreadable: each device is drawn as a plain shape.
+  const minimalDetail = useFlowStore((s) => s.transform[2] < 0.25);
   const doc = useEditor((s) => s.doc);
   const page = useEditor(selectPage);
   const pageId = page?.id ?? '';
@@ -702,7 +704,7 @@ export function Canvas() {
     <div ref={wrapper} className="relative h-full w-full" onDragOver={onDragOver} onDrop={onDrop}>
       <EdgeLabelLayer.Provider value={layers.labels}>
         <DragPreviewFlow
-          className={lowDetail ? 'lw-lod-low' : undefined}
+          className={cx(lowDetail && 'lw-lod-low', minimalDetail && 'lw-lod-min')}
           nodes={baseNodes}
           edges={edges}
           nodeTypes={nodeTypes}
@@ -743,13 +745,7 @@ export function Canvas() {
             />
           )}
           {prefs.showMinimap && (
-            <MiniMap
-              pannable
-              zoomable
-              ariaLabel={t('canvas.minimap', 'Minimap')}
-              nodeColor={minimapFill}
-              nodeStrokeColor={minimapStroke}
-            />
+            <Minimap model={model ?? EMPTY_MODEL} label={t('canvas.minimap', 'Minimap')} />
           )}
           <Controls showInteractive={false} position="bottom-left" />
           <svg width="0" height="0" aria-hidden="true">

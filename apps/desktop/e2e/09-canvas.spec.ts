@@ -138,6 +138,16 @@ test('FR-CAN-02, FR-CAN-03 grid snap, alignment guide while dragging, minimap to
   await expect(page.getByLabel('Minimap')).toHaveCount(0);
   await palette(page, 'Toggle minimap');
   await expect(page.getByLabel('Minimap')).toBeVisible();
+  // Clicking the minimap moves the view there; it shows every device.
+  const map = page.getByLabel('Minimap');
+  await expect(map.locator('rect[fill="var(--device)"]')).toHaveCount(5);
+  const style = () => page.locator('.react-flow__viewport').getAttribute('style');
+  const before = await style();
+  const m = (await map.boundingBox())!;
+  await page.mouse.click(m.x + 8, m.y + 8);
+  await expect.poll(style).not.toBe(before);
+  await palette(page, 'Zoom to fit');
+  await settledViewport(page);
 
   // Sweep R3 horizontally past R1, like a user would: the vertical guide appears when the
   // centers line up, and releasing there snaps R3 onto R1's x.

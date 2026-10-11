@@ -64,13 +64,16 @@ async function open(page: Page, n: number): Promise<number> {
 /** Frame statistics while `action` runs. */
 async function frames(page: Page, action: () => Promise<void>) {
   await page.evaluate(() => {
-    const w = window as unknown as { __frames: number[]; __stop: boolean };
+    const w = window as unknown as { __frames: number[]; __stop: boolean; __restart: boolean };
     w.__frames = [];
     w.__stop = false;
+    w.__restart = false;
     let last = performance.now();
     const tick = (t: number) => {
       if (w.__stop) return;
-      w.__frames.push(t - last);
+      // A restart clears what was counted and times the next frame from this one.
+      if (w.__restart) w.__restart = false;
+      else w.__frames.push(t - last);
       last = t;
       requestAnimationFrame(tick);
     };
@@ -178,13 +181,15 @@ test('NFR-PERF-02..06 with 500 devices / ~800 links', async ({ page }) => {
               buttons: 1,
             }),
           );
-        const w = window as unknown as { __frames: number[]; __stop: boolean };
+        const w = window as unknown as { __frames: number[]; __stop: boolean; __restart: boolean };
         // Frames are counted while the device moves. The press (which selects it) and the drop
         // (which commits the move to history) are single updates, held to the edit budget below.
         at('mousedown', el, start.x, start.y);
         await frame();
         await frame();
+        await frame();
         w.__frames.length = 0;
+        w.__restart = true;
         for (let i = 1; i <= 40; i++) {
           await frame();
           at('mousemove', window, start.x + i * 4, start.y + i * 2);
