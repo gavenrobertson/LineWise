@@ -4,7 +4,9 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
-Polish, accessibility and performance (milestone M5).
+## [0.9.0-beta] - 2026-10-11
+
+Export, polish, accessibility and performance (milestone M5).
 
 ### Added
 

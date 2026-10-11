@@ -59,7 +59,7 @@
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico"
       },
-      "wix": { "language": "en-US" },
+      "wix": { "language": "en-US", "version": "0.9.0" },
       "webviewInstallMode": { "type": "embedBootstrapper" }
     },
     "macOS": {

@@ -3,7 +3,9 @@
 /**
  * Single source of truth for the app version (REL-03): apps/desktop/package.json.
  * tauri.conf.json reads it directly ("version": "../package.json"); this script keeps
- * Cargo.toml, Cargo.lock and the workspace packages in step.
+ * Cargo.toml, Cargo.lock and the workspace packages in step, and the MSI installer version in
+ * tauri.conf.json: MSI versions are numbers only (major.minor.patch), so a pre-release such as
+ * 0.9.0-beta is installed as 0.9.0.
  *
  *   node scripts/version.mjs check [--tag v1.2.3]   fail if anything disagrees (or the tag does)
  *   node scripts/version.mjs set 1.2.3              write the version everywhere
@@ -15,6 +17,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const DESKTOP_PKG = join(ROOT, 'apps/desktop/package.json');
 const CARGO_TOML = join(ROOT, 'apps/desktop/src-tauri/Cargo.toml');
 const CARGO_LOCK = join(ROOT, 'apps/desktop/src-tauri/Cargo.lock');
+const TAURI_CONF = join(ROOT, 'apps/desktop/src-tauri/tauri.conf.json');
 const SEMVER = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 export function cargoTomlVersion(text) {
@@ -31,6 +34,23 @@ export function setCargoLockVersion(text, name, version) {
     new RegExp(`(\\[\\[package\\]\\]\\nname = "${name}"\\nversion = ")[^"]+(")`),
     `$1${version}$2`,
   );
+}
+
+/** The MSI ProductVersion for an app version: the numeric core, without pre-release or build. */
+export function msiVersion(version) {
+  return version.split(/[-+]/)[0];
+}
+
+export function wixVersion(text) {
+  return /"wix":\s*\{[^}]*"version":\s*"([^"]+)"/.exec(text)?.[1];
+}
+
+/** Set bundle.windows.wix.version in tauri.conf.json, keeping the file's formatting. */
+export function setWixVersion(text, version) {
+  const v = msiVersion(version);
+  if (wixVersion(text) !== undefined)
+    return text.replace(/("wix":\s*\{[^}]*"version":\s*")[^"]+(")/, `$1${v}$2`);
+  return text.replace(/("wix":\s*\{[^}]*?)(\s*\})/, `$1, "version": "${v}"$2`);
 }
 
 function packageFiles() {
@@ -52,6 +72,7 @@ function main() {
     }
     writeFileSync(CARGO_TOML, setCargoTomlVersion(readFileSync(CARGO_TOML, 'utf8'), arg));
     writeFileSync(CARGO_LOCK, setCargoLockVersion(readFileSync(CARGO_LOCK, 'utf8'), 'linewise', arg));
+    writeFileSync(TAURI_CONF, setWixVersion(readFileSync(TAURI_CONF, 'utf8'), arg));
     console.log(`Version set to ${arg}.`);
     return;
   }
@@ -66,6 +87,9 @@ function main() {
     if (cargo !== desktop) problems.push(`Cargo.toml is ${cargo}, expected ${desktop}`);
     if (!readFileSync(CARGO_LOCK, 'utf8').includes(`name = "linewise"\nversion = "${desktop}"`))
       problems.push(`Cargo.lock does not record linewise ${desktop}`);
+    const wix = wixVersion(readFileSync(TAURI_CONF, 'utf8'));
+    if (wix !== msiVersion(desktop))
+      problems.push(`tauri.conf.json bundle.windows.wix.version is ${wix}, expected ${msiVersion(desktop)}`);
     if (arg === '--tag' && value !== `v${desktop}`)
       problems.push(`tag ${value} does not match version v${desktop}`);
     if (problems.length) {
