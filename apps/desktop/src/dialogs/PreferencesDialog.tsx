@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 /** Preferences (FR-APP-07). Telemetry is off by default and nothing is sent without opt-in (NFR-PRIV-02). */
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { buildPack, deletePack, listPacks, savePack, unzipFiles, type IconPack } from '../lib/iconPacks.ts';
+import { buildPack, deletePack, savePack, unzipFiles } from '../lib/iconPacks.ts';
+import { usePacks } from '../store/packs.ts';
 import { Button, Checkbox, Dialog, Field, Segmented, Select, TextInput } from '../components/ui.tsx';
 import i18n, { LANGUAGES } from '../i18n/index.ts';
 import { platform } from '../platform/index.ts';
@@ -12,9 +12,9 @@ import { useUi } from '../store/ui.ts';
 function IconPacks() {
   const { t } = useTranslation();
   const toast = useUi((s) => s.toast);
-  const [packs, setPacks] = useState<IconPack[]>([]);
-  const refresh = () => void listPacks().then(setPacks);
-  useEffect(refresh, []);
+  const packs = usePacks((s) => s.packs);
+  const refresh = () => void usePacks.getState().refresh();
+  const embed = usePrefs((s) => s.embedIcons);
   const importPack = async () => {
     const files = await platform().pickBinaryFiles([
       {
@@ -72,7 +72,7 @@ function IconPacks() {
         <p className="text-xs text-subtle">
           {t(
             'prefs.noPacks',
-            'Import a .zip or a set of SVG/PNG files (with an optional manifest.json) to use your own icons. Icons you use are embedded in the diagram.',
+            'Import a .zip or a set of SVG/PNG files (with an optional manifest.json) to use your own icons.',
           )}
         </p>
       ) : (
@@ -97,6 +97,16 @@ function IconPacks() {
           ))}
         </ul>
       )}
+      <div className="mt-2">
+        <Checkbox
+          label={t(
+            'prefs.embedIcons',
+            'Embed pack icons in diagrams, so they show on computers without the pack',
+          )}
+          checked={embed}
+          onChange={(v) => usePrefs.getState().set({ embedIcons: v })}
+        />
+      </div>
     </div>
   );
 }

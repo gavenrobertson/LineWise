@@ -150,15 +150,22 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
             <span
               className="h-3 w-3 rounded-full border-2 border-[var(--canvas)]"
               style={{ background: d.colorTag }}
+              data-lw-mark="color"
             />
           )}
           {d.notes && (
-            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm">
+            <span
+              data-lw-mark="note"
+              className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm"
+            >
               <StickyNote size={9} />
             </span>
           )}
           {d.locked && (
-            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm">
+            <span
+              data-lw-mark="locked"
+              className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm"
+            >
               <Lock size={9} />
             </span>
           )}

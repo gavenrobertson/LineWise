@@ -4,6 +4,34 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+Polish, accessibility and performance (milestone M5).
+
+### Added
+
+- Topology outline as a navigable tree: zones (nested), devices, interfaces and the far end of each link, with arrow keys, Home/End and Enter (NFR-A11Y-02).
+- Interface size follows the system text size (Windows), or a size chosen in Preferences (NFR-A11Y-04).
+- Windows high-contrast (forced colors) support for links, labels and selection (NFR-A11Y-04).
+- Keyboard: arrow keys pan the canvas when nothing is selected; Enter selects a focused zone or note; the inspector sizes zones and notes and adds, moves and removes link bend points (FR-KEY-02).
+- Icon packs can be referenced instead of embedded (Preferences → Icon packs); embedding on save keeps files self-contained, and a diagram whose pack is missing shows built-in icons with a notice (FR-ICO-05, FR-ICO-06).
+- Benchmarks run three times and gate the medians against the NFR targets and a 20% regression budget per runner (NFR-PERF-07).
+
+### Changed
+
+- Problem badges show a glyph (✕ error, ▲ warning, i information) as well as a color, on devices and now also on links (NFR-A11Y-03).
+- Default VLAN colors are a color-blind-safe palette (NFR-A11Y-03).
+- Dragging with 500 devices does several times less work per frame, and a property edit shows on the canvas about three times sooner (NFR-PERF-04). Labels are hidden below 40% zoom.
+- Connection handles appear on the device under the pointer only.
+
+### Fixed
+
+- Links to off-page connectors were never drawn (FR-CAN-12).
+- Devices in starter diagrams now belong to the zones drawn around them.
+- The Arrange toolbar button had no tooltip when shown as an icon (DOC-05).
+
+### Security
+
+- Icon-pack zips are limited in size, file count and expanded size, and entries with unsafe paths are skipped (NFR-SEC-04).
+
 ## [0.4.0] - 2026-10-10
 
 Import (milestone M4).

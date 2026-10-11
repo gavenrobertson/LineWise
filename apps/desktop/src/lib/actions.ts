@@ -26,6 +26,7 @@ import {
 } from '@linewise/core';
 import { detectKind } from '@linewise/parsers';
 import i18n from '../i18n/index.ts';
+import { embedPackIcons } from './embedIcons.ts';
 import { sanitizeSvg } from './sanitize.ts';
 import { platform, type MenuCommand } from '../platform/index.ts';
 import { canvasApi } from '../canvas/Canvas.tsx';
@@ -161,6 +162,11 @@ export async function openFile(path?: string): Promise<void> {
 }
 
 export async function save(asNew = false): Promise<boolean> {
+  // Pack icons go into the file, so it renders without the pack (FR-ICO-06).
+  if (usePrefs.getState().embedIcons && !useEditor.getState().readOnly) {
+    const embed = embedPackIcons(useEditor.getState().doc);
+    if (embed) useEditor.getState().execute(embed);
+  }
   const ed = useEditor.getState();
   if (ed.readOnly) asNew = true;
   const text = serializeDocument(ed.doc);

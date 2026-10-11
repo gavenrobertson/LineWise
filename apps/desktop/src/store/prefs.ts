@@ -18,6 +18,8 @@ export interface Prefs {
   /** Interface size: follow the OS text size, or a fixed factor (NFR-A11Y-04). */
   uiScale: 'system' | number;
   showMinimap: boolean;
+  /** Embed icon-pack icons in diagrams (when chosen and on save), so files render without the pack (FR-ICO-06). */
+  embedIcons: boolean;
   /** Problem badges on devices and links (FR-VAL-03). */
   showProblemBadges: boolean;
   favorites: string[];
@@ -40,6 +42,7 @@ export const DEFAULT_PREFS: Prefs = {
   exportScale: 2,
   uiScale: 'system',
   showMinimap: true,
+  embedIcons: true,
   showProblemBadges: true,
   favorites: [],
   recentTemplates: [],

@@ -3,11 +3,13 @@
 import * as Popover from '@radix-ui/react-popover';
 import { addAsset, batch, updateDevices, type Device, type DeviceRole } from '@linewise/core';
 import { ICON_ROLES } from '@linewise/device-library';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { customIconUrl, iconRole } from '../canvas/icons.ts';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { listPacks, type IconPack, type PackIcon } from '../lib/iconPacks.ts';
+import { packRef, type IconPack, type PackIcon } from '../lib/iconPacks.ts';
+import { usePacks } from '../store/packs.ts';
+import { usePrefs } from '../store/prefs.ts';
 import { useEditor } from '../store/editor.ts';
 import { cx } from './ui.tsx';
 import { roleLabel } from '../lib/labels.ts';
@@ -16,11 +18,9 @@ export function IconPicker({ devices }: { devices: Device[] }) {
   const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
   const execute = useEditor((s) => s.execute);
-  const [packs, setPacks] = useState<IconPack[]>([]);
+  const packs = usePacks((s) => s.packs);
+  const embed = usePrefs((s) => s.embedIcons);
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (open) void listPacks().then(setPacks);
-  }, [open]);
   const first = devices[0];
   if (!first) return null;
   const ids = devices.map((d) => d.id);
@@ -29,7 +29,13 @@ export function IconPicker({ devices }: { devices: Device[] }) {
     execute(updateDevices(ids, { iconOverride: r && r !== first.role ? r : undefined }));
     setOpen(false);
   };
-  const applyPackIcon = (icon: PackIcon) => {
+  const applyPackIcon = (pack: IconPack, icon: PackIcon) => {
+    if (!embed) {
+      // A reference: small files, but the pack must be installed to see the icon (FR-ICO-05).
+      execute(updateDevices(ids, { iconOverride: packRef(pack.id, icon.id) }));
+      setOpen(false);
+      return;
+    }
     // Reuse an identical embedded image instead of storing it twice.
     const existing = Object.entries(doc.assets).find(
       ([, a]) => a.base64 === icon.base64 && a.mime === icon.mime,
@@ -60,7 +66,7 @@ export function IconPicker({ devices }: { devices: Device[] }) {
               url={customIconUrl(doc, first.iconOverride)}
             />
             <span className="truncate">
-              {first.iconOverride?.startsWith('asset:')
+              {first.iconOverride?.startsWith('asset:') || first.iconOverride?.startsWith('pack:')
                 ? t('field.customIcon', 'Custom icon')
                 : roleLabel(iconRole(first.role, first.iconOverride))}
             </span>
@@ -116,11 +122,11 @@ export function IconPicker({ devices }: { devices: Device[] }) {
                       key={i.id}
                       type="button"
                       role="option"
-                      aria-selected={false}
+                      aria-selected={first.iconOverride === packRef(p.id, i.id)}
                       title={i.name}
                       aria-label={i.name}
                       className={cell}
-                      onClick={() => applyPackIcon(i)}
+                      onClick={() => applyPackIcon(p, i)}
                     >
                       <img
                         src={`data:${i.mime};base64,${i.base64}`}

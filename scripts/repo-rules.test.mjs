@@ -64,3 +64,23 @@ test('NFR-MNT-01: TypeScript strict everywhere, explicit any is an error, clippy
   assert.match(read('eslint.config.js'), /'@typescript-eslint\/no-explicit-any': 'error'/);
   assert.match(read('.github/workflows/ci.yml'), /cargo clippy --all-targets --locked -- -D warnings/);
 });
+
+test('FR-ICO-08: no vendor logos; vendor names only describe compatibility', () => {
+  const VENDORS = /cisco|juniper|aruba|fortinet|palo ?alto|arista|meraki|ubiquiti|mikrotik|huawei/i;
+  const icons = tracked.filter((f) => f.startsWith('packages/device-library/icons/') && f.endsWith('.svg'));
+  assert.ok(icons.length >= 20, 'icon set found');
+  for (const f of icons) {
+    const svg = read(f);
+    assert.doesNotMatch(f, VENDORS, f);
+    assert.doesNotMatch(svg, VENDORS, f);
+    // Drawn shapes and generic lettering (like "MPLS") only: no embedded pictures that could carry a logo.
+    assert.doesNotMatch(svg, /<(image|foreignObject)\b/i, f);
+  }
+  const brand = tracked.filter((f) =>
+    /^(packages\/brand|apps\/desktop\/(public|src-tauri\/icons))\//.test(f),
+  );
+  for (const f of brand) assert.doesNotMatch(f, VENDORS, f);
+  const conf = JSON.parse(read('apps/desktop/src-tauri/tauri.conf.json'));
+  assert.equal(conf.productName, 'LineWise');
+  assert.doesNotMatch(read('README.md').split('\n')[0], VENDORS);
+});

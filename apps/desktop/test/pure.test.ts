@@ -22,7 +22,14 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { labelBox, buildPageModel, pageBounds } from '../src/canvas/model.ts';
 import { distanceToPolyline, linkPoints, parallelOffset } from '../src/canvas/geometry.ts';
-import { assetDataUrl, customIconUrl, iconRole } from '../src/canvas/icons.ts';
+import {
+  assetDataUrl,
+  customIconUrl,
+  iconRole,
+  missingPackIcons,
+  setPackIcons,
+} from '../src/canvas/icons.ts';
+import { embedPackIcons } from '../src/lib/embedIcons.ts';
 import { renderPageSvg } from '../src/export/svg.ts';
 import { planPdf, PAPER } from '../src/export/pdf.ts';
 import { clampScale } from '../src/export/raster.ts';
@@ -43,6 +50,7 @@ import {
   MAX_ICON_BYTES,
   MAX_ZIP_BYTES,
   MAX_ZIP_ENTRIES,
+  packRef,
   unsafeZipPath,
   unzipFiles,
 } from '../src/lib/iconPacks.ts';
@@ -314,7 +322,7 @@ describe('layouts', () => {
 });
 
 describe('search', () => {
-  it('finds devices, interfaces, IPs and VLANs', () => {
+  it('FR-CAN-15 finds devices, interfaces, IPs and VLANs', () => {
     const d: NetworkDocument = STARTERS.find((s) => s.id === 'three-tier-campus')!.build();
     expect(searchDocument(d, 'core1').some((h) => h.kind === 'device' && h.title === 'CORE1')).toBe(true);
     expect(searchDocument(d, 'vlan 10')[0]).toMatchObject({ kind: 'vlan', vlan: 10 });
@@ -354,7 +362,7 @@ describe('IPAM helpers', () => {
 
 describe('icon packs', () => {
   const enc = (s: string) => new TextEncoder().encode(s);
-  it('reads a manifest, sanitizes SVG and rejects fake PNGs', () => {
+  it('FR-ICO-05, FR-ICO-07 reads a manifest, sanitizes SVG and rejects fake PNGs', () => {
     const warnings: string[] = [];
     const pack = buildPack(
       [
@@ -570,5 +578,51 @@ describe('icon pack zips', () => {
       // fflate may also reject the mismatch outright; either way nothing large comes out.
     }
     for (const f of out) expect(f.bytes.length).toBeLessThanOrEqual(1024);
+  });
+});
+
+describe('icon pack references', () => {
+  const enc = (s: string) => new TextEncoder().encode(s);
+  const svg = (r: number) => enc(`<svg xmlns="http://www.w3.org/2000/svg"><circle r="${r}"/></svg>`);
+
+  it('FR-ICO-05 pack and icon IDs are stable, from the manifest or the name and the file names', () => {
+    const a = buildPack([{ name: 'x/Edge Router.svg', bytes: svg(1) }], 'Ops Icons');
+    const b = buildPack([{ name: 'y/Edge Router.svg', bytes: svg(1) }], 'Ops Icons');
+    expect([a.id, a.icons[0]!.id]).toEqual(['ops-icons', 'edge-router']);
+    expect(b.id).toBe(a.id);
+    const m = buildPack(
+      [
+        { name: 'manifest.json', bytes: enc(JSON.stringify({ id: 'acme.dc', name: 'Acme' })) },
+        { name: 'a.svg', bytes: svg(1) },
+        { name: 'A.svg', bytes: svg(2) },
+      ],
+      'fallback',
+    );
+    expect(m.id).toBe('acme-dc');
+    expect(m.icons.map((i) => i.id)).toEqual(['a', 'a-2']);
+  });
+
+  it('FR-ICO-05, FR-ICO-06 a reference shows the pack icon when installed, else the role icon; embedding copies it in', () => {
+    const { ed, a, b } = twoRouters();
+    const pack = buildPack([{ name: 'edge.svg', bytes: svg(3) }], 'Ops');
+    const ref = packRef(pack.id, pack.icons[0]!.id);
+    ed.execute(updateDevices([a, b], { iconOverride: ref }));
+    setPackIcons([]);
+    expect(customIconUrl(ed.doc, ref)).toBeUndefined();
+    expect(iconRole('router', ref)).toBe('router');
+    expect(missingPackIcons(ed.doc)).toEqual([ref]);
+    expect(embedPackIcons(ed.doc)).toBeNull();
+
+    setPackIcons(pack.icons.map((i) => [`${pack.id}/${i.id}`, i]));
+    expect(customIconUrl(ed.doc, ref)).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(missingPackIcons(ed.doc)).toEqual([]);
+    ed.execute(embedPackIcons(ed.doc)!);
+    const overrides = ed.doc.devices.map((d) => d.iconOverride);
+    expect(new Set(overrides).size).toBe(1);
+    expect(overrides[0]).toMatch(/^asset:/);
+    expect(Object.keys(ed.doc.assets)).toHaveLength(1);
+    // The embedded copy renders without the pack.
+    setPackIcons([]);
+    expect(customIconUrl(ed.doc, overrides[0])).toMatch(/^data:image\/svg\+xml;base64,/);
   });
 });

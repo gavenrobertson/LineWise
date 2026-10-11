@@ -7,7 +7,7 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import * as RTooltip from '@radix-ui/react-tooltip';
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Canvas } from './canvas/Canvas.tsx';
 import { cx } from './components/ui.tsx';
@@ -48,6 +48,8 @@ import { TabBar } from './panels/TabBar.tsx';
 import { Toolbar } from './panels/Toolbar.tsx';
 import { dirtyTabIds, selectDirty, useEditor } from './store/editor.ts';
 import { applyTheme, usePrefs } from './store/prefs.ts';
+import { usePacks } from './store/packs.ts';
+import { missingPackIcons } from './canvas/icons.ts';
 import { useUi, type DialogState } from './store/ui.ts';
 import { onValidation, requestValidation } from './workers/client.ts';
 
@@ -137,6 +139,25 @@ function useAppEffects(): void {
   const presentation = useUi((s) => s.presentation);
 
   useEffect(() => applyTheme(theme), [theme]);
+  // Installed icon packs, then a notice for a diagram whose pack icons are not installed (FR-ICO-05).
+  const packsLoaded = usePacks((s) => s.loaded);
+  const docId = useEditor((s) => s.doc.id);
+  useEffect(() => void usePacks.getState().refresh(), []);
+  const noticed = useRef(new Set<string>());
+  useEffect(() => {
+    if (!packsLoaded || noticed.current.has(docId)) return;
+    noticed.current.add(docId);
+    const missing = missingPackIcons(useEditor.getState().doc).length;
+    if (missing)
+      useUi.getState().toast(
+        i18n.t('packs.missing', {
+          defaultValue:
+            'This diagram uses {{n}} icons from icon packs that are not installed; built-in icons are shown instead.',
+          n: missing,
+        }),
+        'info',
+      );
+  }, [packsLoaded, docId]);
   // Interface size follows the OS text size unless the user picked one (NFR-A11Y-04).
   const uiScale = usePrefs((s) => s.uiScale);
   useEffect(() => {

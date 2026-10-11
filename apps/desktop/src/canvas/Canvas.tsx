@@ -48,6 +48,7 @@ import {
 } from '@linewise/core';
 import { getTemplate } from '@linewise/device-library';
 import { selectPage, useDragPreview, useEditor } from '../store/editor.ts';
+import { usePacks } from '../store/packs.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
 import {
@@ -192,6 +193,7 @@ export function Canvas() {
   const setDrag = useEditor((s) => s.setDragPositions);
   const endGesture = useEditor((s) => s.endGesture);
   const readOnly = useEditor((s) => s.readOnly);
+  const packs = usePacks((s) => s.packs);
   const prefs = usePrefs();
   const openDialog = useUi((s) => s.open);
   const setUi = useUi((s) => s.set);
@@ -313,9 +315,10 @@ export function Canvas() {
     }
     prevNodes.current = stabilize(prevNodes.current, out, 5);
     return prevNodes.current;
-    // dimsVersion re-runs this when the measured-size ref changes.
+    // dimsVersion re-runs this when the measured-size ref changes; packs when installed icon
+    // packs load, so pack icons resolve.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, page, pageId, sel, doc, dimsVersion, lockedLayers, readOnly]);
+  }, [model, page, pageId, sel, doc, dimsVersion, lockedLayers, readOnly, packs]);
 
   const nodeTypeOf = useMemo(() => new Map(baseNodes.map((n) => [n.id, n.type])), [baseNodes]);
 

@@ -28,7 +28,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-CAN-13 | MUST | `apps/desktop/src/panels/LayersPanel.tsx` | `apps/desktop/e2e/12-network.spec.ts` | done |
 | FR-NET-30 | MUST | `packages/core/src/selectors.ts`, `apps/desktop/src/canvas/model.ts`, `apps/desktop/src/panels/Toolbar.tsx` | `packages/core/test/selectors.test.ts`, `apps/desktop/e2e/02-views-and-vlan.spec.ts` | done |
 | FR-CAN-14 | MUST | `apps/desktop/src/layout/layouts.ts`, `apps/desktop/src/workers/elk.ts`, `apps/desktop/src/workers/layout.worker.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
-| FR-CAN-15 | MUST | | | todo |
+| FR-CAN-15 | MUST | `apps/desktop/src/dialogs/FindPanel.tsx`, `apps/desktop/src/lib/search.ts` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/21-find.spec.ts` | done |
 | FR-CAN-16 | SHOULD | | | todo |
 | FR-CAN-17 | SHOULD | | | todo |
 | FR-LNK-01 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/dialogs/ConnectDialog.tsx`, `packages/core/src/commands.ts` | `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/test/routing.test.ts`, `packages/core/test/commands.test.ts` | done |
@@ -62,11 +62,11 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-ICO-01 | MUST | `packages/device-library/icons`, `packages/device-library/scripts/build-icons.ts` | `packages/device-library/test/library.test.ts` | done |
 | FR-ICO-02 | MUST | `packages/device-library/icons` | `packages/device-library/test/library.test.ts` | done |
 | FR-ICO-03 | MUST | `packages/device-library/icons`, `apps/desktop/src/panels/Inspector.tsx` | `packages/device-library/test/library.test.ts` | done |
-| FR-ICO-04 | MUST | | | todo |
-| FR-ICO-05 | MUST | | | todo |
-| FR-ICO-06 | MUST | | | todo |
-| FR-ICO-07 | MUST | | | todo |
-| FR-ICO-08 | MUST | | | todo |
+| FR-ICO-04 | MUST | `apps/desktop/src/canvas/nodes.tsx` (problem, note, lock and color-tag marks) | `apps/desktop/e2e/20-icons.spec.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
+| FR-ICO-05 | MUST | `apps/desktop/src/lib/iconPacks.ts`, `apps/desktop/src/store/packs.ts`, `apps/desktop/src/canvas/icons.ts` (pack references, fallback), `apps/desktop/src/components/IconPicker.tsx`, `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `apps/desktop/src/App.tsx` (missing-pack notice) | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/20-icons.spec.ts` | done |
+| FR-ICO-06 | MUST | `apps/desktop/src/lib/embedIcons.ts`, `apps/desktop/src/lib/actions.ts` (`save`), `apps/desktop/src/store/prefs.ts` (`embedIcons`) | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/20-icons.spec.ts` | done |
+| FR-ICO-07 | MUST | `apps/desktop/src/lib/sanitize.ts`, `apps/desktop/src/lib/iconPacks.ts` | `apps/desktop/test/pure.test.ts` | done |
+| FR-ICO-08 | MUST | `packages/device-library/icons`, `packages/brand` | `scripts/repo-rules.test.mjs` | done |
 | FR-TPL-01 | MUST | `packages/core/src/templates.ts` | `packages/core/test/misc.test.ts`, `packages/device-library/test/library.test.ts` | done |
 | FR-TPL-02 | MUST | `packages/device-library/templates/generic` | `packages/device-library/test/library.test.ts` | done |
 | FR-TPL-03 | MUST | `packages/device-library/templates` — blocked: vendor datasheet hosts are denied by this environment's network policy (docs/HUMAN-TODO.md) | `packages/device-library/test/library.test.ts` | todo |

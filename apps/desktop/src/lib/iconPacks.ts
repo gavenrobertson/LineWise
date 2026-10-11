@@ -6,8 +6,10 @@
  *   { "name": "My icons", "icons": [{ "file": "edge.svg", "role": "router", "name": "Edge router" }] }
  *
  * SVGs are sanitized on import. Packs live in the app's own storage
- * (IndexedDB in the web view's app-data folder). Using an icon embeds it in
- * the diagram's assets, so diagrams render anywhere without the pack (FR-ICO-06).
+ * (IndexedDB in the web view's app-data folder). A diagram refers to a pack icon as
+ * "pack:<packId>/<iconId>", or embeds it in its assets so it renders anywhere without the pack
+ * (FR-ICO-06, the "embed icons" preference). Pack and icon IDs are stable: the manifest's `id`
+ * (else the pack name) and the file name, so the same pack installed elsewhere resolves the same.
  */
 import { DEVICE_ROLES, type DeviceRole } from '@linewise/core';
 import { sanitizeSvg } from './sanitize.ts';
@@ -31,6 +33,7 @@ export const MAX_ICON_BYTES = 512 * 1024;
 export const MAX_PACK_ICONS = 500;
 
 interface Manifest {
+  id?: string;
   name?: string;
   icons?: { file: string; role?: string; name?: string }[];
 }
@@ -39,6 +42,25 @@ function toBase64(bytes: Uint8Array): string {
   let bin = '';
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(bin);
+}
+
+/** A stable ID from a name: lowercase letters, digits and dashes. */
+export function slug(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 64) || 'icons'
+  );
+}
+
+export const PACK_REF = 'pack:';
+
+/** The icon override that refers to an icon in an installed pack. */
+export function packRef(packId: string, iconId: string): string {
+  return `${PACK_REF}${packId}/${iconId}`;
 }
 
 function baseName(path: string): string {
@@ -70,6 +92,7 @@ export function buildPack(
   }
   const meta = new Map((manifest.icons ?? []).map((m) => [baseName(m.file).toLowerCase(), m]));
   const icons: PackIcon[] = [];
+  const taken = new Set<string>();
   for (const f of files) {
     const file = baseName(f.name);
     const lower = file.toLowerCase();
@@ -106,17 +129,21 @@ export function buildPack(
       }
       base64 = toBase64(f.bytes);
     }
+    let iconId = slug(lower.replace(/\.[a-z]+$/, ''));
+    for (let n = 2; taken.has(iconId); n++) iconId = `${slug(lower.replace(/\.[a-z]+$/, ''))}-${n}`;
+    taken.add(iconId);
     icons.push({
-      id: `${icons.length}-${lower}`,
+      id: iconId,
       name: m?.name ?? file.replace(/\.[a-z]+$/i, ''),
       ...(role ? { role } : {}),
       mime: isSvg ? 'image/svg+xml' : 'image/png',
       base64,
     });
   }
+  const name = manifest.name?.trim() || fallbackName;
   return {
-    id: `pack-${Date.now().toString(36)}`,
-    name: manifest.name?.trim() || fallbackName,
+    id: slug(manifest.id?.trim() || name),
+    name,
     importedAt: new Date().toISOString(),
     icons,
   };
