@@ -186,7 +186,7 @@ test('NFR-SEC-08: private reporting, dependency audits, CodeQL and a CycloneDX S
   const release = read('.github/workflows/release.yml');
   assert.match(ci, /pnpm audit --prod/);
   assert.match(nightly, /pnpm audit/);
-  assert.match(nightly, /rustsec\/audit-check/);
+  assert.match(nightly, /cargo audit --file apps\/desktop\/src-tauri\/Cargo\.lock/);
   assert.match(nightly, /github\/codeql-action\/analyze/);
   for (const lang of ['javascript-typescript', 'rust']) assert.ok(nightly.includes(lang), lang);
   assert.match(release, /format: cyclonedx-json/);

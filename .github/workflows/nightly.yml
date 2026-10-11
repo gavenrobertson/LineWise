@@ -73,10 +73,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level moderate
-      - uses: rustsec/audit-check@v2
+      # Fails on vulnerabilities; unmaintained or unsound notices are reported as warnings.
+      - uses: taiki-e/install-action@v2
         with:
-          token: ${{ github.token }}
-          working-directory: apps/desktop/src-tauri
+          tool: cargo-audit
+      - name: cargo audit
+        run: cargo audit --file apps/desktop/src-tauri/Cargo.lock
 
   codeql:
     name: CodeQL (${{ matrix.language }})
