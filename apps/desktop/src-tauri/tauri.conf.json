@@ -105,7 +105,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBFOTVBRTFDNzA5RjNENTIKUldSU1BaOXdISzZWRHA1ZTlFNjlqT1pFVjJSZnlTekNDWmxnSCtTM1hQcVhrUnI3VU11dEs3a3MK",
       "endpoints": ["https://github.com/gavenrobertson/linewise/releases/latest/download/latest.json"],
       "windows": {
         "installMode": "passive"

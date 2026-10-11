@@ -6,7 +6,7 @@ import { withMermaid } from 'vitepress-plugin-mermaid';
 import { docsDirOf, EXCLUDED, REPO, repoLinks } from './repoLinks.ts';
 
 const docsDir = docsDirOf(fileURLToPath(new URL('.', import.meta.url)));
-const base = '/linewise/';
+const base = '/LineWise/';
 
 export const guide = [
   { text: 'Overview', link: '/user/' },
