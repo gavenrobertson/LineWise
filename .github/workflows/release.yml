@@ -52,13 +52,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          flags=(--draft --title "LineWise ${TAG}" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag)
-          if [ "${{ steps.meta.outputs.prerelease }}" = "true" ]; then flags+=(--prerelease); fi
           id=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq "map(select(.tag_name == \"${TAG}\"))[0].id // empty")
           if [ -z "$id" ]; then
-            gh release create "$TAG" "${flags[@]}"
-            id=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq "map(select(.tag_name == \"${TAG}\"))[0].id")
+            # Use the create response: a fresh draft may not appear in the release list yet.
+            id=$(gh api --method POST "repos/${GITHUB_REPOSITORY}/releases" \
+              -f tag_name="$TAG" -f name="LineWise ${TAG}" \
+              -F "body=@$RUNNER_TEMP/notes.md" -F draft=true \
+              -F prerelease="${{ steps.meta.outputs.prerelease }}" --jq '.id')
           fi
+          [[ "$id" =~ ^[0-9]+$ ]] || { echo "No valid draft release ID returned" >&2; exit 1; }
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
   build:
@@ -155,6 +157,7 @@ jobs:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config src-tauri/tauri.release.conf.json
           releaseId: ${{ needs.prepare.outputs.release_id }}
           tagName: ${{ env.TAG }}
+          releaseDraft: true
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
           retryAttempts: 1

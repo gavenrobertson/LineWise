@@ -65,7 +65,7 @@ pnpm dev                  # or: run the UI in a browser at http://127.0.0.1:1420
 
 ## Documentation
 
-The documentation site is at **[gavenrobertson.github.io/linewise](https://gavenrobertson.github.io/linewise/)**, built from [`docs/`](docs/) (`pnpm docs:dev` previews it locally).
+The documentation site is at **[gavenrobertson.github.io/LineWise](https://gavenrobertson.github.io/LineWise/)**, built from [`docs/`](docs/) (`pnpm docs:dev` previews it locally).
 
 - [User guide](docs/user/index.md) — drawing, devices and interfaces, VLANs and IPAM, views, validation, importing, exporting, shortcuts
 - [Developer guide](docs/dev/index.md) — architecture, the command pattern, adding features, releases

@@ -46,7 +46,7 @@ import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
 
 /** The documentation site (DOC-01), published from docs/ by docs.yml. */
-export const DOCS_URL = 'https://gavenrobertson.github.io/linewise/';
+export const DOCS_URL = 'https://gavenrobertson.github.io/LineWise/';
 
 const t = (k: string, d: string, o?: Record<string, unknown>) => i18n.t(k, { defaultValue: d, ...o });
 

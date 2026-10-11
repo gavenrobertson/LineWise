@@ -3,7 +3,7 @@
 The build continues with placeholders for each item; nothing here blocks local development. Exact steps are in [docs/dev/release.md](dev/release.md).
 
 - [x] Create the GitHub repository `gavenrobertson/linewise` and push this code.
-- [ ] **Push the milestone tags.** This environment can push only its working branch (tag pushes are refused with HTTP 403), so each milestone tag is listed here with the commit whose CI run verified it. Create and push them from a clone; each push runs `release.yml`, which makes a draft release with unsigned installers:
+- [x] **Push the milestone tags through `v0.9.0-beta`.** The six annotated tags were pushed from a local clone on 2026-10-11 at the verified commits below. Each tag triggered `release.yml`; Apple and Windows code signing remain pending. `v1.0.0` remains gated on the acceptance steps below.
 
   | Tag                                           | Commit                                     | Verified by CI run                                                                 |
   | --------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
@@ -23,20 +23,26 @@ The build continues with placeholders for each item; nothing here blocks local d
   git tag -a v0.3.0 1f4f0691e99cb61b3c774612cda61b9d8476d882 -m "LineWise 0.3.0"
   git tag -a v0.4.0 314473229765d809f82c1f365425ddd789fdadc5 -m "LineWise 0.4.0"
   git tag -a v0.9.0-beta 45afa99d69a5b40612923cf74ff1404093944131 -m "LineWise 0.9.0-beta — M5 Export, polish, accessibility, performance"
-  git push origin v0.0.1 v0.1.0 v0.2.0 v0.3.0 v0.4.0 v0.9.0-beta
+  # Push individually: GitHub does not create workflow events for more than three tags at once.
+  git push origin v0.0.1
+  git push origin v0.1.0
+  git push origin v0.2.0
+  git push origin v0.3.0
+  git push origin v0.4.0
+  git push origin v0.9.0-beta
   ```
 
   The CI run on the `1.0.0` release commit verified `v0.9.0-beta` too: the two differ only in version numbers, `CHANGELOG.md` and docs. Push `v1.0.0` only after the v1.0 acceptance steps below.
 
-- [ ] Decide when to merge `claude/wizardly-bohr-l366zp` into `main` (and make `main` the default branch). The milestone tags point at commits on this branch.
-- [ ] **Updater key pair:** `pnpm --filter @linewise/desktop tauri signer generate -w ~/.tauri/linewise.key`; put the public key in `apps/desktop/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`, replacing `REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY`); add secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Until then releases have no updater artifacts and installed apps cannot auto-update (REL-10..12).
+- [x] Merge `claude/wizardly-bohr-l366zp` into `main` and make `main` the default branch. The milestone commits are in `main`'s history.
+- [x] **Updater key pair (REL-10..12):** generated and validated on the owner's machine on 2026-10-11. The public key is in `apps/desktop/src-tauri/tauri.conf.json` and the repository variable `TAURI_UPDATER_PUBKEY` (needed by the historical milestone builds). Repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` are configured. Keep an offline backup of the private key and password; these are never committed. This configures update signatures; installer code signing and the manual update acceptance check are still separate items below.
 - [ ] **Apple:** Developer Program membership → "Developer ID Application" certificate → App Store Connect API key. Secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` (contents of the .p8). Until then the macOS build is ad-hoc signed and Gatekeeper blocks it (REL-02).
 - [ ] **Windows signing:** apply to SignPath Foundation (free for OSS) or set up Azure Trusted Signing (secrets `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`; variables `TRUSTED_SIGNING_ENDPOINT`, `TRUSTED_SIGNING_ACCOUNT`, `TRUSTED_SIGNING_PROFILE`), or buy an OV/EV certificate. Until then SmartScreen warns (REL-01).
-- [ ] **Branch protection for `main` (REL-21):** after `main` is the default branch, import `.github/rulesets/protect-main.json` under Settings → Rules → Rulesets → New ruleset → Import. It requires every CI job and `DCO sign-off` (`dco.yml` checks contributor sign-offs, OSS-05; the [DCO GitHub app](https://github.com/apps/dco) is an alternative), one review (admins may merge their own pull requests), linear history, and blocks force-pushes and deletion.
-- [ ] Enable GitHub private vulnerability reporting (Settings → Code security) so the link in SECURITY.md works (NFR-SEC-08).
-- [ ] Enable GitHub Pages with source "GitHub Actions" for the docs site; optionally register a domain (for example `linewise.dev`) and set it as the Pages custom domain (DOC-01).
-- [ ] Choose a contact email for Code of Conduct reports and add it to `CODE_OF_CONDUCT.md`.
-- [ ] Install the Renovate GitHub app on the repository.
+- [x] **Branch protection for `main` (REL-21):** the active `Protect main` ruleset matches `.github/rulesets/protect-main.json`. It requires every CI job and `DCO sign-off`, one review (admins may merge their own pull requests), linear history, and blocks force-pushes and deletion.
+- [x] Enable GitHub private vulnerability reporting so the link in SECURITY.md works (NFR-SEC-08).
+- [x] Enable GitHub Pages with source "GitHub Actions" for the docs site at `https://gavenrobertson.github.io/LineWise/` (DOC-01). The `github-pages` deployment environment permits `main`.
+- [x] Add `gaven.robertson@gmail.com` to `CODE_OF_CONDUCT.md` for conduct reports.
+- [x] Install the Renovate GitHub app with access to this repository only.
 - [ ] **Vendor datasheets (FR-TPL-03):** this cloud environment's network policy blocks the vendor sites, so no vendor-model templates could be checked against datasheets. Either allow these hosts in the environment's Network access settings (`www.cisco.com`, `documentation.meraki.com`, `www.juniper.net`, `www.arista.com`, `www.fortinet.com`, `www.paloaltonetworks.com`, `docs.paloaltonetworks.com`, `techspecs.ui.com`) so the agent can verify and add them, or add templates yourself following CONTRIBUTING.md. Until then only the generic templates ship.
 - [ ] **v1.0 acceptance (M6), in this order** (`docs/reports/M6.md`):
   1. Set up the updater key pair and, if you can, Apple and Windows signing (items above).
