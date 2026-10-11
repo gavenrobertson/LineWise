@@ -5,13 +5,15 @@ The build continues with placeholders for each item; nothing here blocks local d
 - [x] Create the GitHub repository `gavenrobertson/linewise` and push this code.
 - [ ] **Push the milestone tags.** This environment can push only its working branch (tag pushes are refused with HTTP 403), so each milestone tag is listed here with the commit whose CI run verified it. Create and push them from a clone; each push runs `release.yml`, which makes a draft release with unsigned installers:
 
-  | Tag      | Commit                                     | Verified by CI run                                                                 |
-  | -------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-  | `v0.0.1` | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38080684053](https://github.com/gavenrobertson/LineWise/actions/runs/38080684053) |
-  | `v0.1.0` | `fca725230cc9ef11b49a0a9a94293e36c861f0f6` | [38081402516](https://github.com/gavenrobertson/LineWise/actions/runs/38081402516) |
-  | `v0.2.0` | `088ced79dbe48e2853b4466dc6cecec934f95422` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
-  | `v0.3.0` | `1f4f0691e99cb61b3c774612cda61b9d8476d882` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
-  | `v0.4.0` | `314473229765d809f82c1f365425ddd789fdadc5` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
+  | Tag                                           | Commit                                     | Verified by CI run                                                                 |
+  | --------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
+  | `v0.0.1`                                      | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38080684053](https://github.com/gavenrobertson/LineWise/actions/runs/38080684053) |
+  | `v0.1.0`                                      | `fca725230cc9ef11b49a0a9a94293e36c861f0f6` | [38081402516](https://github.com/gavenrobertson/LineWise/actions/runs/38081402516) |
+  | `v0.2.0`                                      | `088ced79dbe48e2853b4466dc6cecec934f95422` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
+  | `v0.3.0`                                      | `1f4f0691e99cb61b3c774612cda61b9d8476d882` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
+  | `v0.4.0`                                      | `314473229765d809f82c1f365425ddd789fdadc5` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
+  | `v0.9.0-beta`                                 | `45afa99d69a5b40612923cf74ff1404093944131` | [38145974927](https://github.com/gavenrobertson/LineWise/actions/runs/38145974927) |
+  | `v1.0.0` (after the release checklist, below) | `fd5ea8a20e4e3af43fd4511dc808303e4dfe5613` | [38145974927](https://github.com/gavenrobertson/LineWise/actions/runs/38145974927) |
 
   ```bash
   git fetch origin claude/wizardly-bohr-l366zp
@@ -20,8 +22,11 @@ The build continues with placeholders for each item; nothing here blocks local d
   git tag -a v0.2.0 088ced79dbe48e2853b4466dc6cecec934f95422 -m "LineWise 0.2.0"
   git tag -a v0.3.0 1f4f0691e99cb61b3c774612cda61b9d8476d882 -m "LineWise 0.3.0"
   git tag -a v0.4.0 314473229765d809f82c1f365425ddd789fdadc5 -m "LineWise 0.4.0"
-  git push origin v0.0.1 v0.1.0 v0.2.0 v0.3.0 v0.4.0
+  git tag -a v0.9.0-beta 45afa99d69a5b40612923cf74ff1404093944131 -m "LineWise 0.9.0-beta — M5 Export, polish, accessibility, performance"
+  git push origin v0.0.1 v0.1.0 v0.2.0 v0.3.0 v0.4.0 v0.9.0-beta
   ```
+
+  The CI run on the `1.0.0` release commit verified `v0.9.0-beta` too: the two differ only in version numbers, `CHANGELOG.md` and docs. Push `v1.0.0` only after the v1.0 acceptance steps below.
 
 - [ ] Decide when to merge `claude/wizardly-bohr-l366zp` into `main` (and make `main` the default branch). The milestone tags point at commits on this branch.
 - [ ] **Updater key pair:** `pnpm --filter @linewise/desktop tauri signer generate -w ~/.tauri/linewise.key`; put the public key in `apps/desktop/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`, replacing `REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY`); add secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Until then releases have no updater artifacts and installed apps cannot auto-update (REL-10..12).
