@@ -158,7 +158,7 @@ describe('icons', () => {
 });
 
 describe('SVG export', () => {
-  it('is self-contained, escapes text and includes every device', () => {
+  it('FR-EXP-02 is self-contained, escapes text and includes every device', () => {
     const { ed, a } = twoRouters();
     ed.execute(updateDevices([a], { hostname: 'R1<script>alert(1)</script>' }));
     const { svg, width, height } = renderPageSvg(ed.doc, {
@@ -190,7 +190,35 @@ describe('SVG export', () => {
     }
   });
 
-  it('exports only the selection when asked', () => {
+  it('FR-EXP-01 draws the background and grid only when asked', () => {
+    const { ed } = twoRouters();
+    const pageId = ed.doc.pages[0]!.id;
+    const plain = renderPageSvg(ed.doc, { pageId }).svg;
+    expect(plain).not.toContain('lw-grid');
+    expect(renderPageSvg(ed.doc, { pageId, grid: true }).svg).toContain('fill="url(#lw-grid)"');
+    // The background is one rect over the whole image.
+    const hasBackground = (out: { svg: string; width: number; height: number }) =>
+      [...new DOMParser().parseFromString(out.svg, 'image/svg+xml').querySelectorAll('svg > rect')].some(
+        (r) =>
+          r.getAttribute('width') === String(out.width) &&
+          r.getAttribute('height') === String(out.height) &&
+          r.getAttribute('fill')?.startsWith('#'),
+      );
+    expect(hasBackground(renderPageSvg(ed.doc, { pageId }))).toBe(true);
+    expect(hasBackground(renderPageSvg(ed.doc, { pageId, transparent: true }))).toBe(false);
+  });
+
+  it('FR-EXP-03 title block shows name, author, date, revision and page', () => {
+    const { ed } = twoRouters();
+    const { svg } = renderPageSvg(ed.doc, {
+      pageId: ed.doc.pages[0]!.id,
+      titleBlock: { name: 'HQ network', author: 'NetOps', date: '2026-10-10', revision: 'B', page: 'Core' },
+    });
+    for (const text of ['HQ network', 'NetOps', '2026-10-10', 'B', 'Core'])
+      expect(svg).toContain(`>${text}<`);
+  });
+
+  it('FR-EXP-01 exports only the selection when asked', () => {
     const { ed, a } = twoRouters();
     const { svg } = renderPageSvg(ed.doc, { pageId: ed.doc.pages[0]!.id, selection: [a] });
     expect(svg).toContain('data-device="R1"');
@@ -199,7 +227,7 @@ describe('SVG export', () => {
 });
 
 describe('PDF planning and raster limits', () => {
-  it('fits each page or tiles large diagrams', () => {
+  it('FR-EXP-03 fits each page or tiles large diagrams', () => {
     const fit = planPdf([{ pageId: 'p', width: 2000, height: 1000 }], {
       paper: 'a4',
       orientation: 'auto',
@@ -217,7 +245,7 @@ describe('PDF planning and raster limits', () => {
     expect(tile.length).toBeGreaterThan(4);
   });
 
-  it('keeps canvas sizes within browser limits', () => {
+  it('FR-EXP-01 keeps canvas sizes within browser limits', () => {
     expect(clampScale(1000, 1000, 4)).toBe(4);
     expect(clampScale(10000, 10000, 4)).toBeLessThan(2);
   });

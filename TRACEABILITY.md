@@ -97,16 +97,16 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-IMP-24 | MUST | `apps/desktop/src/dialogs/ImportDialog.tsx`, `apps/desktop/src/workers/client.ts` | `apps/desktop/e2e/03-import-cdp.spec.ts` | done |
 | FR-IMP-25 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/config.ts` | `packages/parsers/test/parsers.test.ts`, `apps/desktop/e2e/04-import-config.spec.ts` | done |
 | FR-IMP-26 | MUST | `packages/parsers/fixtures` — every parser has at least five fixtures including a malformed one, with golden snapshots | `packages/parsers/test/parsers.test.ts` | done |
-| FR-EXP-01 | MUST | | | todo |
-| FR-EXP-02 | MUST | | | todo |
-| FR-EXP-03 | MUST | | | todo |
-| FR-EXP-04 | MUST | | | todo |
-| FR-EXP-05 | MUST | | | todo |
-| FR-EXP-06 | MUST | | | todo |
-| FR-EXP-07 | SHOULD | | | todo |
-| FR-EXP-08 | SHOULD | | | todo |
-| FR-EXP-09 | MAY | | | todo |
-| FR-EXP-10 | MUST | | | todo |
+| FR-EXP-01 | MUST | `apps/desktop/src/export/raster.ts`, `apps/desktop/src/export/svg.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/16-export-options.spec.ts` | done |
+| FR-EXP-02 | MUST | `apps/desktop/src/export/svg.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/06-exports.spec.ts` | done |
+| FR-EXP-03 | MUST | `apps/desktop/src/export/pdf.ts`, `apps/desktop/src/export/paper.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/16-export-options.spec.ts` | done |
+| FR-EXP-04 | MUST | `packages/core/src/exporters.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `packages/core/test/exporters.test.ts`, `packages/parsers/test/roundtrip.test.ts`, `apps/desktop/e2e/06-exports.spec.ts` | done |
+| FR-EXP-05 | MUST | `packages/core/src/exporters.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `packages/core/test/exporters.test.ts`, `apps/desktop/e2e/16-export-options.spec.ts` | done |
+| FR-EXP-06 | MUST | `packages/core/src/exporters.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `packages/core/test/exporters.test.ts`, `packages/parsers/test/roundtrip.test.ts`, `apps/desktop/e2e/06-exports.spec.ts` | done |
+| FR-EXP-07 | SHOULD | `packages/core/src/exporters.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `packages/parsers/test/roundtrip.test.ts`, `apps/desktop/e2e/16-export-options.spec.ts` | done |
+| FR-EXP-08 | SHOULD | `packages/core/src/exporters.ts`, `apps/desktop/src/dialogs/ExportDialog.tsx` | `apps/desktop/e2e/16-export-options.spec.ts` | done |
+| FR-EXP-09 | MAY | Post-1.0 (spec) | | deferred |
+| FR-EXP-10 | MUST | `apps/desktop/src/export/print.ts`, `apps/desktop/src/platform/tauri.ts`, `apps/desktop/src-tauri/src/lib.rs` (macOS `print_page`) | `apps/desktop/e2e/16-export-options.spec.ts` | done |
 | VAL-001 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
 | VAL-002 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |
 | VAL-003 | MUST | `packages/core/src/validation.ts` | `packages/core/test/validation.test.ts` | done |

@@ -86,6 +86,20 @@ export async function startFrom(page: Page, starter: RegExp): Promise<void> {
 }
 
 /** Exported files captured by the BrowserPlatform test hooks. */
+/** Exports through the Export dialog; `configure` sets options before pressing Export. */
+export async function exportAs(
+  page: Page,
+  format: string,
+  configure?: (d: ReturnType<Page['getByRole']>) => Promise<void>,
+) {
+  await page.locator('body').press(`${MOD}+e`);
+  const dialog = page.getByRole('dialog', { name: 'Export' });
+  await dialog.getByRole('radio', { name: format }).click();
+  if (configure) await configure(dialog);
+  await dialog.getByRole('button', { name: 'Export…' }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
 export async function exportsList(
   page: Page,
 ): Promise<{ name: string; text: string | null; bytes: number[] | null }[]> {

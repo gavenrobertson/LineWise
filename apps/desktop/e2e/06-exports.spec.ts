@@ -1,22 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-// Journey 6: export PNG, SVG, PDF, CSV and draw.io; check each file is valid.
-import { expect, test, type Page } from '@playwright/test';
-import { exportsList, MOD, openApp, startFrom } from './helpers.ts';
+// Journey 6: export PNG, SVG, PDF, CSV and draw.io; check each file is valid. The options of each
+// format are covered in 16-export-options.spec.ts.
+import { expect, test } from '@playwright/test';
+import { exportAs, exportsList, openApp, startFrom } from './helpers.ts';
 
-async function exportAs(
-  page: Page,
-  format: string,
-  configure?: (d: ReturnType<Page['getByRole']>) => Promise<void>,
-) {
-  await page.locator('body').press(`${MOD}+e`);
-  const dialog = page.getByRole('dialog', { name: 'Export' });
-  await dialog.getByRole('radio', { name: format }).click();
-  if (configure) await configure(dialog);
-  await dialog.getByRole('button', { name: 'Export…' }).click();
-  await expect(dialog).toHaveCount(0);
-}
-
-test('exports are valid files', async ({ page }) => {
+test('FR-EXP-02, FR-EXP-04, FR-EXP-06 exports are valid files', async ({ page }) => {
   await openApp(page);
   await startFrom(page, /Small office/);
   await exportAs(page, 'PNG image');
