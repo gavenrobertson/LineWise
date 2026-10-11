@@ -21,5 +21,7 @@ test('installers at or over 25 MB fail; other release assets are ignored', () =>
 
 test('the release workflow checks the size of the installers it uploads', () => {
   const wf = readFileSync(join(import.meta.dirname, '../.github/workflows/release.yml'), 'utf8');
-  assert.match(wf, /node scripts\/installer-size\.mjs dist-release/);
+  assert.match(wf, /WORKFLOW_SHA: \$\{\{ github\.sha \}\}/);
+  assert.match(wf, /git show "\$WORKFLOW_SHA:scripts\/installer-size\.mjs"/);
+  assert.match(wf, /node "\$RUNNER_TEMP\/installer-size\.mjs" dist-release/);
 });
