@@ -116,7 +116,11 @@ fn read_text_scale_factor() -> Option<u32> {
 /// layout consistent (CSS zoom would not).
 #[tauri::command]
 fn set_ui_scale(window: tauri::WebviewWindow, scale: f64) -> Result<(), String> {
-    let s = if scale.is_finite() { scale.clamp(0.75, 2.5) } else { 1.0 };
+    let s = if scale.is_finite() {
+        scale.clamp(0.75, 2.5)
+    } else {
+        1.0
+    };
     window.set_zoom(s).map_err(|e| e.to_string())
 }
 

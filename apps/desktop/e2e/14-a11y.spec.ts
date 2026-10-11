@@ -71,6 +71,16 @@ for (const theme of ['light', 'dark'] as const) {
         await page.getByRole('tab', { name: tab }).click();
         await axe(page, `sidebar ${tab}`);
       }
+      // Zoomed out, labels are hidden and devices are plain shapes; their names stay valid.
+      const pane = (await page.locator('.react-flow__pane').boundingBox())!;
+      await page.mouse.move(pane.x + pane.width / 2, pane.y + pane.height / 2);
+      await page.keyboard.down('Control');
+      await expect(async () => {
+        await page.mouse.wheel(0, 400);
+        await expect(page.locator('.lw-lod-min')).toHaveCount(1, { timeout: 200 });
+      }).toPass();
+      await page.keyboard.up('Control');
+      await axe(page, 'low zoom');
     });
 
     test('dialogs', async ({ page }) => {

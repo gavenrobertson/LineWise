@@ -29,6 +29,7 @@ Export, polish, accessibility and performance (milestone M5).
 - Links to off-page connectors were never drawn (FR-CAN-12).
 - Devices in starter diagrams now belong to the zones drawn around them.
 - The Arrange toolbar button had no tooltip when shown as an icon (DOC-05).
+- Devices and zones carried a name without a role, which screen readers may ignore when the label text is hidden at low zoom (NFR-A11Y-05).
 
 ### Security
 

@@ -124,6 +124,9 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
         if (e.buttons === 0) setHover(false);
         else window.addEventListener('mouseup', () => setHover(false), { once: true });
       }}
+      // A named group (NFR-A11Y-05): aria-label is not allowed on a div without a role, which axe
+      // reports whenever the hostname text is hidden (labels are hidden at low zoom).
+      role="group"
       aria-label={`${roleLabel(d.role)} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
       title={summary}
     >
@@ -233,6 +236,7 @@ export const ZoneNode = memo(function ZoneNode({ data, selected }: NodeProps<Zon
           width: box.w,
           height: box.h,
         }}
+        role="group"
         aria-label={`Zone ${zone.name}`}
       >
         <div className="px-2 py-1 text-[12px] font-semibold" style={{ color: zone.color }}>
