@@ -172,7 +172,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | REL-11 | MUST | `apps/desktop/src-tauri/src/updates.rs` (stable and beta feeds), `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `.github/workflows/publish-channel.yml` | `apps/desktop/test/updates.test.tsx`, `apps/desktop/src-tauri/src/updates.rs` (Rust tests) | done |
 | REL-12 | MUST | `apps/desktop/src-tauri/src/updates.rs` (tauri-plugin-updater verifies the minisign signature before installing; failures are logged and shown) | `apps/desktop/test/updates.test.tsx`, `scripts/release-pipeline.test.mjs` | done |
 | REL-20 | MUST | `commitlint.config.js`, `.husky/commit-msg`, `release-please-config.json`, `.github/workflows/release-please.yml`, `CHANGELOG.md` | `scripts/repo-docs.test.mjs`, `scripts/release-notes.test.mjs` | done |
-| REL-21 | MUST | `.github/rulesets/protect-main.json` (required CI and DCO checks, one review, linear history) — only the owner can apply it: Settings → Rules → Rulesets → Import (docs/HUMAN-TODO.md) | `scripts/branch-rules.test.mjs` | partial |
+| REL-21 | MUST | `.github/rulesets/protect-main.json` (required CI and DCO checks, one review, linear history) — Protect main is active; verified 2026-10-11 (docs/HUMAN-TODO.md) | `scripts/branch-rules.test.mjs` | done |
 | OSS-01 | MUST | `LICENSE` | `scripts/repo-rules.test.mjs` | done |
 | OSS-02 | MUST | `scripts/check-licenses.mjs`, `scripts/licenses.mjs`, `apps/desktop/src-tauri/deny.toml`, `.github/workflows/ci.yml` | `scripts/licenses.test.mjs` | done |
 | OSS-03 | MUST | `scripts/third-party-notices.mjs`, `apps/desktop/src/dialogs/AboutDialog.tsx` | `apps/desktop/test/components.test.tsx` | done |
