@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: '17 6 * * *'
   workflow_dispatch:
+    inputs:
+      update_baseline:
+        description: Record bench/baseline.json from this run (download it from the bench-results artifact and commit it)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -41,8 +46,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @linewise/desktop exec playwright install --with-deps chromium
-      - name: Benchmarks (fail on > 20% regression against bench/baseline.json)
-        run: pnpm bench
+      - name: Benchmarks, median of 3 runs (NFR targets; fail on > 20% regression against bench/baseline.json)
+        env:
+          BENCH_RUNS: '3'
+          BENCH_MACHINE: github-ubuntu-latest
+        run: pnpm bench ${{ inputs.update_baseline && '-- --update-baseline' || '' }}
+      - name: Keep the new baseline with the results
+        if: always() && inputs.update_baseline
+        run: cp bench/baseline.json bench/results/ || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:

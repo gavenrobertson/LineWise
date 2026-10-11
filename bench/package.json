@@ -9,7 +9,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "generate": "node --experimental-transform-types --no-warnings scripts/generate.ts",
-    "bench": "pnpm generate && playwright test -c playwright.config.ts"
+    "bench": "pnpm generate && node --experimental-transform-types --no-warnings scripts/run.ts"
   },
   "dependencies": {
     "@linewise/core": "workspace:*",

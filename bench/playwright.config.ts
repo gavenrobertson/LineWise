@@ -24,7 +24,10 @@ export default defineConfig({
     ...(chromiumPath ? { launchOptions: { executablePath: chromiumPath } } : {}),
   },
   webServer: {
-    command: 'pnpm --filter @linewise/desktop build && pnpm --filter @linewise/desktop preview',
+    // scripts/run.ts builds once and sets BENCH_BUILT for the later runs.
+    command: process.env.BENCH_BUILT
+      ? 'pnpm --filter @linewise/desktop preview'
+      : 'pnpm --filter @linewise/desktop build && pnpm --filter @linewise/desktop preview',
     cwd: '..',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,

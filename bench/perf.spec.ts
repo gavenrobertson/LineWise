@@ -3,31 +3,18 @@
  * Performance benchmarks against NFR-PERF-01..07, with the generated fixtures in bench/fixtures.
  * Timings are taken inside the page with requestAnimationFrame, so they include rendering.
  *
- * Gates: every NFR target in TARGETS must be met, and when bench/baseline.json was recorded on
- * the same kind of machine, no metric may be more than 20% worse than its baseline.
- * Results go to bench/results/results.json; `BENCH_UPDATE_BASELINE=1` writes a new baseline.
+ * One pass writes bench/results/run-<BENCH_RUN>.json. `pnpm bench` runs the suite BENCH_RUNS times
+ * and gates the medians (src/gate.ts): every NFR target, and the 20% regression budget against
+ * bench/baseline.json when it was recorded on the same kind of machine (NFR-PERF-07).
  */
 import { expect, test, type Page } from '@playwright/test';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { cpus, platform, totalmem } from 'node:os';
 import { join } from 'node:path';
 
 const HERE = import.meta.dirname;
 const FIXTURES = join(HERE, 'fixtures');
 const RESULTS = join(HERE, 'results');
-
-/** NFR targets: [metric, limit, unit, direction]. */
-const TARGETS: Record<string, { limit: number; unit: string; better: 'lower' | 'higher'; req: string }> = {
-  coldStartMs: { limit: 2000, unit: 'ms', better: 'lower', req: 'NFR-PERF-01' },
-  open500Ms: { limit: 2000, unit: 'ms', better: 'lower', req: 'NFR-PERF-02' },
-  open2000Ms: { limit: 5000, unit: 'ms', better: 'lower', req: 'NFR-PERF-02' },
-  pan500Fps: { limit: 60 * 0.9, unit: 'fps', better: 'higher', req: 'NFR-PERF-03' },
-  pan2000Fps: { limit: 30, unit: 'fps', better: 'higher', req: 'NFR-PERF-03' },
-  drag500FrameP95Ms: { limit: 16.7 * 1.25, unit: 'ms', better: 'lower', req: 'NFR-PERF-04' },
-  edit500Ms: { limit: 50, unit: 'ms', better: 'lower', req: 'NFR-PERF-04' },
-  layout500Ms: { limit: 3000, unit: 'ms', better: 'lower', req: 'NFR-PERF-05' },
-  heap500Mb: { limit: 250, unit: 'MB', better: 'lower', req: 'NFR-PERF-06' },
-};
 
 const results: Record<string, number> = {};
 
@@ -304,52 +291,8 @@ test('NFR-PERF-07 5,000 devices open (recorded, no target)', async ({ page }) =>
 
 test.afterAll(() => {
   mkdirSync(RESULTS, { recursive: true });
-  const report = { date: new Date().toISOString(), machine: machine(), results, targets: TARGETS };
-  writeFileSync(join(RESULTS, 'results.json'), `${JSON.stringify(report, null, 2)}\n`);
-  const rows = Object.entries(results).map(([k, v]) => {
-    const t = TARGETS[k];
-    const ok = !t || (t.better === 'lower' ? v <= t.limit : v >= t.limit);
-    return `${ok ? 'PASS' : 'FAIL'}  ${k.padEnd(20)} ${v.toFixed(1).padStart(9)} ${t ? `${t.better === 'lower' ? '≤' : '≥'} ${t.limit} ${t.unit} (${t.req})` : ''}`;
-  });
-  console.log(`\nBenchmarks on ${JSON.stringify(machine())}\n${rows.join('\n')}`);
-  if (process.env.BENCH_UPDATE_BASELINE === '1')
-    writeFileSync(
-      join(HERE, 'baseline.json'),
-      `${JSON.stringify({ machine: machine(), results }, null, 2)}\n`,
-    );
-});
-
-test('gates: NFR targets and the 20% regression budget', () => {
-  const failures: string[] = [];
-  for (const [k, t] of Object.entries(TARGETS)) {
-    const v = results[k];
-    if (v === undefined) continue;
-    if (t.better === 'lower' ? v > t.limit : v < t.limit)
-      failures.push(`${k} = ${v.toFixed(1)} ${t.unit}, target ${t.limit} (${t.req})`);
-  }
-  const baselineFile = join(HERE, 'baseline.json');
-  if (existsSync(baselineFile)) {
-    const base = JSON.parse(readFileSync(baselineFile, 'utf8')) as {
-      machine: ReturnType<typeof machine>;
-      results: Record<string, number>;
-    };
-    const same =
-      base.machine.os === machine().os &&
-      base.machine.cpu === machine().cpu &&
-      base.machine.cores === machine().cores;
-    if (!same)
-      console.log(
-        `Baseline was recorded on ${JSON.stringify(base.machine)}; skipping the regression comparison on this machine.`,
-      );
-    else
-      for (const [k, b] of Object.entries(base.results)) {
-        const v = results[k];
-        if (v === undefined || !b) continue;
-        const higherBetter = TARGETS[k]?.better === 'higher';
-        const worse = higherBetter ? (b - v) / b : (v - b) / b;
-        if (worse > 0.2)
-          failures.push(`${k} regressed ${(worse * 100).toFixed(0)}% (${b.toFixed(1)} → ${v.toFixed(1)})`);
-      }
-  }
-  expect(failures, failures.join('\n')).toEqual([]);
+  const run = process.env.BENCH_RUN ?? '1';
+  const report = { date: new Date().toISOString(), machine: machine(), run, results };
+  writeFileSync(join(RESULTS, `run-${run}.json`), `${JSON.stringify(report, null, 2)}\n`);
+  console.log(`\nRun ${run}: ${JSON.stringify(results)}`);
 });
