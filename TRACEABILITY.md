@@ -183,13 +183,13 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | OSS-12 | MUST | `CODE_OF_CONDUCT.md`, `SECURITY.md`, `PRIVACY.md`, `GOVERNANCE.md`, `.github/CODEOWNERS` | `scripts/repo-docs.test.mjs` | done |
 | OSS-13 | MUST | `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/pull_request_template.md` | `scripts/repo-docs.test.mjs` | done |
 | OSS-14 | MUST | `.github/labels.yml`, `.github/workflows/labels.yml` | `scripts/repo-docs.test.mjs` | done |
-| DOC-01 | MUST | `docs/user/index.md` — starting page; per-topic pages and VitePress site in M6 | `scripts/repo-docs.test.mjs` | partial |
-| DOC-02 | MUST | `docs/dev/index.md`, `docs/dev/architecture.md`, `docs/dev/release.md` — signing setup walkthrough in M6 | `scripts/repo-docs.test.mjs` | partial |
+| DOC-01 | MUST | `docs/user/` (eleven topic pages and an overview), `docs/.vitepress/` (VitePress site), `.github/workflows/docs.yml` (GitHub Pages) | `scripts/docs-site.test.mjs`, `scripts/repo-docs.test.mjs`, `.github/workflows/docs.yml` (build fails on dead links) | done |
+| DOC-02 | MUST | `docs/dev/index.md` (adding a feature end to end), `docs/dev/architecture.md` (diagram, commands), `docs/dev/release.md` (release process, signing setup), `docs/release-checklist.md` | `scripts/docs-site.test.mjs`, `scripts/repo-docs.test.mjs` | done |
 | DOC-03 | MUST | `docs/file-format.md`, `docs/examples/branch-office.lwise`, `schema/v1.json` | `packages/core/test/serialize.test.ts`, `packages/core/test/jsonSchema.test.ts`, `scripts/repo-docs.test.mjs` | done |
 | DOC-04 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/adr/0002-react-flow-over-maxgraph.md`, `docs/adr/0003-command-patch-architecture.md`, `docs/adr/0004-file-format.md`, `docs/adr/0005-license.md` | `scripts/repo-docs.test.mjs` | done |
 | DOC-05 | MUST | `apps/desktop/src/components/ui.tsx` (tooltips), `apps/desktop/src/panels/Toolbar.tsx`, `apps/desktop/src/canvas/Canvas.tsx` (empty state), `apps/desktop/src/lib/actions.ts` (Help) | `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | DOC-06 | MUST | `TRACEABILITY.md`, `scripts/traceability.mjs` | `scripts/traceability.test.mjs`, `scripts/repo-docs.test.mjs` | done |
 | BRD-01 | MUST | `packages/brand/svg/`, `packages/brand/scripts/build-brand.mjs` | `scripts/brand.test.mjs` | done |
-| BRD-04 | MUST | `apps/desktop/src/components/BrandMark.tsx` (welcome, About), `apps/desktop/src-tauri/installer/` (DMG, NSIS, WiX images), `README.md` — docs-site logo and favicon come with the docs site (DOC-01) | `scripts/brand.test.mjs` | partial |
+| BRD-04 | MUST | `apps/desktop/src/components/BrandMark.tsx` (welcome, About), `apps/desktop/src-tauri/installer/` (DMG, NSIS, WiX images), `README.md`, `docs/public/` and `docs/.vitepress/config.mts` (docs-site logo, favicon, home page lockups) | `scripts/brand.test.mjs`, `scripts/docs-site.test.mjs` | done |
 | BRD-05 | MUST | `apps/desktop/src/styles.css` | `scripts/brand.test.mjs`, `apps/desktop/e2e/14-a11y.spec.ts` | done |
 | BRD-06 | SHOULD | `docs/brand.md` | `scripts/repo-docs.test.mjs` | done |
