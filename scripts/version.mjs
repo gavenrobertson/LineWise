@@ -10,7 +10,7 @@
  *   node scripts/version.mjs check [--tag v1.2.3]   fail if anything disagrees (or the tag does)
  *   node scripts/version.mjs set 1.2.3              write the version everywhere
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -18,6 +18,10 @@ const DESKTOP_PKG = join(ROOT, 'apps/desktop/package.json');
 const CARGO_TOML = join(ROOT, 'apps/desktop/src-tauri/Cargo.toml');
 const CARGO_LOCK = join(ROOT, 'apps/desktop/src-tauri/Cargo.lock');
 const TAURI_CONF = join(ROOT, 'apps/desktop/src-tauri/tauri.conf.json');
+/** release-please's record of the last released version (REL-20). */
+const MANIFEST = join(ROOT, '.release-please-manifest.json');
+/** The plain version file release-please's simple strategy bumps. */
+const VERSION_TXT = join(ROOT, 'version.txt');
 const SEMVER = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 export function cargoTomlVersion(text) {
@@ -73,6 +77,8 @@ function main() {
     writeFileSync(CARGO_TOML, setCargoTomlVersion(readFileSync(CARGO_TOML, 'utf8'), arg));
     writeFileSync(CARGO_LOCK, setCargoLockVersion(readFileSync(CARGO_LOCK, 'utf8'), 'linewise', arg));
     writeFileSync(TAURI_CONF, setWixVersion(readFileSync(TAURI_CONF, 'utf8'), arg));
+    writeFileSync(MANIFEST, `{ ".": "${arg}" }\n`);
+    writeFileSync(VERSION_TXT, `${arg}\n`);
     console.log(`Version set to ${arg}.`);
     return;
   }
@@ -90,6 +96,11 @@ function main() {
     const wix = wixVersion(readFileSync(TAURI_CONF, 'utf8'));
     if (wix !== msiVersion(desktop))
       problems.push(`tauri.conf.json bundle.windows.wix.version is ${wix}, expected ${msiVersion(desktop)}`);
+    const released = JSON.parse(readFileSync(MANIFEST, 'utf8'))['.'];
+    if (released !== desktop)
+      problems.push(`.release-please-manifest.json is ${released}, expected ${desktop}`);
+    const txt = existsSync(VERSION_TXT) ? readFileSync(VERSION_TXT, 'utf8').trim() : '(missing)';
+    if (txt !== desktop) problems.push(`version.txt is ${txt}, expected ${desktop}`);
     if (arg === '--tag' && value !== `v${desktop}`)
       problems.push(`tag ${value} does not match version v${desktop}`);
     if (problems.length) {
