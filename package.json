@@ -26,7 +26,9 @@
     "version:check": "node scripts/version.mjs check",
     "bench": "pnpm --filter @linewise/bench bench",
     "fuzz": "pnpm --filter @linewise/parsers --filter @linewise/core exec vitest run -t fuzz",
-    "i18n": "node --experimental-transform-types --no-warnings scripts/i18n.ts"
+    "i18n": "node --experimental-transform-types --no-warnings scripts/i18n.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -39,9 +41,12 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
     "husky": "^9.1.7",
+    "mermaid": "^11.17.2",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^5.0.3"
   }
 }

@@ -231,5 +231,5 @@ test('FR-KEY-01, DOC-05 shortcut sheet under Help, toolbar tooltips, empty-state
   await (await palette(page, 'Documentation')).getByRole('option', { name: /^Documentation/ }).click();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __opened?: string }).__opened))
-    .toMatch(/^https:\/\/github\.com\/gavenrobertson\/linewise/);
+    .toBe('https://gavenrobertson.github.io/linewise/');
 });

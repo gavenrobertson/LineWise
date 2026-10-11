@@ -15,3 +15,7 @@ apps/desktop/public/THIRD_PARTY_NOTICES.md
 bench/fixtures/
 bench/results/
 bench/test-results/
+
+# VitePress output and cache
+docs/.vitepress/dist
+docs/.vitepress/cache

@@ -4,10 +4,10 @@ Read this first, then `CLAUDE.md`, then `docs/SPEC.md` (the source of truth) and
 
 ## Where things stand (2026-10-11)
 
-- **M0–M4 accepted** (tags v0.0.1–v0.4.0 are created locally; this environment cannot push tags, so `docs/HUMAN-TODO.md` lists each tag with its commit and the CI run that verified it).
-- **M5 (export, polish, accessibility, performance) in acceptance.** Exports, the app shell, accessibility, reliability, privacy and security rows are done and traced. The open criterion is NFR-PERF-04: dragging one device with 500 on screen must stay under 16 ms per frame in the CI benchmark; see `docs/reports/M5.md`.
-- **M6 (release engineering and v1.0) not started**: icons/installer images (BRD-01..05), signing, notarization, updater channels, docs site, release checklist.
-- `node scripts/traceability.mjs --summary` gives the live status per requirement; `--require-must` is the v1.0 gate.
+- **M0–M5 accepted** (tags v0.0.1–v0.9.0-beta are created locally; this environment cannot push tags, so `docs/HUMAN-TODO.md` lists each tag with its commit and the CI run that verified it).
+- **M6 (release engineering and v1.0): everything buildable from the repo is done** — icons and installer images from the brand masters, the `.lwise` document icon on Windows and macOS, release gates (installer size, idle memory), update-flow tests, the VitePress docs site, the DCO check and the `main` ruleset. See `docs/reports/M6.md`.
+- **Open, owner only:** updater keys, Apple and Windows signing, pushing the tags, enabling GitHub Pages, importing the branch ruleset (REL-21), vendor datasheets (FR-TPL-03), and the manual release checklist on four machines. `v1.0.0` is tagged after the checklist passes (`docs/HUMAN-TODO.md`).
+- `node scripts/traceability.mjs --summary` gives the live status per requirement; `--require-must` is the v1.0 gate (FR-TPL-03 and REL-21 are the open MUSTs).
 
 ## How the work is checked
 
@@ -23,6 +23,8 @@ Read this first, then `CLAUDE.md`, then `docs/SPEC.md` (the source of truth) and
 | Fuzz (10,000 runs)      | `FUZZ_RUNS=10000 pnpm fuzz`                                      | nightly.yml (also a short run in CI) |
 | Benchmarks              | `pnpm bench` (3 runs, medians, NFR targets, 20% budget)          | nightly.yml                          |
 | Audits, CodeQL          | `pnpm audit`, `cargo audit`, CodeQL                              | ci.yml (pnpm), nightly.yml           |
+| Docs site               | `pnpm docs:build` (VitePress, fails on dead links)               | docs.yml (publishes from main)       |
+| Installers              | document icon registration, sizes under 25 MB                    | ci.yml (Windows, macOS), release.yml |
 
 `bench/profile.spec.ts` is a developer tool: CPU profile and rendering trace of an edit or a drag (`BENCH_PROFILE=drag BENCH_TRACE=1`).
 
@@ -33,6 +35,8 @@ Read this first, then `CLAUDE.md`, then `docs/SPEC.md` (the source of truth) and
 - Timings in this cloud container vary by ±30% between hosts; compare variants on the same host, several runs each, or use the nightly on GitHub's runner.
 - Tag pushes return HTTP 403 here: create tags locally and record them in `docs/HUMAN-TODO.md`.
 - Vendor sites are blocked by the network policy, so FR-TPL-03 (vendor templates checked against datasheets) waits on the owner (HUMAN-TODO).
+- App icons and installer images are generated and checked in: after changing a brand master run `pnpm --filter @linewise/brand build` and then `pnpm --filter @linewise/brand icons` (needs Chromium; `PW_CHROMIUM_PATH`). `scripts/brand.test.mjs` fails until you do.
+- The docs are written to read on GitHub (relative links); on the site, links to repo files outside `docs/` are rewritten to GitHub (`docs/.vitepress/repoLinks.ts`).
 
 ## Commands
 
@@ -45,6 +49,7 @@ pnpm e2e                 # builds, serves on :4173, runs Playwright
 pnpm bench               # benchmarks; BENCH_RUNS=1 BENCH_SKIP_5000=1 for a quick local pass
 pnpm schema              # regenerate schema/v1.json after schema changes
 pnpm i18n                # regenerate en.json from the code
+pnpm docs:dev            # docs site on http://localhost:5173/linewise/
 cd apps/desktop/src-tauri && cargo clippy --all-targets -- -D warnings && cargo test
 ```
 

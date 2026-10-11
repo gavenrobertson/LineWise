@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+# The documentation site (DOC-01, DOC-02): VitePress from docs/, built on every change to the docs
+# and published to GitHub Pages from main. Pages must be enabled with "GitHub Actions" as the
+# source (Settings → Pages; docs/HUMAN-TODO.md).
+name: docs
+
+on:
+  push:
+    paths:
+      ['docs/**', 'packages/brand/svg/**', 'package.json', 'pnpm-lock.yaml', '.github/workflows/docs.yml']
+  pull_request:
+    paths:
+      ['docs/**', 'packages/brand/svg/**', 'package.json', 'pnpm-lock.yaml', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # last-updated dates come from git history
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: VitePress build (fails on dead links)
+        run: pnpm docs:build
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    name: Publish to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
