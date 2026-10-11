@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: Apache-2.0
-/** The LineWise "Routed L" mark (spec section 15), drawn from the brand master. */
+import full from '@linewise/brand/svg/app-icon.svg?raw';
+import small from '@linewise/brand/svg/app-icon-small.svg?raw';
+
+const url = (svg: string) => `data:image/svg+xml;base64,${btoa(svg)}`;
+const FULL = url(full);
+const NO_GRID = url(full.replace(/\s*<rect id="grid-layer"[^>]*\/>/, ''));
+const SMALL = url(small);
+
+/** The brand master for a rendered size (spec section 15, size rules; BRD-04). */
+export const markFor = (size: number) => (size <= 32 ? SMALL : size < 96 ? NO_GRID : FULL);
+
+/** The LineWise "Routed L" mark (spec section 15), drawn from the brand masters. */
 export function BrandMark({ size = 24, title }: { size?: number; title?: string }) {
   return (
-    <svg
-      viewBox="0 0 64 64"
+    <img
+      src={markFor(size)}
       width={size}
       height={size}
-      role={title ? 'img' : undefined}
+      alt={title ?? ''}
       aria-hidden={title ? undefined : true}
-      aria-label={title}
-    >
-      <rect width="64" height="64" rx="14" fill="#0E1726" />
-      <path
-        d="M20 22V44H38"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeWidth="5.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <rect x="12" y="9" width="16" height="15" rx="4" fill="#FFFFFF" />
-      <circle cx="45" cy="44" r="8.5" fill="#0D9488" />
-    </svg>
+      draggable={false}
+    />
   );
 }
 

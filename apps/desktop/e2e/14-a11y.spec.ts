@@ -129,13 +129,21 @@ test('NFR-A11Y-04 reduced motion, increased contrast, forced colors and interfac
 
   // Forced colors: links use the system text color; device icons and badges keep theirs.
   await page.emulateMedia({ forcedColors: 'active', contrast: 'no-preference' });
-  const look = await page.evaluate(() => ({
-    edge: getComputedStyle(document.querySelector('.react-flow__edge-path')!).stroke,
-    text: getComputedStyle(document.body).color,
-    icon: getComputedStyle(document.querySelector('.react-flow__node-device svg')!).forcedColorAdjust,
-  }));
-  expect(look.edge).toBe(look.text);
-  expect(look.icon).toBe('none');
+  const look = () =>
+    page.evaluate(() => {
+      // The system text color; WebKit matches the media query but does not force page colors itself.
+      const probe = document.body.appendChild(document.createElement('span'));
+      probe.style.color = 'CanvasText';
+      const text = getComputedStyle(probe).color;
+      probe.remove();
+      return {
+        edges: [...document.querySelectorAll('.react-flow__edge-path')].every(
+          (e) => getComputedStyle(e).stroke === text,
+        ),
+        icon: getComputedStyle(document.querySelector('.react-flow__node-device svg')!).forcedColorAdjust,
+      };
+    });
+  await expect.poll(look).toEqual({ edges: true, icon: 'none' });
   await page.emulateMedia({ forcedColors: 'none' });
 
   // Interface size follows the system (1 in a browser) or the user's choice.

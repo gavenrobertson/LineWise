@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!--
+  The .lwise document icon for the MSI (BRD-03, FR-APP-09). Tauri's template advertises the
+  "LineWise.lwise" ProgId (product name, then the extension) without an icon; this gives it
+  document.ico, which the installer copies next to the app (tauri.windows.conf.json). The MSI
+  installs per machine, so the key is under HKLM, and uninstalling removes it.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="LwiseDocumentIcon" Guid="*">
+        <RegistryValue Root="HKLM" Key="Software\Classes\LineWise.lwise\DefaultIcon" Type="string" Value="[INSTALLDIR]document.ico" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

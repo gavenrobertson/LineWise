@@ -1,0 +1,35 @@
+{
+  "sources": {
+    "app-icon.svg": "fe56020c26a6e18aafa84a3c27b4f8c8ee60c5f7a0323ad98eef5211a5ff6a68",
+    "app-icon-small.svg": "6c4e90df0f23ea8831da8522efca6127b29feb81f0c4be90575c2d03c5bdc896",
+    "doc-icon-shipped.svg": "a8edec05cc833130dc645ee5631d30df19e4c6e25ce21bf728fde643cd9f679d",
+    "lockup-light.svg": "2ecf0766779ceb716b86076f0e1a75347839e16b7e567abc042a948f6e029643",
+    "lockup-dark.svg": "dfe3b5a4d4a1b54b36492740f717bf1352821d6cf7dcfabc3b84b241446860ba"
+  },
+  "outputs": {
+    "icons/128x128.png": "b71aa5bef0b06522e6640250647beba540f0177d8abb9231824cb15ac5a1b82d",
+    "icons/128x128@2x.png": "ae7a5826092ecaf0fe0f9e2d511f1600a2a85c40518e2dc78795f97d8da13408",
+    "icons/32x32.png": "3936c5e494c714ca9811cff0264fae7491326de250fa1ee415b7f4e6c7234e59",
+    "icons/64x64.png": "9b433163e036cd28ce9ed127fdc75fd871a548a09d16273cdd1120174bb85a60",
+    "icons/Square107x107Logo.png": "66ea61dd10c644f2a6ba82c576657df1632e03221f7aab5f887f319c6ee2ee62",
+    "icons/Square142x142Logo.png": "bbde1806dfaf3608ccdc910b53fc2e954039bc9ad503049daf40f7209cfcac3a",
+    "icons/Square150x150Logo.png": "8b3898e89f557bb6032d2e6459d76a89b5a046eb78e08a9a5dae7ed41e958c1e",
+    "icons/Square284x284Logo.png": "c4084f0c78f0a06ef667cc2a09ca667e2b2fc640618fab6931521a9d56108c1d",
+    "icons/Square30x30Logo.png": "ee29924d498b8982615f5ceb18a79fc49e1e97e0e8c1251e288ed14f81d3ffc4",
+    "icons/Square310x310Logo.png": "148615e17f30a4f2723d2f35fdbeda1a5d9432185c2b2be5bfc70a2620771633",
+    "icons/Square44x44Logo.png": "cdcd680b133f62da87e88d80580221e7635d7b0f7f6e6792de59de63071e9ef2",
+    "icons/Square71x71Logo.png": "01c6b6f8d21a44c6002a46699649b40e9ecf86d49f15e995f221efadcd53c20f",
+    "icons/Square89x89Logo.png": "1eba4ab04ff9bb1a153fa145422b275ec623ac60d16962910391acb40d8849de",
+    "icons/StoreLogo.png": "63d81c891dde67649532c6043ecd58e2e35d6ac9e314b230bf5c3f445f0412ab",
+    "icons/document.icns": "c26cdae01267abe56e2ab9b8ba75dbf2313fe7c06ef693d63382b9fc5b162fc1",
+    "icons/document.ico": "d6411318849d3a48540ebe7b413fa3f672ffdbb5f67fd01f02edb73fa8925be0",
+    "icons/icon.icns": "2a085f109657292ee7bf7437137b1cf72f4f60ae91cbb33ea28477d6056ecab5",
+    "icons/icon.ico": "28c59e45db3b61ffdad056bd2d943ad251cc4ad1c08bf1d8dc9900f284c89512",
+    "icons/icon.png": "d7ba492441a5f2876d7c69fc6d34450651f515dd089c098e2cef27552dbdf6ed",
+    "installer/dmg-background.png": "6495d4f0d24513d57083fa32211e05e1ce939dfd1b0bcfb912d11e5706823d59",
+    "installer/nsis-header.bmp": "f5d5bc71369e9d9c67e1e110c5d158969ccf879358f60843b69d7420b57efcfa",
+    "installer/nsis-sidebar.bmp": "479b4baca029f8a0763ca58b5a2d9005f6516d5550c51a226bd12a6c66119484",
+    "installer/wix-banner.bmp": "6e169a2f703956e042f10e286b930a2addff084c13a6e30947eade9ca063859f",
+    "installer/wix-dialog.bmp": "12f50bf81ee4a8ba17a771f080dbf4be890ba20637e5705e194c0480516ba290"
+  }
+}

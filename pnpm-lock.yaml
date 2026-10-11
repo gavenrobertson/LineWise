@@ -214,6 +214,9 @@ importers:
       opentype.js:
         specifier: ^2.0.0
         version: 2.0.0
+      playwright-core:
+        specifier: ^1.64.0
+        version: 1.64.0
 
   packages/core:
     dependencies:

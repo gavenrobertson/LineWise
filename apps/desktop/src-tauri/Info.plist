@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!--
+  Merged into the app's Info.plist by the Tauri bundler. It declares the .lwise type with its
+  document icon (BRD-03, FR-APP-09), which Tauri's fileAssociations cannot set; the keys replace
+  the ones Tauri generates from tauri.conf.json, so they repeat its name, role and MIME type.
+  document.icns is copied into Contents/Resources (bundle.macOS.files).
+-->
+<plist version="1.0">
+<dict>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>LineWise diagram</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>lwise</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>document.icns</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>dev.gavenrobertson.linewise.diagram</string>
+      </array>
+    </dict>
+  </array>
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>dev.gavenrobertson.linewise.diagram</string>
+      <key>UTTypeDescription</key>
+      <string>LineWise network diagram</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.json</string>
+      </array>
+      <key>UTTypeIconFile</key>
+      <string>document.icns</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>lwise</string>
+        </array>
+        <key>public.mime-type</key>
+        <string>application/vnd.linewise+json</string>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

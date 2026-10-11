@@ -181,6 +181,35 @@ jobs:
             cargo install tauri-driver --locked
             xvfb-run -a node --test apps/desktop/smoke/smoke.test.mjs
           fi
+      # BRD-03, FR-APP-09: the installers register the .lwise document icon.
+      - name: Document icon registered (Windows NSIS and MSI)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $bundle = "apps/desktop/src-tauri/target/debug/bundle"
+          $nsis = (Get-ChildItem "$bundle/nsis/*.exe" | Select-Object -First 1).FullName
+          Start-Process $nsis -ArgumentList '/S' -Wait
+          $cls = (Get-ItemProperty 'HKCU:\Software\Classes\.lwise').'(default)'
+          $icon = (Get-ItemProperty 'HKCU:\Software\Classes\LineWise diagram\DefaultIcon').'(default)'
+          "NSIS: .lwise -> $cls, icon $icon"
+          if ($cls -ne 'LineWise diagram') { throw ".lwise is registered as '$cls'" }
+          if (-not ($icon -like '*document.ico') -or -not (Test-Path $icon)) { throw "document icon missing: $icon" }
+          $msi = (Get-ChildItem "$bundle/msi/*.msi" | Select-Object -First 1).FullName
+          $p = Start-Process msiexec -ArgumentList '/i', "`"$msi`"", '/qn', '/l*v', "`"$env:RUNNER_TEMP\msi.log`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\msi.log" -Tail 40; throw "msiexec exited with $($p.ExitCode)" }
+          $icon = (Get-ItemProperty 'HKLM:\Software\Classes\LineWise.lwise\DefaultIcon').'(default)'
+          "MSI: icon $icon"
+          if (-not ($icon -like '*document.ico') -or -not (Test-Path $icon)) { throw "document icon missing: $icon" }
+      - name: Document icon registered (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          app=apps/desktop/src-tauri/target/debug/bundle/macos/LineWise.app
+          plist="$app/Contents/Info.plist"
+          plutil -p "$plist" | sed -n '/CFBundleDocumentTypes/,/UTExportedTypeDeclarations/p'
+          test "$(plutil -extract CFBundleDocumentTypes.0.CFBundleTypeIconFile raw "$plist")" = document.icns
+          test "$(plutil -extract CFBundleDocumentTypes.0.CFBundleTypeExtensions.0 raw "$plist")" = lwise
+          test "$(plutil -extract UTExportedTypeDeclarations.0.UTTypeIconFile raw "$plist")" = document.icns
+          test -s "$app/Contents/Resources/document.icns"
       - name: Smoke diagnostics (Windows)
         if: failure() && runner.os == 'Windows'
         shell: pwsh

@@ -57,23 +57,59 @@
       "nsis": {
         "installMode": "currentUser",
         "displayLanguageSelector": false,
-        "installerIcon": "icons/icon.ico"
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "windows/hooks.nsh",
+        "headerImage": "installer/nsis-header.bmp",
+        "sidebarImage": "installer/nsis-sidebar.bmp"
       },
-      "wix": { "language": "en-US", "version": "0.9.0" },
-      "webviewInstallMode": { "type": "embedBootstrapper" }
+      "wix": {
+        "language": "en-US",
+        "version": "0.9.0",
+        "bannerPath": "installer/wix-banner.bmp",
+        "dialogImagePath": "installer/wix-dialog.bmp",
+        "fragmentPaths": ["windows/document-icon.wxs"],
+        "componentRefs": ["LwiseDocumentIcon"]
+      },
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
     },
     "macOS": {
       "minimumSystemVersion": "12.0",
       "hardenedRuntime": true,
-      "dmg": { "windowSize": { "width": 660, "height": 400 } }
+      "dmg": {
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "background": "installer/dmg-background.png",
+        "appPosition": {
+          "x": 180,
+          "y": 230
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 230
+        }
+      },
+      "infoPlist": "Info.plist",
+      "files": {
+        "Resources/document.icns": "icons/document.icns"
+      }
     },
-    "linux": { "deb": { "depends": [] } }
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
   },
   "plugins": {
     "updater": {
       "pubkey": "REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY",
       "endpoints": ["https://github.com/gavenrobertson/linewise/releases/latest/download/latest.json"],
-      "windows": { "installMode": "passive" }
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
