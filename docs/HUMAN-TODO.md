@@ -1,51 +1,44 @@
-# Things only Gaven can do
+# Gaven's setup and release todo
 
-The build continues with placeholders for each item; nothing here blocks local development. Exact steps are in [docs/dev/release.md](dev/release.md).
+Last updated: **2026-10-11**. Repository setup, updater signing and all six milestone draft builds are complete. The remaining owner actions are below. Exact signing steps are in [the release guide](dev/release.md).
 
-- [x] Create the GitHub repository `gavenrobertson/linewise` and push this code.
-- [x] **Push the milestone tags through `v0.9.0-beta`.** The six annotated tags were pushed from a local clone on 2026-10-11 at the verified commits below. Each tag triggered `release.yml`; Apple and Windows code signing remain pending. `v1.0.0` remains gated on the acceptance steps below.
+## Still to do
 
-  | Tag                                           | Commit                                     | Verified by CI run                                                                 |
-  | --------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-  | `v0.0.1`                                      | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38080684053](https://github.com/gavenrobertson/LineWise/actions/runs/38080684053) |
-  | `v0.1.0`                                      | `fca725230cc9ef11b49a0a9a94293e36c861f0f6` | [38081402516](https://github.com/gavenrobertson/LineWise/actions/runs/38081402516) |
-  | `v0.2.0`                                      | `088ced79dbe48e2853b4466dc6cecec934f95422` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
-  | `v0.3.0`                                      | `1f4f0691e99cb61b3c774612cda61b9d8476d882` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
-  | `v0.4.0`                                      | `314473229765d809f82c1f365425ddd789fdadc5` | [38082073359](https://github.com/gavenrobertson/LineWise/actions/runs/38082073359) |
-  | `v0.9.0-beta`                                 | `45afa99d69a5b40612923cf74ff1404093944131` | [38145974927](https://github.com/gavenrobertson/LineWise/actions/runs/38145974927) |
-  | `v1.0.0` (after the release checklist, below) | `fd5ea8a20e4e3af43fd4511dc808303e4dfe5613` | [38145974927](https://github.com/gavenrobertson/LineWise/actions/runs/38145974927) |
+- [ ] **Keep an offline updater-key backup.** Copy the private key and its password from the protected local `LineWise-updater-backup` directory to a private offline location; follow its README. The local backup exists, but an offline copy has not been confirmed. Never commit the key or password. Keep the existing key pair for future releases; replacing it would break updates for copies using the original public key.
+- [ ] **Apple installer signing and notarization (REL-02).** Provide Developer Program membership, a Developer ID Application certificate exported as `.p12`, and an App Store Connect API key. Configure `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_ISSUER` and `APPLE_API_KEY_P8` as Actions secrets. Rebuild and verify the notarized installer. Current macOS drafts are ad-hoc signed; Gatekeeper acceptance has not been verified.
+- [ ] **Windows installer signing (REL-01).** Choose a signing service or certificate. The workflow supports Azure Trusted Signing: secrets `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`, and variables `TRUSTED_SIGNING_ENDPOINT`, `TRUSTED_SIGNING_ACCOUNT`, `TRUSTED_SIGNING_PROFILE`. SignPath or another certificate requires its signing integration before rebuilding. Current drafts have updater signatures but no verified publisher signature; SmartScreen acceptance remains untested.
+- [ ] **Vendor datasheets and templates (FR-TPL-03).** Share/open the cloud environment's Network access settings so its allowlist can be configured, or add verified templates following [CONTRIBUTING.md](../CONTRIBUTING.md). Hosts: `www.cisco.com`, `documentation.meraki.com`, `www.juniper.net`, `www.arista.com`, `www.fortinet.com`, `www.paloaltonetworks.com`, `docs.paloaltonetworks.com`, `techspecs.ui.com`. Allowing the hosts is only the first step: verify the datasheets and add the corresponding templates. Only generic templates currently ship.
+- [ ] **Review and publish the beta.** `v0.9.0-beta` already exists and its draft build passed. Review its notes and signing limitations, verify downloads against `SHA256SUMS.txt`, and download/install at least one build before publishing, following [the release guide](dev/release.md). Then install the beta on the four test machines. Publishing and installation have not been done.
+- [ ] **Create the `v1.0.0` draft when ready.** Use a green commit on current `main` containing the docs, public updater key and workflow fixes from [PR #2](https://github.com/gavenrobertson/LineWise/pull/2) and [PR #4](https://github.com/gavenrobertson/LineWise/pull/4). Confirm version files and release notes before tagging. Do not use the obsolete `fd5ea8a20e4e3af43fd4511dc808303e4dfe5613` baseline, which predates these fixes. No `v1.0.0` tag exists yet.
+- [ ] **Complete four-platform acceptance and publish `v1.0.0`.** Run [the release checklist](release-checklist.md) on Windows 10 x64, Windows 11 ARM64, macOS Intel and macOS Apple Silicon. Record installer names, SHA-256 hashes and every result, including the `v0.9.0-beta` → `v1.0.0` update. Keep 1.0 as a draft until the checklist and signing requirements pass. Building updater artifacts does not establish that an installed app successfully updates.
 
-  ```bash
-  git fetch origin claude/wizardly-bohr-l366zp
-  git tag -a v0.0.1 50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19 -m "LineWise 0.0.1 — M0 Foundation"
-  git tag -a v0.1.0 fca725230cc9ef11b49a0a9a94293e36c861f0f6 -m "LineWise 0.1.0 — M1 Core model and canvas"
-  git tag -a v0.2.0 088ced79dbe48e2853b4466dc6cecec934f95422 -m "LineWise 0.2.0"
-  git tag -a v0.3.0 1f4f0691e99cb61b3c774612cda61b9d8476d882 -m "LineWise 0.3.0"
-  git tag -a v0.4.0 314473229765d809f82c1f365425ddd789fdadc5 -m "LineWise 0.4.0"
-  git tag -a v0.9.0-beta 45afa99d69a5b40612923cf74ff1404093944131 -m "LineWise 0.9.0-beta — M5 Export, polish, accessibility, performance"
-  # Push individually: GitHub does not create workflow events for more than three tags at once.
-  git push origin v0.0.1
-  git push origin v0.1.0
-  git push origin v0.2.0
-  git push origin v0.3.0
-  git push origin v0.4.0
-  git push origin v0.9.0-beta
-  ```
+## Other implementation follow-ups
 
-  The CI run on the `1.0.0` release commit verified `v0.9.0-beta` too: the two differ only in version numbers, `CHANGELOG.md` and docs. Push `v1.0.0` only after the v1.0 acceptance steps below.
+[TRACEABILITY.md](../TRACEABILITY.md) still lists seven SHOULD requirements as todo: format painter and presentation mode (FR-CAN-16/17); routing annotations, gateway redundancy groups and rack elevation (FR-NET-11/12/13); the NetBox device-library importer and template contribution pipeline (FR-TPL-06/07). Visio export (FR-EXP-09, MAY) is deferred until after 1.0. These are development backlog items, separate from the owner account and release actions above. FR-TPL-03 is the only MUST requirement still open in the matrix.
 
-- [x] Merge `claude/wizardly-bohr-l366zp` into `main` and make `main` the default branch. The milestone commits are in `main`'s history.
-- [x] **Updater key pair (REL-10..12):** generated and validated on the owner's machine on 2026-10-11. The public key is in `apps/desktop/src-tauri/tauri.conf.json` and the repository variable `TAURI_UPDATER_PUBKEY` (needed by the historical milestone builds). Repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` are configured. Keep an offline backup of the private key and password; these are never committed. This configures update signatures; installer code signing and the manual update acceptance check are still separate items below.
-- [ ] **Apple:** Developer Program membership → "Developer ID Application" certificate → App Store Connect API key. Secrets: `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_TEAM_ID`, `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` (contents of the .p8). Until then the macOS build is ad-hoc signed and Gatekeeper blocks it (REL-02).
-- [ ] **Windows signing:** apply to SignPath Foundation (free for OSS) or set up Azure Trusted Signing (secrets `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`; variables `TRUSTED_SIGNING_ENDPOINT`, `TRUSTED_SIGNING_ACCOUNT`, `TRUSTED_SIGNING_PROFILE`), or buy an OV/EV certificate. Until then SmartScreen warns (REL-01).
-- [x] **Branch protection for `main` (REL-21):** the active `Protect main` ruleset matches `.github/rulesets/protect-main.json`. It requires every CI job and `DCO sign-off`, one review (admins may merge their own pull requests), linear history, and blocks force-pushes and deletion.
-- [x] Enable GitHub private vulnerability reporting so the link in SECURITY.md works (NFR-SEC-08).
-- [x] Enable GitHub Pages with source "GitHub Actions" for the docs site at `https://gavenrobertson.github.io/LineWise/` (DOC-01). The `github-pages` deployment environment permits `main`.
+## Completed
+
+- [x] Create and populate [gavenrobertson/LineWise](https://github.com/gavenrobertson/LineWise). Keep the repository's **LineWise** capitalization.
+- [x] Merge `claude/wizardly-bohr-l366zp` into `main` and make `main` the default branch. All milestone commits are in its history.
+- [x] Push six annotated milestone tags through `v0.9.0-beta`, at the specified commits. No need to recreate or push them again.
+- [x] Generate and validate the password-encrypted updater key pair. Commit the public key in `apps/desktop/src-tauri/tauri.conf.json`, configure repository variable `TAURI_UPDATER_PUBKEY`, and configure Actions secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. The private values were never committed.
+- [x] Fix the draft-ID handoff and the size checker used for older tags. All six drafts contain Windows x64, Windows ARM64 and universal macOS installers, updater signatures, `latest.json`, `SHA256SUMS.txt`, a CycloneDX SBOM and third-party notices. All remain **unpublished drafts**; Apple/Windows installer signing is separate.
+- [x] Activate `Protect main`, matching `.github/rulesets/protect-main.json`: twelve required CI/DCO checks, one review, linear history, no force-pushes or deletion, and admin bypass only through pull requests.
+- [x] Enable GitHub private vulnerability reporting (NFR-SEC-08).
+- [x] Enable GitHub Pages with source GitHub Actions and permit `main` in the deployment environment. Fix the docs base and app Documentation link to [https://gavenrobertson.github.io/LineWise/](https://gavenrobertson.github.io/LineWise/). Verify the guide opens after a fresh reload.
 - [x] Add `gaven.robertson@gmail.com` to `CODE_OF_CONDUCT.md` for conduct reports.
-- [x] Install the Renovate GitHub app with access to this repository only.
-- [ ] **Vendor datasheets (FR-TPL-03):** this cloud environment's network policy blocks the vendor sites, so no vendor-model templates could be checked against datasheets. Either allow these hosts in the environment's Network access settings (`www.cisco.com`, `documentation.meraki.com`, `www.juniper.net`, `www.arista.com`, `www.fortinet.com`, `www.paloaltonetworks.com`, `docs.paloaltonetworks.com`, `techspecs.ui.com`) so the agent can verify and add them, or add templates yourself following CONTRIBUTING.md. Until then only the generic templates ship.
-- [ ] **v1.0 acceptance (M6), in this order** (`docs/reports/M6.md`):
-  1. Set up the updater key pair and, if you can, Apple and Windows signing (items above).
-  2. Push `v0.9.0-beta` (table above). Review its draft release and publish it, then install it on each test machine.
-  3. Tag the 1.0.0 release commit: `git tag -a v1.0.0 <commit> -m "LineWise 1.0.0"` and `git push origin v1.0.0`. Use the `v1.0.0` commit in the tag table above. Review the draft release.
-  4. Run the release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon. The auto-update row is the v0.9.0-beta → v1.0.0 update. Then publish v1.0.0.
+- [x] Install Renovate with access to this repository only.
+- [x] Merge the docs/updater fix in [PR #2](https://github.com/gavenrobertson/LineWise/pull/2) after 13 passing checks, and the historical packaging fix in [PR #4](https://github.com/gavenrobertson/LineWise/pull/4) after all twelve required checks passed. One unchanged macOS canvas test passed on retry.
+
+## Milestone build evidence
+
+Each linked release workflow completed successfully. These are historical milestone commits; future releases should use current, verified `main`.
+
+| Tag           | Tagged commit                              | Successful draft build                                                             |
+| ------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `v0.0.1`      | `50b84d27cfe1cc00ae8cb05b97e32718fe0b7a19` | [38172973421](https://github.com/gavenrobertson/LineWise/actions/runs/38172973421) |
+| `v0.1.0`      | `fca725230cc9ef11b49a0a9a94293e36c861f0f6` | [38172976099](https://github.com/gavenrobertson/LineWise/actions/runs/38172976099) |
+| `v0.2.0`      | `088ced79dbe48e2853b4466dc6cecec934f95422` | [38172978542](https://github.com/gavenrobertson/LineWise/actions/runs/38172978542) |
+| `v0.3.0`      | `1f4f0691e99cb61b3c774612cda61b9d8476d882` | [38172980996](https://github.com/gavenrobertson/LineWise/actions/runs/38172980996) |
+| `v0.4.0`      | `314473229765d809f82c1f365425ddd789fdadc5` | [38172983320](https://github.com/gavenrobertson/LineWise/actions/runs/38172983320) |
+| `v0.9.0-beta` | `45afa99d69a5b40612923cf74ff1404093944131` | [38171695782](https://github.com/gavenrobertson/LineWise/actions/runs/38171695782) |
