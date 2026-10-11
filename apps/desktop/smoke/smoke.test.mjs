@@ -122,6 +122,64 @@ async function keys(sid, ...chords) {
   }
 }
 
+/**
+ * Memory of the app and every process it started (web view, GPU and network helpers), in MB
+ * (NFR-PERF-06). Linux sums proportional set sizes, so shared pages count once; Windows sums
+ * private bytes.
+ */
+function appMemoryMB() {
+  let rows;
+  if (process.platform === 'win32') {
+    const ps = spawnSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,PrivatePageCount | ConvertTo-Json -Compress',
+      ],
+      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+    );
+    rows = JSON.parse(ps.stdout).map((r) => ({
+      pid: r.ProcessId,
+      ppid: r.ParentProcessId,
+      name: r.Name,
+      bytes: () => Number(r.PrivatePageCount),
+    }));
+  } else {
+    const ps = spawnSync('ps', ['-eo', 'pid=,ppid=,comm='], { encoding: 'utf8' });
+    rows = ps.stdout
+      .trim()
+      .split('\n')
+      .map((l) => l.trim().split(/\s+/))
+      .map(([pid, ppid, name]) => ({
+        pid: Number(pid),
+        ppid: Number(ppid),
+        name,
+        bytes: () => {
+          try {
+            const kb = /^Pss:\s+(\d+) kB/m.exec(readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8'));
+            return kb ? Number(kb[1]) * 1024 : 0;
+          } catch {
+            return 0; // exited, or not ours to read
+          }
+        },
+      }));
+  }
+  const roots = rows.filter((r) => (ATTACH ? r.pid === app.pid : r.name === exe)).map((r) => r.pid);
+  assert.ok(roots.length, `no ${exe} process found`);
+  const tree = new Set(roots);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const r of rows)
+      if (!tree.has(r.pid) && tree.has(r.ppid)) {
+        tree.add(r.pid);
+        grew = true;
+      }
+  }
+  const bytes = rows.filter((r) => tree.has(r.pid)).reduce((sum, r) => sum + r.bytes(), 0);
+  return { mb: bytes / 1024 / 1024, processes: tree.size };
+}
+
 const script = (sid, fn) =>
   wd('POST', `/session/${sid}/execute/sync`, { script: `return (${fn})()`, args: [] });
 
@@ -212,6 +270,12 @@ test('launch, new diagram, save, reopen', { timeout: 180_000 }, async () => {
     );
     const title = await wd('GET', `/session/${sid}/title`);
     assert.match(title, /Untitled/);
+
+    // Idle memory with a diagram open, under 250 MB (NFR-PERF-06).
+    await sleep(5000);
+    const memory = appMemoryMB();
+    console.log(`Idle memory: ${memory.mb.toFixed(0)} MB in ${memory.processes} processes`);
+    assert.ok(memory.mb < 250, `idle memory ${memory.mb.toFixed(0)} MB (limit 250 MB)`);
   } finally {
     await wd('DELETE', `/session/${sid}`).catch(() => {});
   }

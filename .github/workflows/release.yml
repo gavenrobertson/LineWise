@@ -195,6 +195,8 @@ jobs:
           rm -f SHA256SUMS.txt
           sha256sum -- * | sort -k2 > SHA256SUMS.txt
           cat SHA256SUMS.txt
+      - name: Installers are under 25 MB (NFR-PERF-06)
+        run: node scripts/installer-size.mjs dist-release
       - name: Upload checksums, SBOM and notices to the draft
         env:
           GH_TOKEN: ${{ github.token }}

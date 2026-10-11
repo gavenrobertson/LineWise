@@ -137,14 +137,14 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-PERF-03 | MUST | `apps/desktop/src/canvas/Canvas.tsx` (`onlyRenderVisibleElements`, stable props, level of detail), `bench/perf.spec.ts` — nightly: 59.8 fps with 500 devices, 59.0 with 2,000 | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
 | NFR-PERF-04 | MUST | `apps/desktop/src/canvas/Canvas.tsx` (`DragPreviewFlow`, `useDragPreview`), `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/NetworkEdge.tsx`, `apps/desktop/src/canvas/Minimap.tsx` — nightly: drag p95 16.7 ms per frame (all 3 runs), edit 19 ms (≤ 50) | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
 | NFR-PERF-05 | MUST | `apps/desktop/src/workers/layout.worker.ts`, `bench/perf.spec.ts` — nightly: 800 ms (≤ 3,000), in a worker | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | done |
-| NFR-PERF-06 | MUST | `bench/perf.spec.ts` — JS heap with 500 devices 65 MB (≤ 250); native process memory and installer size (< 25 MB) are checked on release builds in M6 | `bench/perf.spec.ts`, `bench/test/gate.test.ts` | partial |
+| NFR-PERF-06 | MUST | `bench/perf.spec.ts` (JS heap with 500 devices), `apps/desktop/smoke/smoke.test.mjs` (idle memory of the app's process tree, Windows and Linux), `scripts/installer-size.mjs` (release installers under 25 MB) | `bench/perf.spec.ts`, `apps/desktop/smoke/smoke.test.mjs`, `scripts/installer-size.test.mjs` | done |
 | NFR-PERF-07 | MUST | `bench/scripts/generate.ts` (100/500/2,000/5,000), `bench/scripts/run.ts`, `bench/src/gate.ts`, `bench/baseline.json`, `.github/workflows/nightly.yml` | `bench/test/generate.test.ts`, `bench/test/gate.test.ts` | done |
 | NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
 | NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts` (DOMPurify, SVG profile), `apps/desktop/src/lib/iconPacks.ts`, `apps/desktop/src/canvas/icons.ts`, `packages/parsers/src/formats.ts` (draw.io HTML reduced to text) | `apps/desktop/test/pure.test.ts`, `packages/parsers/test/parsers.test.ts` | done |
 | NFR-SEC-04 | MUST | `apps/desktop/src/lib/iconPacks.ts` (`unzipFiles`: size, count and path limits) | `apps/desktop/test/pure.test.ts` | done |
 | NFR-SEC-05 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/formats.ts` — 10,000 inputs per parser and for the file loader in CI | `packages/parsers/test/fuzz.test.ts`, `packages/parsers/test/parsers.test.ts`, `packages/core/test/fuzz.test.ts` | done |
-| NFR-SEC-06 | MUST | | | todo |
+| NFR-SEC-06 | MUST | `scripts/release-config.mjs` (public key from the release variable), `.github/workflows/release.yml` (private key from secrets only) — the owner generates the key pair (docs/HUMAN-TODO.md) | `scripts/release-pipeline.test.mjs`, `scripts/release-config.test.mjs` | done |
 | NFR-SEC-07 | MUST | `packages/core/src/schema.ts` (no credential fields), `packages/parsers/src/config.ts` (secrets stripped, FR-IMP-25) | `packages/core/test/jsonSchema.test.ts`, `packages/parsers/test/parsers.test.ts` | done |
 | NFR-SEC-08 | MUST | `SECURITY.md`, `.github/workflows/ci.yml`, `.github/workflows/nightly.yml` (audits, CodeQL), `.github/workflows/release.yml` (CycloneDX SBOM) | `scripts/repo-docs.test.mjs` | done |
 | NFR-PRIV-01 | MUST | `apps/desktop/src-tauri/tauri.conf.json` (CSP `connect-src`), `apps/desktop/src-tauri/src/updates.rs`, `PRIVACY.md` | `apps/desktop/e2e/19-privacy.spec.ts`, `apps/desktop/test/config.test.ts`, `scripts/repo-docs.test.mjs` | done |
@@ -162,15 +162,15 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-MNT-01 | MUST | `tsconfig.base.json`, `eslint.config.js`, `.github/workflows/ci.yml` | `scripts/repo-rules.test.mjs` | done |
 | NFR-MNT-02 | MUST | `packages/core/package.json`, `eslint.config.js` | `scripts/repo-rules.test.mjs` | done |
 | NFR-MNT-03 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/decisions-log.md` | `scripts/repo-docs.test.mjs` | done |
-| REL-01 | MUST | | | todo |
-| REL-02 | MUST | | | todo |
+| REL-01 | MUST | `apps/desktop/src-tauri/tauri.conf.json` (NSIS per user, MSI, file association, WebView2 bootstrapper), `.github/workflows/release.yml`, `docs/dev/release.md` (silent flags) | `scripts/release-pipeline.test.mjs`, `scripts/release-config.test.mjs`, `.github/workflows/ci.yml` (installs both installers) | done |
+| REL-02 | MUST | `.github/workflows/release.yml` (universal-apple-darwin, notarization secrets), `apps/desktop/src-tauri/tauri.conf.json` (hardened runtime, DMG background and Applications shortcut) — signing needs the owner's Apple account (docs/HUMAN-TODO.md) | `scripts/release-pipeline.test.mjs`, `scripts/release-config.test.mjs` | done |
 | REL-03 | MUST | `scripts/version.mjs`, `apps/desktop/src-tauri/tauri.conf.json`, `packages/brand/scripts/build-icons.mjs` — version single-sourcing, app and document icons from the masters | `scripts/version.test.mjs`, `apps/desktop/test/config.test.ts`, `scripts/brand.test.mjs` | done |
 | BRD-02 | MUST | `packages/brand/scripts/build-icons.mjs`, `apps/desktop/src-tauri/icons/` | `scripts/brand.test.mjs` | done |
 | BRD-03 | MUST | `packages/brand/scripts/build-icons.mjs`, `apps/desktop/src-tauri/windows/`, `apps/desktop/src-tauri/Info.plist`, `apps/desktop/src-tauri/tauri.windows.conf.json` | `scripts/brand.test.mjs`, `.github/workflows/ci.yml` (document icon steps) | done |
-| REL-04 | MUST | | | todo |
-| REL-10 | MUST | | | todo |
-| REL-11 | MUST | | | todo |
-| REL-12 | MUST | | | todo |
+| REL-04 | MUST | `.github/workflows/release.yml` (finalize: SHA256SUMS.txt, CycloneDX SBOM) | `scripts/release-pipeline.test.mjs` | done |
+| REL-10 | MUST | `apps/desktop/src/lib/actions.ts` (`checkUpdates`: on launch at most once per 24 h, Help → Check for updates), `apps/desktop/src/dialogs/UpdateDialog.tsx`, `apps/desktop/src-tauri/src/updates.rs` | `apps/desktop/test/updates.test.tsx` | done |
+| REL-11 | MUST | `apps/desktop/src-tauri/src/updates.rs` (stable and beta feeds), `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `.github/workflows/publish-channel.yml` | `apps/desktop/test/updates.test.tsx`, `apps/desktop/src-tauri/src/updates.rs` (Rust tests) | done |
+| REL-12 | MUST | `apps/desktop/src-tauri/src/updates.rs` (tauri-plugin-updater verifies the minisign signature before installing; failures are logged and shown) | `apps/desktop/test/updates.test.tsx`, `scripts/release-pipeline.test.mjs` | done |
 | REL-20 | MUST | `commitlint.config.js`, `.husky/commit-msg`, `release-please-config.json`, `.github/workflows/release-please.yml`, `CHANGELOG.md` | `scripts/repo-docs.test.mjs`, `scripts/release-notes.test.mjs` | done |
 | REL-21 | MUST |  — Branch protection is a repository setting only the owner can enable (docs/HUMAN-TODO.md). |  | todo |
 | OSS-01 | MUST | `LICENSE` | `scripts/repo-rules.test.mjs` | done |
