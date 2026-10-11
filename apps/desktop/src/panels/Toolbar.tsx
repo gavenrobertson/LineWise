@@ -33,7 +33,7 @@ import {
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark } from '../components/BrandMark.tsx';
-import { cx, IconButton, Segmented } from '../components/ui.tsx';
+import { cx, IconButton, Segmented, Tooltip } from '../components/ui.tsx';
 import { formatShortcut, runCommand } from '../lib/actions.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -94,17 +94,20 @@ function ArrangeMenu() {
   ];
   return (
     <Menu.Root>
-      <Menu.Trigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] text-ink hover:bg-surface-3"
-          aria-label={t('toolbar.arrange', 'Arrange')}
-        >
-          <LayoutGrid size={16} />
-          <span className="hidden xl:inline">{t('toolbar.arrange', 'Arrange')}</span>
-          <ChevronDown size={13} className="text-muted" />
-        </button>
-      </Menu.Trigger>
+      {/* Icon-only below xl, so it gets a tooltip like every toolbar button (DOC-05). */}
+      <Tooltip text={t('toolbar.arrange', 'Arrange')}>
+        <Menu.Trigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] text-ink hover:bg-surface-3"
+            aria-label={t('toolbar.arrange', 'Arrange')}
+          >
+            <LayoutGrid size={16} />
+            <span className="hidden xl:inline">{t('toolbar.arrange', 'Arrange')}</span>
+            <ChevronDown size={13} className="text-muted" />
+          </button>
+        </Menu.Trigger>
+      </Tooltip>
       <MenuContent>
         {items.map(([m, label, icon]) => (
           <MenuItem key={m} disabled={ids.length < 2} onSelect={() => align(m)}>

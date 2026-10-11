@@ -152,7 +152,7 @@ export function WelcomeDialog() {
                 {t('welcome.noRecent', 'Files you open or save appear here.')}
               </p>
             ) : (
-              <ul className="flex flex-col">
+              <ul className="flex flex-col" aria-label={t('welcome.recent', 'Recent')}>
                 {recent.slice(0, 10).map((r) => (
                   <li key={r.path}>
                     <button

@@ -6,12 +6,12 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | --- | --- | --- | --- | --- |
 | FR-APP-01 | MUST | `apps/desktop/src-tauri/src/menu.rs`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/config.test.ts`, `apps/desktop/test/pure.test.ts` | done |
 | FR-APP-02 | MUST | `apps/desktop/src/store/editor.ts`, `apps/desktop/src/panels/TabBar.tsx`, `apps/desktop/src/lib/actions.ts` — tabs in one window on both OSes (decisions log) | `apps/desktop/test/tabs.test.ts`, `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/10-tabs.spec.ts` | done |
-| FR-APP-03 | MUST | | | todo |
-| FR-APP-04 | MUST | | | todo |
-| FR-APP-05 | MUST | | | todo |
-| FR-APP-06 | MUST | | | todo |
-| FR-APP-07 | MUST | | | todo |
-| FR-APP-08 | MUST | | | todo |
+| FR-APP-03 | MUST | `apps/desktop/src/App.tsx`, `apps/desktop/src/panels/SidePanel.tsx`, `apps/desktop/src/panels/Inspector.tsx`, `apps/desktop/src/panels/ProblemsPanel.tsx`, `apps/desktop/src/panels/Toolbar.tsx` | `apps/desktop/e2e/17-app-shell.spec.ts` | done |
+| FR-APP-04 | MUST | `apps/desktop/src/store/prefs.ts`, `apps/desktop/src/styles.css` | `apps/desktop/e2e/17-app-shell.spec.ts`, `apps/desktop/e2e/14-a11y.spec.ts` | done |
+| FR-APP-05 | MUST | `apps/desktop/src/dialogs/WelcomeDialog.tsx`, `apps/desktop/src/platform/browser.ts`, `apps/desktop/src-tauri/src/files.rs` (recent files) | `apps/desktop/e2e/17-app-shell.spec.ts` | done |
+| FR-APP-06 | MUST | `packages/device-library/src/starters.ts`, `apps/desktop/src/dialogs/WelcomeDialog.tsx` | `packages/device-library/test/starters.test.ts`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
+| FR-APP-07 | MUST | `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `apps/desktop/src/store/prefs.ts` | `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
+| FR-APP-08 | MUST | `apps/desktop/src/dialogs/CommandPalette.tsx`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/components.test.tsx`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | FR-APP-09 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/src-tauri/src/lib.rs` — association and open-with done; .lwise document icon comes with BRD-03 (M6) | `apps/desktop/test/config.test.ts`, `apps/desktop/smoke/smoke.test.mjs` | partial |
 | FR-CAN-01 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-CAN-02 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/store/prefs.ts`, `apps/desktop/src/dialogs/PreferencesDialog.tsx` | `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
@@ -41,7 +41,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-INS-02 | MUST | `apps/desktop/src/panels/Inspector.tsx`, `packages/core/src/commands.ts` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
 | FR-INS-03 | MUST | `apps/desktop/src/panels/InterfaceTable.tsx` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
 | FR-INS-04 | MUST | `apps/desktop/src/panels/Inspector.tsx` | `apps/desktop/test/components.test.tsx` | done |
-| FR-KEY-01 | MUST | | | todo |
+| FR-KEY-01 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/dialogs/ShortcutsDialog.tsx`, `apps/desktop/src-tauri/src/menu.rs` | `apps/desktop/test/pure.test.ts`, `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | FR-KEY-02 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/store/ui.ts`, `apps/desktop/src/lib/actions.ts` — place, nudge, link, rename and every command via the palette; full audit of canvas actions in M5 | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/13-campus.spec.ts` | partial |
 | FR-NET-01 | MUST | `packages/core/src/commands.ts`, `packages/core/src/templates.ts` | `packages/core/test/commands.test.ts` | done |
 | FR-NET-02 | MUST | `packages/core/src/naming.ts`, `packages/core/src/commands.ts`, `apps/desktop/src/panels/InterfaceTable.tsx` | `packages/core/test/naming.test.ts`, `packages/core/test/commands.test.ts` | done |
@@ -187,7 +187,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | DOC-02 | MUST | `docs/dev/index.md`, `docs/dev/architecture.md`, `docs/dev/release.md` — signing setup walkthrough in M6 | `scripts/repo-docs.test.mjs` | partial |
 | DOC-03 | MUST | `docs/file-format.md`, `docs/examples/branch-office.lwise`, `schema/v1.json` | `packages/core/test/serialize.test.ts`, `packages/core/test/jsonSchema.test.ts`, `scripts/repo-docs.test.mjs` | done |
 | DOC-04 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/adr/0002-react-flow-over-maxgraph.md`, `docs/adr/0003-command-patch-architecture.md`, `docs/adr/0004-file-format.md`, `docs/adr/0005-license.md` | `scripts/repo-docs.test.mjs` | done |
-| DOC-05 | MUST | | | todo |
+| DOC-05 | MUST | `apps/desktop/src/components/ui.tsx` (tooltips), `apps/desktop/src/panels/Toolbar.tsx`, `apps/desktop/src/canvas/Canvas.tsx` (empty state), `apps/desktop/src/lib/actions.ts` (Help) | `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | DOC-06 | MUST | `TRACEABILITY.md`, `scripts/traceability.mjs` | `scripts/traceability.test.mjs`, `scripts/repo-docs.test.mjs` | done |
 | BRD-01 | MUST | | | todo |
 | BRD-04 | MUST | | | todo |

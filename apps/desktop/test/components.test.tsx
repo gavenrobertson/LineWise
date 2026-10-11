@@ -484,3 +484,22 @@ describe('Command palette', () => {
     expect(useUi.getState().palette).toBe(false);
   });
 });
+
+describe('Preferences', () => {
+  it('FR-APP-07, NFR-PRIV-01 the desktop build offers the update check, on by default and stored when turned off', async () => {
+    const real = platform();
+    setPlatform({ ...real, kind: 'tauri' });
+    try {
+      act(() => usePrefs.getState().set({ updateChecks: true }));
+      wrap(<PreferencesDialog />);
+      const box = screen.getByLabelText('Check for updates automatically');
+      expect(box).toBeChecked();
+      await userEvent.click(box);
+      expect(usePrefs.getState().updateChecks).toBe(false);
+      expect(screen.getByLabelText('Send anonymous crash reports')).not.toBeChecked();
+    } finally {
+      setPlatform(real);
+      act(() => usePrefs.getState().set({ updateChecks: true }));
+    }
+  });
+});
