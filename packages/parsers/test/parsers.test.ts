@@ -338,6 +338,18 @@ describe('other formats', () => {
     ]);
   });
 
+  it('NFR-SEC-03 draw.io HTML labels become plain text, never markup', () => {
+    const xml = `<mxfile><diagram><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+      <mxCell id="2" value="&lt;b&gt;R9&lt;/b&gt;&lt;img src=x onerror=alert(1)&gt;" style="shape=mxgraph.cisco.routers.router;html=1" vertex="1" parent="1"><mxGeometry x="0" y="0" width="80" height="40" as="geometry"/></mxCell>
+      <mxCell id="3" value="&lt;div&gt;Note&lt;script&gt;alert(2)&lt;/script&gt;&lt;/div&gt;" style="text;html=1" vertex="1" parent="1"><mxGeometry x="200" y="0" width="80" height="40" as="geometry"/></mxCell>
+    </root></mxGraphModel></diagram></mxfile>`;
+    const r = parseText(xml, { fileName: 'x.drawio' });
+    expect(r.devices.map((d) => d.hostname)).toEqual(['R9']);
+    const text = JSON.stringify(r);
+    expect(text).not.toMatch(/<(img|script|div|b)\b/i);
+    expect(text).not.toContain('onerror');
+  });
+
   it('FR-IMP-07 GNS3 projects: nodes and links with port names', () => {
     const r = parseText(read('gns3/01-basic.gns3'), { fileName: '01-basic.gns3' });
     expect(r.devices.map((d) => [d.hostname, d.role])).toEqual([

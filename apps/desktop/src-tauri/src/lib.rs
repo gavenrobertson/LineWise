@@ -242,6 +242,15 @@ fn install_panic_hook() {
 mod tests {
     use super::*;
 
+    /// NFR-REL-02: the panic hook logs and then hands over to the default hook, so a panic in a
+    /// command still unwinds (and is reported) instead of being swallowed.
+    #[test]
+    fn panic_hook_keeps_the_default_behaviour() {
+        install_panic_hook();
+        let r = std::panic::catch_unwind(|| panic!("boom"));
+        assert!(r.is_err());
+    }
+
     #[test]
     fn text_scale_reads_the_windows_percentage() {
         assert_eq!(text_scale_from(None), 1.0);

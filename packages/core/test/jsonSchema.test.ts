@@ -24,4 +24,20 @@ describe('published JSON Schema', () => {
       expect.arrayContaining(['devices', 'links', 'vlans', 'subnets', 'settings']),
     );
   });
+
+  it('has no place to store a credential [NFR-SEC-07]', () => {
+    const keys: string[] = [];
+    const walk = (v: unknown) => {
+      if (!v || typeof v !== 'object') return;
+      for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+        if (k === 'properties' && x && typeof x === 'object') keys.push(...Object.keys(x));
+        walk(x);
+      }
+    };
+    walk(documentJsonSchema());
+    expect(keys.length).toBeGreaterThan(50);
+    expect(
+      keys.filter((k) => /pass(word)?|secret|community|credential|token|private.?key|snmp|ssh/i.test(k)),
+    ).toEqual([]);
+  });
 });

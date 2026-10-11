@@ -141,14 +141,14 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-PERF-07 | MUST | `bench/src/generate.ts`, `bench/perf.spec.ts`, `.github/workflows/nightly.yml` — fixtures and gates exist; the 20% regression gate needs a baseline recorded on the CI runner (M5) | `bench/test/generate.test.ts`, `bench/perf.spec.ts` | partial |
 | NFR-SEC-01 | MUST | `apps/desktop/src-tauri/capabilities/default.json`, `apps/desktop/src-tauri/build.rs`, `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/src-tauri/src/recovery.rs` | `apps/desktop/test/config.test.ts`, `apps/desktop/src-tauri/src/files.rs` | done |
 | NFR-SEC-02 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/index.html`, `packages/brand/fonts/fonts.css` | `apps/desktop/test/config.test.ts` | done |
-| NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts`, `apps/desktop/src/canvas/icons.ts` — SVG sanitized on import; assets shown only as images; audit in M5 | `apps/desktop/test/pure.test.ts` | partial |
-| NFR-SEC-04 | MUST | | | todo |
+| NFR-SEC-03 | MUST | `apps/desktop/src/lib/sanitize.ts` (DOMPurify, SVG profile), `apps/desktop/src/lib/iconPacks.ts`, `apps/desktop/src/canvas/icons.ts`, `packages/parsers/src/formats.ts` (draw.io HTML reduced to text) | `apps/desktop/test/pure.test.ts`, `packages/parsers/test/parsers.test.ts` | done |
+| NFR-SEC-04 | MUST | `apps/desktop/src/lib/iconPacks.ts` (`unzipFiles`: size, count and path limits) | `apps/desktop/test/pure.test.ts` | done |
 | NFR-SEC-05 | MUST | `packages/parsers/src/util.ts`, `packages/parsers/src/formats.ts` — 10,000 inputs per parser and for the file loader in CI | `packages/parsers/test/fuzz.test.ts`, `packages/parsers/test/parsers.test.ts`, `packages/core/test/fuzz.test.ts` | done |
 | NFR-SEC-06 | MUST | | | todo |
-| NFR-SEC-07 | MUST | | | todo |
-| NFR-SEC-08 | MUST | | | todo |
-| NFR-PRIV-01 | MUST | | | todo |
-| NFR-PRIV-02 | MUST | | | todo |
+| NFR-SEC-07 | MUST | `packages/core/src/schema.ts` (no credential fields), `packages/parsers/src/config.ts` (secrets stripped, FR-IMP-25) | `packages/core/test/jsonSchema.test.ts`, `packages/parsers/test/parsers.test.ts` | done |
+| NFR-SEC-08 | MUST | `SECURITY.md`, `.github/workflows/ci.yml`, `.github/workflows/nightly.yml` (audits, CodeQL), `.github/workflows/release.yml` (CycloneDX SBOM) | `scripts/repo-docs.test.mjs` | done |
+| NFR-PRIV-01 | MUST | `apps/desktop/src-tauri/tauri.conf.json` (CSP `connect-src`), `apps/desktop/src-tauri/src/updates.rs`, `PRIVACY.md` | `apps/desktop/e2e/19-privacy.spec.ts`, `apps/desktop/test/config.test.ts`, `scripts/repo-docs.test.mjs` | done |
+| NFR-PRIV-02 | MUST | `apps/desktop/src/store/prefs.ts`, `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `PRIVACY.md` — no telemetry service in v1 | `apps/desktop/test/components.test.tsx`, `scripts/repo-docs.test.mjs` | done |
 | NFR-A11Y-01 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/lib/actions.ts` (`focusNearest`), `apps/desktop/src/App.tsx` (skip link) | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
 | NFR-A11Y-02 | MUST | `apps/desktop/src/panels/OutlinePanel.tsx`, `apps/desktop/src/panels/outlineTree.ts` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
 | NFR-A11Y-03 | MUST | `apps/desktop/src/canvas/model.ts` (`SEVERITY_GLYPH`), `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/NetworkEdge.tsx`, `apps/desktop/src/export/svg.ts`, `packages/core/src/palette.ts`, `packages/core/src/selectors.ts` (`endLabel`: VLAN labels in L2) | `packages/core/test/misc.test.ts`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
@@ -156,9 +156,9 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-A11Y-05 | MUST | axe-core in E2E (both themes) and component tests | `apps/desktop/e2e/14-a11y.spec.ts`, `apps/desktop/test/components.test.tsx` | done |
 | NFR-I18N-01 | MUST | `scripts/i18n.ts`, `apps/desktop/src/i18n/` | `scripts/i18n.test.mjs`, `apps/desktop/e2e/15-i18n.spec.ts` | done |
 | NFR-I18N-02 | MUST | `apps/desktop/src/main.tsx` (pseudo-locale), `apps/desktop/src/styles.css` | `apps/desktop/e2e/15-i18n.spec.ts` | done |
-| NFR-REL-01 | MUST | | | todo |
-| NFR-REL-02 | MUST | | | todo |
-| NFR-REL-03 | MUST | | | todo |
+| NFR-REL-01 | MUST | `apps/desktop/src-tauri/src/files.rs` (atomic save + .bak), `apps/desktop/src-tauri/src/recovery.rs`, `apps/desktop/src/lib/actions.ts` (`autosaveNow`) | `apps/desktop/src-tauri/src/files.rs`, `apps/desktop/e2e/08-crash-recovery.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
+| NFR-REL-02 | MUST | `apps/desktop/src/components/ErrorBoundary.tsx`, `apps/desktop/src-tauri/src/lib.rs` (`install_panic_hook`) | `apps/desktop/test/components.test.tsx`, `apps/desktop/src-tauri/src/lib.rs` | done |
+| NFR-REL-03 | MUST | `apps/desktop/src-tauri/src/lib.rs` (tauri-plugin-log: log dir, 5 × 5 MB), `apps/desktop/src/lib/actions.ts` (Help → Open logs folder) | `apps/desktop/test/config.test.ts` | done |
 | NFR-MNT-01 | MUST | `tsconfig.base.json`, `eslint.config.js`, `.github/workflows/ci.yml` | `scripts/repo-rules.test.mjs` | done |
 | NFR-MNT-02 | MUST | `packages/core/package.json`, `eslint.config.js` | `scripts/repo-rules.test.mjs` | done |
 | NFR-MNT-03 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/decisions-log.md` | `scripts/repo-docs.test.mjs` | done |

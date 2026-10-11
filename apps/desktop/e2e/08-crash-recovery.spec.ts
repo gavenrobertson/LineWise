@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test';
 import { doc, openApp, place, startBlank } from './helpers.ts';
 
-test('restore work after a crash', async ({ page }) => {
+test('NFR-REL-01, FR-FMT-07 restore work after a crash', async ({ page }) => {
   // Autosave every second for the test.
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('lw-e2e-prefs')) {

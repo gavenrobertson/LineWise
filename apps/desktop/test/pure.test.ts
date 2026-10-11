@@ -27,6 +27,7 @@ import { renderPageSvg } from '../src/export/svg.ts';
 import { planPdf, PAPER } from '../src/export/pdf.ts';
 import { clampScale } from '../src/export/raster.ts';
 import { buildOutline, visibleNodes, type OutlineLabels } from '../src/panels/outlineTree.ts';
+import { zipSync } from 'fflate';
 import {
   circularLayout,
   elkLayout,
@@ -37,7 +38,14 @@ import {
 } from '../src/layout/layouts.ts';
 import { searchDocument } from '../src/lib/search.ts';
 import { overlappingSubnets, p2pCommand, subnetUtilization } from '../src/lib/ipam.ts';
-import { buildPack } from '../src/lib/iconPacks.ts';
+import {
+  buildPack,
+  MAX_ICON_BYTES,
+  MAX_ZIP_BYTES,
+  MAX_ZIP_ENTRIES,
+  unsafeZipPath,
+  unzipFiles,
+} from '../src/lib/iconPacks.ts';
 import { handlesShortcut, matches } from '../src/lib/keyboard.ts';
 import { commandList } from '../src/lib/actions.ts';
 import { parseCalcInput } from '../src/dialogs/CalculatorDialog.tsx';
@@ -515,5 +523,52 @@ describe('topology outline', () => {
     const page = ed.doc.pages[0]!;
     expect(buildOutline(ed.doc, page, 'r2', labels).map((n) => n.label)).toEqual(['Not in a zone']);
     expect(buildOutline(ed.doc, page, 'nothing', labels)).toEqual([]);
+  });
+});
+
+describe('icon pack zips', () => {
+  const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><circle r="3"/></svg>');
+
+  it('NFR-SEC-04 skips unsafe paths and oversized entries', async () => {
+    const zip = zipSync({
+      'ok/router.svg': svg,
+      '../evil.svg': svg,
+      'a/../../evil2.svg': svg,
+      '/abs.svg': svg,
+      'C:/win.svg': svg,
+      'big.svg': new Uint8Array(MAX_ICON_BYTES * 3),
+    });
+    const warnings: string[] = [];
+    const files = await unzipFiles(zip, warnings);
+    expect(files.map((f) => f.name)).toEqual(['ok/router.svg']);
+    expect(warnings.filter((w) => w.includes('unsafe path'))).toHaveLength(4);
+    expect(warnings.some((w) => w.includes('big.svg'))).toBe(true);
+    expect(unsafeZipPath('icons/..hidden.svg')).toBe(false);
+  });
+
+  it('NFR-SEC-04 refuses archives over the size and file-count limits', async () => {
+    await expect(unzipFiles(new Uint8Array(MAX_ZIP_BYTES + 1))).rejects.toThrow(/20 MB/);
+    const many: Record<string, Uint8Array> = {};
+    for (let i = 0; i <= MAX_ZIP_ENTRIES; i++) many[`f${i}.txt`] = new Uint8Array(1);
+    await expect(unzipFiles(zipSync(many, { level: 0 }))).rejects.toThrow(/more than 2000 files/);
+  });
+
+  it('NFR-SEC-04 a header that understates the size cannot inflate past it (zip bomb)', async () => {
+    // 4 MB of zeros, compressed to a few KB, with both headers claiming 1 KB.
+    const zip = zipSync({ 'bomb.svg': new Uint8Array(4 * 1024 * 1024) });
+    const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+    view.setUint32(22, 1024, true); // local file header: uncompressed size
+    for (let i = zip.length - 22; i >= 0; i--)
+      if (view.getUint32(i, true) === 0x02014b50) {
+        view.setUint32(i + 24, 1024, true); // central directory: uncompressed size
+        break;
+      }
+    let out: { name: string; bytes: Uint8Array }[] = [];
+    try {
+      out = await unzipFiles(zip);
+    } catch {
+      // fflate may also reject the mismatch outright; either way nothing large comes out.
+    }
+    for (const f of out) expect(f.bytes.length).toBeLessThanOrEqual(1024);
   });
 });

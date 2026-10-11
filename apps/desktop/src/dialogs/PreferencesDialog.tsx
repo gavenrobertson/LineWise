@@ -25,9 +25,18 @@ function IconPacks() {
     if (!files.length) return;
     const warnings: string[] = [];
     const expanded: { name: string; bytes: Uint8Array }[] = [];
-    for (const f of files) {
-      if (f.name.toLowerCase().endsWith('.zip')) expanded.push(...(await unzipFiles(f.bytes)));
-      else expanded.push(f);
+    try {
+      for (const f of files) {
+        if (f.name.toLowerCase().endsWith('.zip')) expanded.push(...(await unzipFiles(f.bytes, warnings)));
+        else expanded.push(f);
+      }
+    } catch (e) {
+      // Over a limit, or not a zip at all (NFR-SEC-04).
+      toast(
+        t('prefs.packFailed', 'The icon pack could not be read: {{msg}}', { msg: (e as Error).message }),
+        'error',
+      );
+      return;
     }
     const name =
       files.length === 1 && files[0]

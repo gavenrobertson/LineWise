@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// Community files, ADRs, docs and governance (OSS-10..14, DOC-01..04, DOC-06, BRD-06, NFR-MNT-03, REL-20).
+// Community files, ADRs, docs and governance (OSS-10..14, DOC-01..04, DOC-06, BRD-06, NFR-MNT-03, REL-20,
+// NFR-SEC-08, NFR-PRIV-01, NFR-PRIV-02).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -176,4 +177,30 @@ test('OSS-04: icons and templates are project-original; contributions state sour
         `${style}/${f} is a self-contained original drawing`,
       );
     }
+});
+
+test('NFR-SEC-08: private reporting, dependency audits, CodeQL and a CycloneDX SBOM per release', () => {
+  assert.match(read('SECURITY.md'), /security\/advisories\/new/);
+  const ci = read('.github/workflows/ci.yml');
+  const nightly = read('.github/workflows/nightly.yml');
+  const release = read('.github/workflows/release.yml');
+  assert.match(ci, /pnpm audit --prod/);
+  assert.match(nightly, /pnpm audit/);
+  assert.match(nightly, /rustsec\/audit-check/);
+  assert.match(nightly, /github\/codeql-action\/analyze/);
+  for (const lang of ['javascript-typescript', 'rust']) assert.ok(nightly.includes(lang), lang);
+  assert.match(release, /format: cyclonedx-json/);
+  assert.match(release, /sbom\.cdx\.json/);
+});
+
+test('NFR-PRIV-01, NFR-PRIV-02: PRIVACY.md lists every network call; telemetry is off and opt-in', () => {
+  const md = read('PRIVACY.md');
+  assert.match(md, /## Network access/);
+  assert.match(md, /Update check \(on by default, can be turned off\)/);
+  assert.match(md, /\*\*Nothing else\.\*\*/);
+  assert.match(md, /## Telemetry and crash reports/);
+  assert.match(md, /Off by default and opt-in only/);
+  assert.match(md, /never include diagram content, hostnames or IP addresses/);
+  const prefs = read('apps/desktop/src/store/prefs.ts');
+  assert.match(prefs, /telemetry: false,/);
 });

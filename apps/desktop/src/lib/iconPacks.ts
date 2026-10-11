@@ -122,16 +122,55 @@ export function buildPack(
   };
 }
 
-export async function unzipFiles(bytes: Uint8Array): Promise<{ name: string; bytes: Uint8Array }[]> {
+/** Zip limits (NFR-SEC-04): the archive, its entries and what they may expand to. */
+export const MAX_ZIP_BYTES = 20 * 1024 * 1024;
+export const MAX_ZIP_ENTRIES = 2000;
+export const MAX_ZIP_TOTAL = 64 * 1024 * 1024;
+
+/** Entry names that could point outside the pack: parent steps, absolute or drive paths. */
+export function unsafeZipPath(name: string): boolean {
+  return /(^|[\\/])\.\.([\\/]|$)/.test(name) || /^([\\/]|[a-zA-Z]:)/.test(name) || name.includes('\0');
+}
+
+/**
+ * Unzip an icon pack (NFR-SEC-04). Nothing is written to disk, but the archive is still checked:
+ * size and entry-count limits, no unsafe paths, and every entry's real (inflated) size is bounded,
+ * whatever its header claims.
+ */
+export async function unzipFiles(
+  bytes: Uint8Array,
+  warnings: string[] = [],
+): Promise<{ name: string; bytes: Uint8Array }[]> {
+  if (bytes.length > MAX_ZIP_BYTES) throw new Error('The icon pack is larger than 20 MB.');
   const { unzipSync } = await import('fflate');
-  // Only read image and manifest entries; ignore everything else (zip-bomb safety via size filter).
+  let count = 0;
+  let total = 0;
   const entries = unzipSync(bytes, {
-    filter: (f) =>
-      /\.(svg|png|json)$/i.test(f.name) &&
-      f.originalSize <= MAX_ICON_BYTES * 2 &&
-      !f.name.startsWith('__MACOSX/'),
+    filter: (f) => {
+      if (++count > MAX_ZIP_ENTRIES) throw new Error(`The icon pack has more than ${MAX_ZIP_ENTRIES} files.`);
+      if (unsafeZipPath(f.name)) {
+        warnings.push(`${f.name} has an unsafe path and was skipped.`);
+        return false;
+      }
+      if (!/\.(svg|png|json)$/i.test(f.name) || f.name.startsWith('__MACOSX/')) return false;
+      if (f.originalSize > MAX_ICON_BYTES * 2) {
+        warnings.push(`${f.name} is larger than 512 KB and was skipped.`);
+        return false;
+      }
+      total += f.originalSize;
+      if (total > MAX_ZIP_TOTAL) throw new Error('The icon pack expands to more than 64 MB.');
+      return true;
+    },
   });
-  return Object.entries(entries).map(([name, b]) => ({ name, bytes: b }));
+  // fflate inflates into a buffer of the declared size, so a header that understates the size
+  // cannot grow an entry; check the result anyway.
+  return Object.entries(entries)
+    .filter(([name, b]) => {
+      if (b.length <= MAX_ICON_BYTES * 2) return true;
+      warnings.push(`${name} is larger than 512 KB and was skipped.`);
+      return false;
+    })
+    .map(([name, b]) => ({ name, bytes: b }));
 }
 
 // ---------------------------------------------------------------- storage

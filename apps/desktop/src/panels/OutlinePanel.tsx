@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Topology outline (NFR-A11Y-02): a tree of zones → devices → interfaces → link peers that
  * mirrors the canvas for screen-reader and keyboard users (NFR-A11Y-01). Arrow keys move through

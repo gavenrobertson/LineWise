@@ -569,6 +569,7 @@
   "prefs.packDefault": "Imported icons",
   "prefs.packDone": "Imported {{n}} icons into “{{name}}”.",
   "prefs.packEmpty": "No SVG or PNG icons were found.",
+  "prefs.packFailed": "The icon pack could not be read: {{msg}}",
   "prefs.packFiles": "Icon pack (.zip, .svg, .png, manifest.json)",
   "prefs.packs": "Icon packs",
   "prefs.problemBadges": "Show problem badges on the canvas",

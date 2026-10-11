@@ -98,3 +98,27 @@ describe('REL-03, FR-APP-09 bundle identity and file association', () => {
     expect(conf.bundle.macOS.minimumSystemVersion).toBe('12.0');
   });
 });
+
+describe('NFR-REL-03 local logs', () => {
+  const libRs = readFileSync(here('src-tauri/src/lib.rs'), 'utf8');
+  it('rotate at 5 files of 5 MB in the log folder, which Help opens', () => {
+    expect(libRs).toMatch(/TargetKind::LogDir/);
+    expect(libRs).toMatch(/\.max_file_size\(5 \* 1024 \* 1024\)/);
+    expect(libRs).toMatch(/RotationStrategy::KeepSome\(5\)/);
+    expect(menuRs).toContain('"help.logs"');
+    expect(libRs).toMatch(/fn open_logs_folder[\s\S]*app_log_dir/);
+    expect(caps.permissions).toContain('allow-open-logs-folder');
+  });
+});
+
+describe('NFR-PRIV-01 the web view cannot reach the network', () => {
+  it('allows connections only to the app itself and its IPC bridge', () => {
+    const csp: string = conf.app.security.csp;
+    const connect = csp
+      .split(';')
+      .map((d) => d.trim())
+      .find((d) => d.startsWith('connect-src'))!;
+    expect(connect.split(/\s+/).slice(1).sort()).toEqual(["'self'", 'http://ipc.localhost', 'ipc:'].sort());
+    expect(csp).toMatch(/default-src 'self'/);
+  });
+});

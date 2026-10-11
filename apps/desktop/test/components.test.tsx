@@ -8,13 +8,15 @@ import {
   addDevice,
   applyFix,
   assignIp,
+  updateDevices,
   updateInterface,
   validate,
   type NetworkDocument,
 } from '@linewise/core';
 import { getTemplate, STARTERS } from '@linewise/device-library';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { diagnostics, ErrorBoundary } from '../src/components/ErrorBoundary.tsx';
 import { AboutDialog } from '../src/dialogs/AboutDialog.tsx';
 import { CalculatorDialog } from '../src/dialogs/CalculatorDialog.tsx';
 import { CommandPalette } from '../src/dialogs/CommandPalette.tsx';
@@ -500,6 +502,44 @@ describe('Preferences', () => {
     } finally {
       setPlatform(real);
       act(() => usePrefs.getState().set({ updateChecks: true }));
+    }
+  });
+});
+
+describe('crash screen', () => {
+  function Boom(): never {
+    throw new Error('render failed');
+  }
+
+  it('NFR-REL-02 shows a recoverable screen, keeps a recovery copy and copies diagnostics only', async () => {
+    const real = platform();
+    const writes: { text: string }[] = [];
+    let copied = '';
+    setPlatform({ ...real, writeRecovery: async (r) => void writes.push(r) });
+    Object.assign(navigator, { clipboard: { writeText: async (s: string) => void (copied = s) } });
+    // Unsaved work: rename a device so the document is dirty.
+    const r1 = useEditor.getState().doc.devices.find((d) => d.hostname === 'R1')!;
+    act(() => void useEditor.getState().execute(updateDevices([r1.id], { hostname: 'SECRET-HOST' })));
+    const quiet = console.error;
+    console.error = () => undefined;
+    try {
+      render(
+        <ErrorBoundary>
+          <Boom />
+        </ErrorBoundary>,
+      );
+      expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
+      expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+      await vi.waitFor(() => expect(writes).toHaveLength(1));
+      expect(writes[0]!.text).toContain('SECRET-HOST');
+      await userEvent.click(screen.getByRole('button', { name: 'Copy diagnostics' }));
+      await screen.findByRole('button', { name: 'Diagnostics copied' });
+      expect(copied).toContain('Error: Error: render failed');
+      expect(copied).not.toContain('SECRET-HOST');
+      expect(diagnostics(new Error('x'), '')).toMatch(/^LineWise/);
+    } finally {
+      console.error = quiet;
+      setPlatform(real);
     }
   });
 });
