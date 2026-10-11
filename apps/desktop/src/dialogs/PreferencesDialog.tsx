@@ -220,6 +220,24 @@ export function PreferencesDialog() {
             )}
           </Field>
         </div>
+        <Field label={t('prefs.uiScale', 'Interface size')}>
+          {(id) => (
+            <Select
+              id={id}
+              value={String(p.uiScale)}
+              onChange={(e) =>
+                p.set({ uiScale: e.target.value === 'system' ? 'system' : Number(e.target.value) })
+              }
+            >
+              <option value="system">{t('prefs.uiScaleSystem', 'Follow system text size')}</option>
+              {[0.9, 1, 1.1, 1.25, 1.5, 1.75, 2].map((n) => (
+                <option key={n} value={n}>
+                  {Math.round(n * 100)}%
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
         <Field label={t('prefs.language', 'Language')}>
           {(id) => (
             <Select

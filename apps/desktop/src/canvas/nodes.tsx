@@ -19,7 +19,7 @@ import { Lock, StickyNote } from 'lucide-react';
 import { cx } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { DEVICE_W, ICON } from './geometry.ts';
-import type { DeviceView, ZoneView } from './model.ts';
+import { SEVERITY_GLYPH, type DeviceView, type ZoneView } from './model.ts';
 import { roleLabel } from '../lib/labels.ts';
 
 export function DeviceIcon({
@@ -141,6 +141,7 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
             aria-hidden="true"
             data-lw-badge={view.severity}
           >
+            <span className="mr-0.5 text-[8px] leading-none">{SEVERITY_GLYPH[view.severity]}</span>
             {view.issueCount}
           </span>
         )}

@@ -82,6 +82,44 @@ fn print_page(window: tauri::WebviewWindow) -> Result<(), String> {
     window.print().map_err(|e| e.to_string())
 }
 
+/// The text size the OS asks for, as a scale factor (NFR-A11Y-04). On Windows this is Settings →
+/// Accessibility → Text size, which WebView2 does not apply by itself. macOS has no system-wide
+/// text size for web views, so the UI stays at 1 there unless the user picks a size.
+#[tauri::command]
+fn os_text_scale() -> f64 {
+    text_scale_from(read_text_scale_factor())
+}
+
+/// TextScaleFactor is a percentage from 100 to 225; anything else means "not set".
+fn text_scale_from(percent: Option<u32>) -> f64 {
+    match percent {
+        Some(p) if (100..=225).contains(&p) => f64::from(p) / 100.0,
+        _ => 1.0,
+    }
+}
+
+#[cfg(windows)]
+fn read_text_scale_factor() -> Option<u32> {
+    windows_registry::CURRENT_USER
+        .open(r"Software\Microsoft\Accessibility")
+        .ok()?
+        .get_u32("TextScaleFactor")
+        .ok()
+}
+
+#[cfg(not(windows))]
+fn read_text_scale_factor() -> Option<u32> {
+    None
+}
+
+/// Scale the whole interface with the web view's own zoom, which keeps pointer coordinates and
+/// layout consistent (CSS zoom would not).
+#[tauri::command]
+fn set_ui_scale(window: tauri::WebviewWindow, scale: f64) -> Result<(), String> {
+    let s = if scale.is_finite() { scale.clamp(0.75, 2.5) } else { 1.0 };
+    window.set_zoom(s).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     install_panic_hook();
@@ -146,6 +184,8 @@ pub fn run() {
             take_pending_opens,
             quit_app,
             print_page,
+            os_text_scale,
+            set_ui_scale,
             open_external,
             open_logs_folder,
             files::read_text_file,
@@ -201,6 +241,17 @@ fn install_panic_hook() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn text_scale_reads_the_windows_percentage() {
+        assert_eq!(text_scale_from(None), 1.0);
+        assert_eq!(text_scale_from(Some(100)), 1.0);
+        assert_eq!(text_scale_from(Some(150)), 1.5);
+        assert_eq!(text_scale_from(Some(225)), 2.25);
+        // Out-of-range values are ignored.
+        assert_eq!(text_scale_from(Some(0)), 1.0);
+        assert_eq!(text_scale_from(Some(1000)), 1.0);
+    }
 
     /// FR-APP-09: double-clicking a .lwise file passes its path to the app.
     #[test]

@@ -22,6 +22,8 @@ fn main() {
             "pick_save",
             "recent_list",
             "recent_add",
+            "os_text_scale",
+            "set_ui_scale",
         ]),
     ))
     .expect("failed to run tauri-build");

@@ -3,6 +3,7 @@
 import {
   addDevice,
   addOffPageRef,
+  addZone,
   addPage,
   assignIp,
   connect,
@@ -25,6 +26,7 @@ import { assetDataUrl, customIconUrl, iconRole } from '../src/canvas/icons.ts';
 import { renderPageSvg } from '../src/export/svg.ts';
 import { planPdf, PAPER } from '../src/export/pdf.ts';
 import { clampScale } from '../src/export/raster.ts';
+import { buildOutline, visibleNodes, type OutlineLabels } from '../src/panels/outlineTree.ts';
 import {
   circularLayout,
   elkLayout,
@@ -206,6 +208,20 @@ describe('SVG export', () => {
       );
     expect(hasBackground(renderPageSvg(ed.doc, { pageId }))).toBe(true);
     expect(hasBackground(renderPageSvg(ed.doc, { pageId, transparent: true }))).toBe(false);
+  });
+
+  it('NFR-A11Y-03 an error link carries the ✕ badge as well as the red stroke', () => {
+    const { ed, link } = twoRouters();
+    const pageId = ed.doc.pages[0]!.id;
+    expect(renderPageSvg(ed.doc, { pageId }).svg).not.toContain('✕');
+    const issue = {
+      ruleId: 'VAL-002',
+      severity: 'error' as const,
+      message: '',
+      objectIds: [link],
+      fixes: [],
+    };
+    expect(renderPageSvg(ed.doc, { pageId, issues: [issue] }).svg).toContain('>✕</text>');
   });
 
   it('FR-EXP-03 title block shows name, author, date, revision and page', () => {
@@ -437,5 +453,67 @@ describe('input parsing', () => {
   it('makes safe file names', () => {
     expect(safeFileName('HQ: core/dist <v2>')).toBe('HQ- core-dist -v2-');
     expect(safeFileName('   ')).toBe('diagram');
+  });
+});
+
+describe('topology outline', () => {
+  const labels: OutlineLabels = {
+    noZone: 'Not in a zone',
+    role: (d) => d.role,
+    connectedTo: (host, port) => `Connected to ${host} ${port}`,
+    access: (v) => `access VLAN ${v}`,
+    trunk: (v) => `trunk ${v}`,
+  };
+
+  it('NFR-A11Y-02 nests zones, devices, interfaces and link peers', () => {
+    const { ed, pageId, a, b } = twoRouters();
+    const outer = addZone(pageId, 'Site', 'site', { x: -50, y: -50, w: 600, h: 300 });
+    ed.execute(outer);
+    const inner = addZone(pageId, 'Rack 1', 'floor', { x: -20, y: -20, w: 100, h: 100 }, outer.zoneId);
+    ed.execute(inner);
+    ed.execute(updateDevices([a], { zoneId: inner.zoneId }));
+    const page = ed.doc.pages[0]!;
+    const tree = buildOutline(ed.doc, page, '', labels);
+    // Site → Rack 1 → R1; R2 is not in a zone.
+    expect(tree.map((n) => n.label)).toEqual(['Site', 'Not in a zone']);
+    const rack = tree[0]!.children[0]!;
+    expect(rack).toMatchObject({ kind: 'zone', label: 'Rack 1' });
+    const r1 = rack.children[0]!;
+    expect(r1).toMatchObject({ kind: 'device', label: 'R1', deviceId: a });
+    expect(r1.children.map((i) => i.kind)).toEqual(r1.children.map(() => 'interface'));
+    // The linked interface leads to the far end.
+    const linked = r1.children.find((i) => i.children.length)!;
+    const r2 = ed.doc.devices.find((d) => d.id === b)!;
+    const link = ed.doc.links[0]!;
+    const far = r2.interfaces.find(
+      (i) => i.id === [link.endpointA, link.endpointB].find((e) => e.deviceId === b)!.interfaceId,
+    )!;
+    expect(linked.children[0]).toMatchObject({
+      kind: 'peer',
+      label: `Connected to R2 ${far.shortName}`,
+      deviceId: b,
+      linkId: link.id,
+    });
+    expect(tree[1]!.children.map((n) => n.label)).toEqual(['R2']);
+
+    // Only what is expanded can be reached.
+    expect(visibleNodes(tree, new Set()).map((v) => v.node.label)).toEqual(['Site', 'Not in a zone']);
+    const open = new Set([tree[0]!.key, rack.key]);
+    expect(visibleNodes(tree, open).map((v) => [v.node.label, v.level])).toEqual([
+      ['Site', 1],
+      ['Rack 1', 2],
+      ['R1', 3],
+      ['Not in a zone', 1],
+    ]);
+  });
+
+  it('NFR-A11Y-02 filters by hostname or address and drops empty zones', () => {
+    const { ed, pageId, a } = twoRouters();
+    const z = addZone(pageId, 'Site', 'site', { x: -50, y: -50, w: 600, h: 300 });
+    ed.execute(z);
+    ed.execute(updateDevices([a], { zoneId: z.zoneId }));
+    const page = ed.doc.pages[0]!;
+    expect(buildOutline(ed.doc, page, 'r2', labels).map((n) => n.label)).toEqual(['Not in a zone']);
+    expect(buildOutline(ed.doc, page, 'nothing', labels)).toEqual([]);
   });
 });

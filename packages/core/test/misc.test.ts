@@ -23,6 +23,8 @@ import {
   validateTemplate,
   copyHostname,
   nextHostname,
+  VLAN_PALETTE,
+  vlanColorAt,
 } from '../src/index.ts';
 import { newEditor, switchTemplate } from './helpers.ts';
 
@@ -123,5 +125,31 @@ describe('remaining commands', () => {
     ed.execute(createPortChannel(s.deviceId, 2, members, 'on'));
     ed.execute(createPortChannel(s.deviceId, 2, [], 'on'));
     expect(ed.doc.devices[0]?.interfaces.filter((i) => i.name === 'Port-channel2')).toHaveLength(1);
+  });
+});
+
+describe('VLAN palette [NFR-A11Y-03]', () => {
+  const lum = (hex: string) => {
+    const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const l = c.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * l[0]! + 0.7152 * l[1]! + 0.0722 * l[2]!;
+  };
+  const contrast = (a: string, b: string) => {
+    const [x, y] = [lum(a), lum(b)];
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  };
+
+  it('keeps 3:1 against the light and dark canvas', () => {
+    for (const c of VLAN_PALETTE) {
+      expect(contrast(c, '#FBFCFD'), c).toBeGreaterThanOrEqual(3);
+      expect(contrast(c, '#0E1726'), c).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('gives consecutive new VLANs different colors', () => {
+    const { ed } = newEditor();
+    for (const n of [10, 20, 30, 40, 50, 60]) ed.execute(upsertVlan({ number: n, name: `V${n}` }));
+    expect(new Set(ed.doc.vlans.map((v) => v.color)).size).toBe(6);
+    expect(vlanColorAt(6)).toBe(vlanColorAt(0));
   });
 });

@@ -171,5 +171,13 @@ export function createTauriPlatform(): PlatformAdapter {
       if (detectOs() === 'macos') await invoke('print_page');
       else window.print();
     },
+
+    async osTextScale() {
+      return invoke<number>('os_text_scale');
+    },
+
+    async setUiScale(scale) {
+      await invoke('set_ui_scale', { scale });
+    },
   };
 }

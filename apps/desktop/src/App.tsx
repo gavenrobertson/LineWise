@@ -137,6 +137,26 @@ function useAppEffects(): void {
   const presentation = useUi((s) => s.presentation);
 
   useEffect(() => applyTheme(theme), [theme]);
+  // Interface size follows the OS text size unless the user picked one (NFR-A11Y-04).
+  const uiScale = usePrefs((s) => s.uiScale);
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const scale =
+        uiScale === 'system'
+          ? await platform()
+              .osTextScale()
+              .catch(() => 1)
+          : uiScale;
+      if (live)
+        await platform()
+          .setUiScale(scale)
+          .catch(() => undefined);
+    })();
+    return () => {
+      live = false;
+    };
+  }, [uiScale]);
   useEffect(() => {
     if (i18n.language !== language) void i18n.changeLanguage(language);
     document.documentElement.lang = language;

@@ -15,6 +15,7 @@ import {
   rolePrefix,
 } from './document.ts';
 import { newId, nowIso } from './ids.ts';
+import { vlanColorAt } from './palette.ts';
 import { expandInterfaceRange, normalizeInterfaceName } from './naming.ts';
 import type {
   Annotation,
@@ -538,7 +539,7 @@ export function upsertVlan(v: Partial<Vlan> & { number: number }): Command & { v
       d.vlans.push({
         name: '',
         description: '',
-        color: '#2563EB',
+        color: vlanColorAt(d.vlans.length),
         subnetIds: [],
         customFields: {},
         ...v,

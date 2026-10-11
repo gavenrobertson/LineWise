@@ -42,7 +42,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-INS-03 | MUST | `apps/desktop/src/panels/InterfaceTable.tsx` | `apps/desktop/test/components.test.tsx`, `packages/core/test/commands.test.ts` | done |
 | FR-INS-04 | MUST | `apps/desktop/src/panels/Inspector.tsx` | `apps/desktop/test/components.test.tsx` | done |
 | FR-KEY-01 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/dialogs/ShortcutsDialog.tsx`, `apps/desktop/src-tauri/src/menu.rs` | `apps/desktop/test/pure.test.ts`, `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
-| FR-KEY-02 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/store/ui.ts`, `apps/desktop/src/lib/actions.ts` — place, nudge, link, rename and every command via the palette; full audit of canvas actions in M5 | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/13-campus.spec.ts` | partial |
+| FR-KEY-02 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/lib/actions.ts`, `apps/desktop/src/panels/Inspector.tsx` (zone and annotation size, bend points), `apps/desktop/src/panels/OutlinePanel.tsx` | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/13-campus.spec.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
 | FR-NET-01 | MUST | `packages/core/src/commands.ts`, `packages/core/src/templates.ts` | `packages/core/test/commands.test.ts` | done |
 | FR-NET-02 | MUST | `packages/core/src/naming.ts`, `packages/core/src/commands.ts`, `apps/desktop/src/panels/InterfaceTable.tsx` | `packages/core/test/naming.test.ts`, `packages/core/test/commands.test.ts` | done |
 | FR-NET-03 | MUST | `packages/core/src/naming.ts` | `packages/core/test/naming.test.ts` | done |
@@ -149,13 +149,13 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-SEC-08 | MUST | | | todo |
 | NFR-PRIV-01 | MUST | | | todo |
 | NFR-PRIV-02 | MUST | | | todo |
-| NFR-A11Y-01 | MUST | | | todo |
-| NFR-A11Y-02 | MUST | | | todo |
-| NFR-A11Y-03 | MUST | | | todo |
-| NFR-A11Y-04 | MUST | | | todo |
-| NFR-A11Y-05 | MUST | | | todo |
-| NFR-I18N-01 | MUST | | | todo |
-| NFR-I18N-02 | MUST | | | todo |
+| NFR-A11Y-01 | MUST | `apps/desktop/src/lib/keyboard.ts`, `apps/desktop/src/lib/actions.ts` (`focusNearest`), `apps/desktop/src/App.tsx` (skip link) | `apps/desktop/e2e/07-keyboard-only.spec.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
+| NFR-A11Y-02 | MUST | `apps/desktop/src/panels/OutlinePanel.tsx`, `apps/desktop/src/panels/outlineTree.ts` | `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
+| NFR-A11Y-03 | MUST | `apps/desktop/src/canvas/model.ts` (`SEVERITY_GLYPH`), `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/NetworkEdge.tsx`, `apps/desktop/src/export/svg.ts`, `packages/core/src/palette.ts`, `packages/core/src/selectors.ts` (`endLabel`: VLAN labels in L2) | `packages/core/test/misc.test.ts`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/18-a11y-keyboard.spec.ts` | done |
+| NFR-A11Y-04 | MUST | `apps/desktop/src/styles.css` (reduced motion, increased contrast, forced colors), `apps/desktop/src/App.tsx` + `apps/desktop/src-tauri/src/lib.rs` (`os_text_scale`, `set_ui_scale`: interface size follows the OS text size), `apps/desktop/src/dialogs/PreferencesDialog.tsx` | `apps/desktop/e2e/14-a11y.spec.ts`, `apps/desktop/src-tauri/src/lib.rs` (unit test) | done |
+| NFR-A11Y-05 | MUST | axe-core in E2E (both themes) and component tests | `apps/desktop/e2e/14-a11y.spec.ts`, `apps/desktop/test/components.test.tsx` | done |
+| NFR-I18N-01 | MUST | `scripts/i18n.ts`, `apps/desktop/src/i18n/` | `scripts/i18n.test.mjs`, `apps/desktop/e2e/15-i18n.spec.ts` | done |
+| NFR-I18N-02 | MUST | `apps/desktop/src/main.tsx` (pseudo-locale), `apps/desktop/src/styles.css` | `apps/desktop/e2e/15-i18n.spec.ts` | done |
 | NFR-REL-01 | MUST | | | todo |
 | NFR-REL-02 | MUST | | | todo |
 | NFR-REL-03 | MUST | | | todo |

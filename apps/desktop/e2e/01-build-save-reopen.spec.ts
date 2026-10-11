@@ -7,7 +7,7 @@ async function selectInOutline(page: Page, hostname: string) {
   await page.getByRole('tab', { name: 'Outline' }).click();
   await page
     .getByRole('tabpanel', { name: 'Outline' })
-    .getByRole('button', { name: new RegExp(`^${hostname}\\b`) })
+    .getByRole('treeitem', { name: new RegExp(`^${hostname}\\b`) })
     .first()
     .click();
 }

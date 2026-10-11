@@ -35,3 +35,7 @@ lto = true
 opt-level = "s"
 panic = "abort"
 strip = true
+
+[target.'cfg(windows)'.dependencies]
+# Reads the OS text size (NFR-A11Y-04); already in the tree through Tauri.
+windows-registry = "0.6"

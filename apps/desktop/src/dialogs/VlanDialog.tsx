@@ -9,6 +9,7 @@ import {
   parseVlanList,
   removeVlans,
   upsertVlan,
+  vlanColorAt,
   vlanDomain,
   type Vlan,
 } from '@linewise/core';
@@ -18,19 +19,6 @@ import { useTranslation } from 'react-i18next';
 import { Button, Dialog, IconButton, TextInput } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
-
-const PALETTE = [
-  '#2563EB',
-  '#16A34A',
-  '#DC2626',
-  '#9333EA',
-  '#EA580C',
-  '#0891B2',
-  '#CA8A04',
-  '#DB2777',
-  '#4F46E5',
-  '#059669',
-];
 
 function VlanRow({ v }: { v: Vlan }) {
   const { t } = useTranslation();
@@ -168,7 +156,7 @@ export function VlanDialog() {
           upsertVlan({
             number: n,
             name: fresh.length === 1 ? name : name && `${name} ${n}`,
-            color: PALETTE[(doc.vlans.length + i) % PALETTE.length] as string,
+            color: vlanColorAt(doc.vlans.length + i),
           }),
         ),
       ),
@@ -234,7 +222,7 @@ export function VlanDialog() {
                   undefinedInUse.map((n, i) =>
                     upsertVlan({
                       number: n,
-                      color: PALETTE[(doc.vlans.length + i) % PALETTE.length] as string,
+                      color: vlanColorAt(doc.vlans.length + i),
                     }),
                   ),
                 ),

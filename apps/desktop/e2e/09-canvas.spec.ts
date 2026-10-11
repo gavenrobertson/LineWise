@@ -340,7 +340,7 @@ test('FR-CAN-09 drag a template onto the canvas, and onto a link to insert it in
 
   // Link them, then drop a switch on the middle of the link.
   await page.getByRole('tab', { name: 'Outline' }).click();
-  await page.getByRole('tabpanel', { name: 'Outline' }).getByRole('button', { name: /^R1\b/ }).click();
+  await page.getByRole('tabpanel', { name: 'Outline' }).getByRole('treeitem', { name: /^R1\b/ }).click();
   await page.keyboard.press('l');
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').fill('R2');

@@ -87,6 +87,12 @@ function worst(a: Severity | null, b: Severity): Severity {
   return !a || SEV_RANK[b] > SEV_RANK[a] ? b : a;
 }
 
+/**
+ * Severity is shown by a glyph as well as a color, so it never depends on color alone
+ * (NFR-A11Y-03): ✕ error, ▲ warning, i information.
+ */
+export const SEVERITY_GLYPH: Record<Severity, string> = { error: '✕', warning: '▲', info: 'i' };
+
 const MEDIUM_STYLE: Record<Link['medium'], { color: string; dash: string | null; width: number }> = {
   copper: { color: 'var(--link)', dash: null, width: 1.75 },
   'fiber-sm': { color: 'var(--link-fiber)', dash: null, width: 1.75 },

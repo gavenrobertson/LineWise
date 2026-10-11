@@ -27,6 +27,21 @@ describe('starter templates [FR-APP-06]', () => {
       const r = parseDocument(serializeDocument(doc));
       expect(r.status).toBe('ok');
       for (const d of doc.devices) expect(doc.pages[0]?.nodePositions[d.id], d.hostname).toBeTruthy();
+      // A device drawn inside a zone belongs to it, as if it had been dropped there (FR-APP-06).
+      const page = doc.pages[0]!;
+      for (const d of doc.devices) {
+        const c = page.nodePositions[d.id]!;
+        const inside = doc.zones.filter((z) => {
+          const b = page.zoneBoxes[z.id];
+          return b && c.x >= b.x && c.x <= b.x + b.w && c.y >= b.y && c.y <= b.y + b.h;
+        });
+        if (inside.length)
+          expect(
+            inside.map((z) => z.id),
+            d.hostname,
+          ).toContain(d.zoneId);
+        else expect(d.zoneId, d.hostname).toBeUndefined();
+      }
     });
   }
 });

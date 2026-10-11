@@ -8,6 +8,7 @@ import {
   connect,
   createDocument,
   Editor,
+  updateDevices,
   updateInterface,
   upsertSubnet,
   upsertVlan,
@@ -109,7 +110,19 @@ class Builder {
     return this;
   }
 
+  /** Devices drawn inside a zone belong to it (the innermost one), as when dropped there. */
   done(): NetworkDocument {
+    const page = this.ed.doc.pages.find((p) => p.id === this.pageId);
+    if (page)
+      for (const d of this.ed.doc.devices) {
+        const c = page.nodePositions[d.id];
+        if (!c) continue;
+        const inner = this.ed.doc.zones
+          .map((z) => ({ z, b: page.zoneBoxes[z.id] }))
+          .filter(({ b }) => b && c.x >= b.x && c.x <= b.x + b.w && c.y >= b.y && c.y <= b.y + b.h)
+          .sort((p, q) => p.b!.w * p.b!.h - q.b!.w * q.b!.h)[0];
+        if (inner && d.zoneId !== inner.z.id) this.ed.execute(updateDevices([d.id], { zoneId: inner.z.id }));
+      }
     return this.ed.doc;
   }
 }

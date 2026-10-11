@@ -20,6 +20,7 @@ export function ShortcutsDialog() {
     { label: t('shortcuts.pan', 'Pan'), keys: t('shortcuts.panKeys', 'Space + drag, or middle mouse') },
     { label: t('shortcuts.multi', 'Add to selection'), keys: `Shift / ${formatShortcut('mod')} + click` },
     { label: t('shortcuts.nudge', 'Nudge selection'), keys: '← ↑ → ↓ (Shift ×10)' },
+    { label: t('shortcuts.panKeys2', 'Pan, with nothing selected'), keys: '← ↑ → ↓ (Shift: further)' },
     { label: t('shortcuts.focus', 'Move focus to nearest device'), keys: 'Alt + ← ↑ → ↓' },
     { label: t('shortcuts.edit', 'Edit hostname'), keys: 'Enter' },
     { label: t('shortcuts.link', 'Link from focused device'), keys: 'L' },

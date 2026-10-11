@@ -247,5 +247,14 @@ export function createBrowserPlatform(): PlatformAdapter {
     async print() {
       window.print();
     },
+
+    async osTextScale() {
+      return 1;
+    },
+
+    async setUiScale(scale) {
+      // The browser's own zoom scales the page; recorded for tests.
+      document.documentElement.dataset.uiScale = String(scale);
+    },
   };
 }

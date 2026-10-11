@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../store/editor.ts';
 import { edgeGeometryPure as edgeGeometry } from './edgeGeometry.ts';
 import { midDirection, nodeCenter, type XY } from './geometry.ts';
-import type { LinkView } from './model.ts';
+import { SEVERITY_GLYPH, type LinkView } from './model.ts';
 
 /** Link anchor for a node: device icon center, or the middle of an off-page reference pill. */
 export function anchorOf(n: InternalNode): XY {
@@ -174,6 +174,20 @@ export const NetworkEdge = memo(function NetworkEdge({
       {/* Bend points are drawn in the edge's own group so they sit above its hit path. */}
       {selected && !readOnly && view.waypoints.length > 0 && (
         <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
+      )}
+      {view.severity && (
+        // Problem badge at the middle of the link, drawn with the link so it shows at every zoom.
+        <g
+          transform={`translate(${anchors.mid.x} ${anchors.mid.y + 10})`}
+          data-lw-badge={view.severity}
+          aria-hidden="true"
+          pointerEvents="none"
+        >
+          <circle r={7} fill={SEV[view.severity]} stroke="var(--canvas)" strokeWidth={1.5} />
+          <text textAnchor="middle" dy={3} fontSize={8} fontWeight={700} fill="#fff">
+            {SEVERITY_GLYPH[view.severity]}
+          </text>
+        </g>
       )}
       <EdgeLabels>
         {view.labelA && (

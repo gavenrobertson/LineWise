@@ -10,6 +10,7 @@
  *   keys are handled here and the event is consumed before the menu sees it.
  */
 import { useEffect } from 'react';
+import { canvasApi } from '../canvas/Canvas.tsx';
 import { platform, type MenuCommand } from '../platform/index.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -140,6 +141,17 @@ export function useKeyboard(): void {
           return;
         }
       }
+      // So does a focused zone or annotation on Enter or Space; arrows then move it and the
+      // inspector edits it (FR-KEY-02).
+      const other = target?.closest?.(
+        '.react-flow__node-zone, .react-flow__node-annotation',
+      ) as HTMLElement | null;
+      if (other?.dataset.id && (e.key === 'Enter' || e.key === ' ')) {
+        const kind = other.classList.contains('react-flow__node-zone') ? 'zones' : 'annotations';
+        useEditor.getState().setSelection({ [kind]: [other.dataset.id] });
+        e.preventDefault();
+        return;
+      }
       // Presentation mode: step through pages.
       if (ui.presentation && (e.key === 'PageDown' || e.key === 'PageUp' || e.key === ' ')) {
         const ed = useEditor.getState();
@@ -152,8 +164,17 @@ export function useKeyboard(): void {
       }
       if (e.key.startsWith('Arrow') && onCanvas) {
         const dir = e.key.slice(5).toLowerCase() as 'up' | 'down' | 'left' | 'right';
+        const ed0 = useEditor.getState().selection;
+        const nothing = !ed0.devices.length && !ed0.zones.length && !ed0.annotations.length;
         if (e.altKey) focusNearest(dir);
-        else {
+        else if (nothing) {
+          // With nothing selected, arrows pan the view (Shift: further).
+          const step = e.shiftKey ? 240 : 60;
+          canvasApi.panBy(
+            dir === 'left' ? -step : dir === 'right' ? step : 0,
+            dir === 'up' ? -step : dir === 'down' ? step : 0,
+          );
+        } else {
           const step = e.shiftKey ? 10 : 1;
           nudge(
             dir === 'left' ? -step : dir === 'right' ? step : 0,

@@ -200,6 +200,35 @@ body {
   }
 }
 
+/* Windows high contrast (forced colors, NFR-A11Y-04): links and labels take the system colors;
+   device icons and severity badges keep their own, like images, so a badge's glyph and shape
+   stay readable on any system background. */
+@media (forced-colors: active) {
+  /* Link colors are inline styles, so the system color needs !important. */
+  .react-flow__edge-path {
+    stroke: CanvasText !important;
+  }
+  .react-flow__node.selected {
+    outline: 2px solid Highlight;
+  }
+  .react-flow__edge.selected .react-flow__edge-path {
+    stroke: Highlight !important;
+  }
+  .lw-edge-label,
+  .lw-device-label > div {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+  .react-flow__node-device svg,
+  [data-lw-badge] {
+    forced-color-adjust: none;
+  }
+  .react-flow__handle {
+    background: Highlight;
+  }
+}
+
 /* React Flow theming */
 .react-flow {
   --xy-background-color: var(--canvas);

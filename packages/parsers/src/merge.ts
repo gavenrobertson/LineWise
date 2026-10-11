@@ -12,6 +12,7 @@ import {
   newId,
   normalizeInterfaceName,
   nowIso,
+  vlanColorAt,
   type Command,
   type Device,
   type DeviceRole,
@@ -326,7 +327,7 @@ export function applyImportPlan(
           number: v.number,
           name: v.name,
           description: '',
-          color: '#2563EB',
+          color: vlanColorAt(d.vlans.length),
           subnetIds: [],
         });
       }

@@ -11,6 +11,8 @@
     "allow-app-version",
     "allow-quit-app",
     "allow-print-page",
+    "allow-os-text-scale",
+    "allow-set-ui-scale",
     "allow-read-text-file",
     "allow-read-binary-file",
     "allow-save-atomic",

@@ -83,12 +83,20 @@ export const canvasApi: {
   zoomIn: () => void;
   zoomOut: () => void;
   focusOn: (ids: string[]) => void;
+  /** Move the view by screen pixels (keyboard panning, FR-KEY-02). */
+  panBy: (dx: number, dy: number) => void;
   viewportCenter: () => XY;
 } = {
   instance: null,
   fit: () => void canvasApi.instance?.fitView({ padding: fitPadding(), duration: 200, maxZoom: 1 }),
   zoomIn: () => void canvasApi.instance?.zoomIn({ duration: 150 }),
   zoomOut: () => void canvasApi.instance?.zoomOut({ duration: 150 }),
+  panBy: (dx, dy) => {
+    const inst = canvasApi.instance;
+    if (!inst) return;
+    const v = inst.getViewport();
+    void inst.setViewport({ x: v.x - dx, y: v.y - dy, zoom: v.zoom }, { duration: 80 });
+  },
   focusOn: (ids) => {
     const inst = canvasApi.instance;
     if (!inst) return;

@@ -15,6 +15,8 @@ export interface Prefs {
   telemetry: boolean;
   language: string;
   exportScale: number;
+  /** Interface size: follow the OS text size, or a fixed factor (NFR-A11Y-04). */
+  uiScale: 'system' | number;
   showMinimap: boolean;
   /** Problem badges on devices and links (FR-VAL-03). */
   showProblemBadges: boolean;
@@ -36,6 +38,7 @@ export const DEFAULT_PREFS: Prefs = {
   telemetry: false,
   language: 'en',
   exportScale: 2,
+  uiScale: 'system',
   showMinimap: true,
   showProblemBadges: true,
   favorites: [],

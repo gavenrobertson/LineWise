@@ -9,7 +9,14 @@ import type { NetworkDocument, ViewLayer, Issue } from '@linewise/core';
 import { iconMarkup } from '@linewise/device-library';
 import { edgeGeometryPure } from '../canvas/edgeGeometry.ts';
 import { ICON, midDirection, type XY } from '../canvas/geometry.ts';
-import { buildPageModel, labelBox, offPageBox, pageBounds, type PageModel } from '../canvas/model.ts';
+import {
+  buildPageModel,
+  labelBox,
+  offPageBox,
+  pageBounds,
+  SEVERITY_GLYPH,
+  type PageModel,
+} from '../canvas/model.ts';
 import { assetDataUrl, customIconUrl, iconRole } from '../canvas/icons.ts';
 
 export type ExportTheme = 'light' | 'dark';
@@ -254,6 +261,11 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
         ),
       );
     };
+    // An error link is red and carries the same ✕ badge as on screen (NFR-A11Y-03).
+    if (l.severity === 'error')
+      labels.push(
+        `<g transform="translate(${f(mid.x)} ${f(mid.y + 10)})"><circle r="7" fill="${pal['--danger']}" stroke="${pal['--canvas']}" stroke-width="1.5"/><text text-anchor="middle" dy="3" font-size="8" font-weight="700" fill="#ffffff">${SEVERITY_GLYPH.error}</text></g>`,
+      );
     label(anchors.a, l.labelA, true);
     label(anchors.b, l.labelB, true);
     label(anchors.mid, l.labelMid, false, -10);

@@ -155,4 +155,8 @@ export interface PlatformAdapter {
   openExternal(url: string): Promise<void>;
   openLogsFolder(): Promise<void>;
   print(): Promise<void>;
+  /** The OS text size as a scale factor; 1 where the OS has none for apps (NFR-A11Y-04). */
+  osTextScale(): Promise<number>;
+  /** Scale the whole interface (web view zoom). The browser build leaves this to the browser. */
+  setUiScale(scale: number): Promise<void>;
 }

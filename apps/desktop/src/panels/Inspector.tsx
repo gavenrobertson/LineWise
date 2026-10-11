@@ -8,6 +8,7 @@ import {
   DEVICE_ROLES,
   isValidIp,
   LINK_MEDIA,
+  resizeZone,
   updateAnnotation,
   updateDevices,
   updateDocumentInfo,
@@ -322,6 +323,7 @@ function LinkFields({ links }: { links: Link[] }) {
         value={shared(links, (l) => l.style.color)}
         onCommit={(v) => execute(updateLinkStyle(ids, { color: v }))}
       />
+      {single && <BendFields link={single} />}
       {links.some((l) => l.style.waypoints?.length) && (
         <button
           type="button"
@@ -339,6 +341,59 @@ function LinkFields({ links }: { links: Link[] }) {
       </p>
       {single && <P2pHelper linkId={single.id} />}
     </Group>
+  );
+}
+
+/** Bend points as numbers, so they can be added and moved without a mouse (FR-KEY-02). */
+function BendFields({ link }: { link: Link }) {
+  const { t } = useTranslation();
+  const execute = useEditor((s) => s.execute);
+  const page = useEditor(selectPage);
+  const points = link.style.waypoints ?? [];
+  const setPoints = (next: { x: number; y: number }[]) =>
+    execute(updateLinkStyle([link.id], { waypoints: next.length ? next : undefined }));
+  const a = page?.nodePositions[link.endpointA.deviceId];
+  const b = page?.nodePositions[link.endpointB.deviceId];
+  const add = () => {
+    // Halfway along the last segment, nudged aside so the link visibly bends.
+    const from = points.at(-1) ?? a;
+    if (!from || !b) return;
+    setPoints([...points, { x: Math.round((from.x + b.x) / 2), y: Math.round((from.y + b.y) / 2 + 40) }]);
+  };
+  return (
+    <div className="flex flex-col gap-1.5">
+      {points.map((p, i) => (
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+          <NumberField
+            label={t('field.bendX', 'Bend {{n}} X', { n: i + 1 })}
+            value={Math.round(p.x)}
+            allowEmpty={false}
+            onCommit={(v) =>
+              v !== undefined && setPoints(points.map((q, j) => (j === i ? { ...q, x: v } : q)))
+            }
+          />
+          <NumberField
+            label={t('field.bendY', 'Bend {{n}} Y', { n: i + 1 })}
+            value={Math.round(p.y)}
+            allowEmpty={false}
+            onCommit={(v) =>
+              v !== undefined && setPoints(points.map((q, j) => (j === i ? { ...q, y: v } : q)))
+            }
+          />
+          <IconButton
+            label={t('inspector.removeBend', 'Remove bend {{n}}', { n: i + 1 })}
+            onClick={() => setPoints(points.filter((_, j) => j !== i))}
+          >
+            <Trash2 size={13} />
+          </IconButton>
+        </div>
+      ))}
+      {a && b && (
+        <button type="button" className="self-start text-[11.5px] text-accent-ink underline" onClick={add}>
+          {t('inspector.addBend', 'Add bend point')}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -415,6 +470,8 @@ function ZoneFields({ zones }: { zones: Zone[] }) {
   const all = useEditor((s) => s.doc.zones);
   const set = (patch: Partial<Zone>) => zones.forEach((z) => execute(updateZone(z.id, patch)));
   const single = zones.length === 1 ? zones[0] : undefined;
+  const page = useEditor(selectPage);
+  const box = single ? page?.zoneBoxes[single.id] : undefined;
   return (
     <Group
       title={
@@ -451,6 +508,25 @@ function ZoneFields({ zones }: { zones: Zone[] }) {
           options={all.filter((z) => z.id !== single.id).map((z) => ({ value: z.id, label: z.name }))}
           onCommit={(v) => set({ parentZoneId: v })}
         />
+      )}
+      {single && box && page && (
+        // Size from the keyboard, as with the resize handles (FR-KEY-02); arrows move it.
+        <div className="grid grid-cols-2 gap-2">
+          <NumberField
+            label={t('field.width', 'Width')}
+            value={Math.round(box.w)}
+            min={80}
+            allowEmpty={false}
+            onCommit={(v) => v && execute(resizeZone(page.id, single.id, { ...box, w: Math.max(80, v) }))}
+          />
+          <NumberField
+            label={t('field.height', 'Height')}
+            value={Math.round(box.h)}
+            min={60}
+            allowEmpty={false}
+            onCommit={(v) => v && execute(resizeZone(page.id, single.id, { ...box, h: Math.max(60, v) }))}
+          />
+        </div>
       )}
       <ColorField
         label={t('field.color', 'Color')}
@@ -529,6 +605,24 @@ function AnnotationFields({ annotations }: { annotations: Annotation[] }) {
           value={shared(annotations, (a) => !!a.style.arrowEnd)}
           onCommit={(v) => setStyle({ arrowEnd: v })}
         />
+      )}
+      {single && single.kind !== 'text' && (
+        <div className="grid grid-cols-2 gap-2">
+          <NumberField
+            label={t('field.width', 'Width')}
+            value={Math.round(single.geometry.w)}
+            min={8}
+            allowEmpty={false}
+            onCommit={(v) => v && set({ geometry: { ...single.geometry, w: Math.max(8, v) } })}
+          />
+          <NumberField
+            label={t('field.height', 'Height')}
+            value={Math.round(single.geometry.h)}
+            min={8}
+            allowEmpty={false}
+            onCommit={(v) => v && set({ geometry: { ...single.geometry, h: Math.max(8, v) } })}
+          />
+        </div>
       )}
       <NumberField
         label={t('field.rotation', 'Rotation (°)')}

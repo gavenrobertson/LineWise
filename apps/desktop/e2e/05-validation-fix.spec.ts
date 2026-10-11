@@ -19,7 +19,7 @@ test('a subnet mismatch is reported and fixed in one click', async ({ page }) =>
   const iface = r2.interfaces.find((i) => i.id === r2End.interfaceId)!;
 
   await page.getByRole('tab', { name: 'Outline' }).click();
-  await page.getByRole('tabpanel', { name: 'Outline' }).getByRole('button', { name: /^R2\b/ }).click();
+  await page.getByRole('tabpanel', { name: 'Outline' }).getByRole('treeitem', { name: /^R2\b/ }).click();
   const inspector = page.getByRole('complementary', { name: 'Inspector' });
   await inspector
     .getByRole('button', { name: new RegExp(`^${iface.shortName.replace('/', '\\/')},`) })

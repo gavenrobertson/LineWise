@@ -100,3 +100,40 @@ for (const theme of ['light', 'dark'] as const) {
     });
   });
 }
+
+test('NFR-A11Y-04 reduced motion, increased contrast, forced colors and interface size', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce', contrast: 'more' });
+  await openApp(page);
+  await startFrom(page, /CCNA lab/);
+  // Reduced motion: transitions are cut to nothing.
+  const transition = await page
+    .locator('.transition-transform')
+    .first()
+    .evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration));
+  expect(transition).toBeLessThan(0.001);
+  // Increased contrast: secondary text and borders get darker.
+  const token = (name: string) =>
+    page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
+  expect((await token('--text-subtle')).toLowerCase()).toBe('#374151');
+  await axe(page, 'increased contrast');
+
+  // Forced colors: links use the system text color; device icons and badges keep theirs.
+  await page.emulateMedia({ forcedColors: 'active', contrast: 'no-preference' });
+  const look = await page.evaluate(() => ({
+    edge: getComputedStyle(document.querySelector('.react-flow__edge-path')!).stroke,
+    text: getComputedStyle(document.body).color,
+    icon: getComputedStyle(document.querySelector('.react-flow__node-device svg')!).forcedColorAdjust,
+  }));
+  expect(look.edge).toBe(look.text);
+  expect(look.icon).toBe('none');
+  await page.emulateMedia({ forcedColors: 'none' });
+
+  // Interface size follows the system (1 in a browser) or the user's choice.
+  await expect(page.locator('html')).toHaveAttribute('data-ui-scale', '1');
+  await palette(page, 'Preferences');
+  const prefs = page.getByRole('dialog', { name: 'Preferences' });
+  await prefs.getByLabel('Interface size').selectOption('1.5');
+  await expect(page.locator('html')).toHaveAttribute('data-ui-scale', '1.5');
+  await prefs.getByLabel('Interface size').selectOption('system');
+  await expect(page.locator('html')).toHaveAttribute('data-ui-scale', '1');
+});
