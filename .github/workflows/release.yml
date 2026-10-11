@@ -199,7 +199,13 @@ jobs:
           sha256sum -- * | sort -k2 > SHA256SUMS.txt
           cat SHA256SUMS.txt
       - name: Installers are under 25 MB (NFR-PERF-06)
-        run: node scripts/installer-size.mjs dist-release
+        env:
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          # Historical tags predate this checker; use the revision running the workflow.
+          git fetch --no-tags --depth=1 origin "$WORKFLOW_SHA"
+          git show "$WORKFLOW_SHA:scripts/installer-size.mjs" > "$RUNNER_TEMP/installer-size.mjs"
+          node "$RUNNER_TEMP/installer-size.mjs" dist-release
       - name: Upload checksums, SBOM and notices to the draft
         env:
           GH_TOKEN: ${{ github.token }}
