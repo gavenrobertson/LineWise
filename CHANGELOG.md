@@ -4,6 +4,12 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- App icons, the `.lwise` document icon and installer images are generated from the brand masters by `pnpm --filter @linewise/brand icons`, following the size rules (BRD-02..04).
+- `.lwise` files show the LineWise document icon in Windows Explorer (NSIS and MSI installs) and the macOS Finder (BRD-03, FR-APP-09).
+- The installers carry the brand: NSIS header and sidebar, WiX banner and dialog, and a DMG background (BRD-04).
+
 ## [0.9.0-beta] - 2026-10-11
 
 Export, polish, accessibility and performance (milestone M5).

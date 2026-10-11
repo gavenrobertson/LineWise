@@ -12,7 +12,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | FR-APP-06 | MUST | `packages/device-library/src/starters.ts`, `apps/desktop/src/dialogs/WelcomeDialog.tsx` | `packages/device-library/test/starters.test.ts`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | FR-APP-07 | MUST | `apps/desktop/src/dialogs/PreferencesDialog.tsx`, `apps/desktop/src/store/prefs.ts` | `apps/desktop/test/components.test.tsx`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | FR-APP-08 | MUST | `apps/desktop/src/dialogs/CommandPalette.tsx`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/test/components.test.tsx`, `apps/desktop/test/pure.test.ts`, `apps/desktop/e2e/17-app-shell.spec.ts` | done |
-| FR-APP-09 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/src-tauri/src/lib.rs` — association and open-with done; .lwise document icon comes with BRD-03 (M6) | `apps/desktop/test/config.test.ts`, `apps/desktop/smoke/smoke.test.mjs` | partial |
+| FR-APP-09 | MUST | `apps/desktop/src-tauri/tauri.conf.json`, `apps/desktop/src-tauri/src/lib.rs`, `apps/desktop/src-tauri/windows/hooks.nsh`, `apps/desktop/src-tauri/windows/document-icon.wxs`, `apps/desktop/src-tauri/Info.plist` — association, open-with, and the .lwise document icon on Windows (NSIS, MSI) and macOS | `apps/desktop/test/config.test.ts`, `apps/desktop/smoke/smoke.test.mjs`, `scripts/brand.test.mjs`, `.github/workflows/ci.yml` (installs both Windows installers and reads the registry; checks the macOS Info.plist) | done |
 | FR-CAN-01 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/lib/actions.ts` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
 | FR-CAN-02 | MUST | `apps/desktop/src/canvas/Canvas.tsx`, `apps/desktop/src/store/prefs.ts`, `apps/desktop/src/dialogs/PreferencesDialog.tsx` | `apps/desktop/e2e/09-canvas.spec.ts`, `apps/desktop/e2e/11-files.spec.ts` | done |
 | FR-CAN-03 | MUST | `apps/desktop/src/canvas/Canvas.tsx` | `apps/desktop/e2e/09-canvas.spec.ts` | done |
@@ -164,9 +164,9 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | NFR-MNT-03 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/decisions-log.md` | `scripts/repo-docs.test.mjs` | done |
 | REL-01 | MUST | | | todo |
 | REL-02 | MUST | | | todo |
-| REL-03 | MUST | `scripts/version.mjs`, `apps/desktop/src-tauri/tauri.conf.json` — Version single-sourcing is done and tested; app and document icons are checked in M6 (BRD-02/03). | `scripts/version.test.mjs`, `apps/desktop/test/config.test.ts` | partial |
-| BRD-02 | MUST | | | todo |
-| BRD-03 | MUST | | | todo |
+| REL-03 | MUST | `scripts/version.mjs`, `apps/desktop/src-tauri/tauri.conf.json`, `packages/brand/scripts/build-icons.mjs` — version single-sourcing, app and document icons from the masters | `scripts/version.test.mjs`, `apps/desktop/test/config.test.ts`, `scripts/brand.test.mjs` | done |
+| BRD-02 | MUST | `packages/brand/scripts/build-icons.mjs`, `apps/desktop/src-tauri/icons/` | `scripts/brand.test.mjs` | done |
+| BRD-03 | MUST | `packages/brand/scripts/build-icons.mjs`, `apps/desktop/src-tauri/windows/`, `apps/desktop/src-tauri/Info.plist`, `apps/desktop/src-tauri/tauri.windows.conf.json` | `scripts/brand.test.mjs`, `.github/workflows/ci.yml` (document icon steps) | done |
 | REL-04 | MUST | | | todo |
 | REL-10 | MUST | | | todo |
 | REL-11 | MUST | | | todo |
@@ -189,7 +189,7 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | DOC-04 | MUST | `docs/adr/0001-tauri-over-electron.md`, `docs/adr/0002-react-flow-over-maxgraph.md`, `docs/adr/0003-command-patch-architecture.md`, `docs/adr/0004-file-format.md`, `docs/adr/0005-license.md` | `scripts/repo-docs.test.mjs` | done |
 | DOC-05 | MUST | `apps/desktop/src/components/ui.tsx` (tooltips), `apps/desktop/src/panels/Toolbar.tsx`, `apps/desktop/src/canvas/Canvas.tsx` (empty state), `apps/desktop/src/lib/actions.ts` (Help) | `apps/desktop/e2e/17-app-shell.spec.ts` | done |
 | DOC-06 | MUST | `TRACEABILITY.md`, `scripts/traceability.mjs` | `scripts/traceability.test.mjs`, `scripts/repo-docs.test.mjs` | done |
-| BRD-01 | MUST | | | todo |
-| BRD-04 | MUST | | | todo |
-| BRD-05 | MUST | | | todo |
+| BRD-01 | MUST | `packages/brand/svg/`, `packages/brand/scripts/build-brand.mjs` | `scripts/brand.test.mjs` | done |
+| BRD-04 | MUST | `apps/desktop/src/components/BrandMark.tsx` (welcome, About), `apps/desktop/src-tauri/installer/` (DMG, NSIS, WiX images), `README.md` — docs-site logo and favicon come with the docs site (DOC-01) | `scripts/brand.test.mjs` | partial |
+| BRD-05 | MUST | `apps/desktop/src/styles.css` | `scripts/brand.test.mjs`, `apps/desktop/e2e/14-a11y.spec.ts` | done |
 | BRD-06 | SHOULD | `docs/brand.md` | `scripts/repo-docs.test.mjs` | done |

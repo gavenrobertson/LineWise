@@ -20,20 +20,23 @@ interface and lands on an endpoint, all drawn on the app's dot-grid canvas.
 
 ## Files
 
-| File                                                   | What it is                                           | Made by                                                                                          |
-| ------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `packages/brand/svg/app-icon.svg`                      | Full mark with dot grid (96 px and up)               | Spec master, verbatim                                                                            |
-| `packages/brand/svg/app-icon-small.svg`                | Simplified mark (32 px and below)                    | Spec master, verbatim                                                                            |
-| `packages/brand/svg/logo-mark-mono.svg`                | One color, transparent background                    | Spec master, verbatim                                                                            |
-| `packages/brand/svg/doc-icon.svg`                      | `.lwise` document icon                               | Spec master, verbatim                                                                            |
-| `packages/brand/svg/doc-icon-shipped.svg`              | Document icon with the `.lwise` label as paths       | `build-brand.mjs`                                                                                |
-| `packages/brand/svg/lockup-{light,dark}[-subline].svg` | Icon plus wordmark, wordmark as paths                | `build-brand.mjs`                                                                                |
-| `packages/brand/fonts/`                                | Sora and IBM Plex Mono WOFF2 files plus OFL licenses | `build-brand.mjs`                                                                                |
-| `apps/desktop/src-tauri/icons/`                        | App icons for every platform                         | `tauri icon` from a 1024 px render of `app-icon.svg` (BRD-02; the scripted pipeline lands in M6) |
+| File                                                   | What it is                                              | Made by                                                                                                       |
+| ------------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `packages/brand/svg/app-icon.svg`                      | Full mark with dot grid (96 px and up)                  | Spec master, verbatim                                                                                         |
+| `packages/brand/svg/app-icon-small.svg`                | Simplified mark (32 px and below)                       | Spec master, verbatim                                                                                         |
+| `packages/brand/svg/logo-mark-mono.svg`                | One color, transparent background                       | Spec master, verbatim                                                                                         |
+| `packages/brand/svg/doc-icon.svg`                      | `.lwise` document icon                                  | Spec master, verbatim                                                                                         |
+| `packages/brand/svg/doc-icon-shipped.svg`              | Document icon with the `.lwise` label as paths          | `build-brand.mjs`                                                                                             |
+| `packages/brand/svg/lockup-{light,dark}[-subline].svg` | Icon plus wordmark, wordmark as paths                   | `build-brand.mjs`                                                                                             |
+| `packages/brand/fonts/`                                | Sora and IBM Plex Mono WOFF2 files plus OFL licenses    | `build-brand.mjs`                                                                                             |
+| `apps/desktop/src-tauri/icons/`                        | App icons for every platform, and `document.{ico,icns}` | `build-icons.mjs`: `tauri icon` from a 1024 px render of `app-icon.svg`, then the size rules (BRD-02, BRD-03) |
+| `apps/desktop/src-tauri/installer/`                    | NSIS, WiX and DMG background images                     | `build-icons.mjs` (BRD-04)                                                                                    |
 
-Rebuild the generated files with `pnpm --filter @linewise/brand build`. The lockups and the shipped
-doc icon convert text to paths with opentype.js, so they render the same on machines without the
-fonts.
+Rebuild the generated files with `pnpm --filter @linewise/brand build`, then the icons and
+installer images with `pnpm --filter @linewise/brand icons` (it renders with Chromium; set
+`PW_CHROMIUM_PATH` to use an installed one). `scripts/brand.test.mjs` fails if a master changed
+without a rebuild. The lockups and the shipped doc icon convert text to paths with opentype.js,
+so they render the same on machines without the fonts.
 
 ## Colors
 
