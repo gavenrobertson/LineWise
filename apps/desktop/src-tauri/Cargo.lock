@@ -2088,7 +2088,7 @@ dependencies = [
 
 [[package]]
 name = "linewise"
-version = "0.9.0-beta"
+version = "1.0.0"
 dependencies = [
  "log",
  "serde",

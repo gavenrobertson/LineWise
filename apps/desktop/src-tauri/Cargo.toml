@@ -1,6 +1,6 @@
 [package]
 name = "linewise"
-version = "0.9.0-beta"
+version = "1.0.0"
 description = "LineWise — open-source network diagramming"
 authors = ["Gaven Robertson"]
 license = "Apache-2.0"

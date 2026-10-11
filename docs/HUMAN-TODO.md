@@ -33,4 +33,8 @@ The build continues with placeholders for each item; nothing here blocks local d
 - [ ] Choose a contact email for Code of Conduct reports and add it to `CODE_OF_CONDUCT.md`.
 - [ ] Install the Renovate GitHub app on the repository.
 - [ ] **Vendor datasheets (FR-TPL-03):** this cloud environment's network policy blocks the vendor sites, so no vendor-model templates could be checked against datasheets. Either allow these hosts in the environment's Network access settings (`www.cisco.com`, `documentation.meraki.com`, `www.juniper.net`, `www.arista.com`, `www.fortinet.com`, `www.paloaltonetworks.com`, `docs.paloaltonetworks.com`, `techspecs.ui.com`) so the agent can verify and add them, or add templates yourself following CONTRIBUTING.md. Until then only the generic templates ship.
-- [ ] Run the manual release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon, including the v0.9 → v1.0 auto-update check (M6 acceptance).
+- [ ] **v1.0 acceptance (M6), in this order** (`docs/reports/M6.md`):
+  1. Set up the updater key pair and, if you can, Apple and Windows signing (items above).
+  2. Push `v0.9.0-beta` (table above). Review its draft release and publish it, then install it on each test machine.
+  3. Tag the 1.0.0 release commit: `git tag -a v1.0.0 <commit> -m "LineWise 1.0.0"` and `git push origin v1.0.0`. Use the `v1.0.0` commit in the tag table above. Review the draft release.
+  4. Run the release checklist (`docs/release-checklist.md`) on Windows 10, Windows 11 ARM, macOS Intel and macOS Apple Silicon. The auto-update row is the v0.9.0-beta → v1.0.0 update. Then publish v1.0.0.

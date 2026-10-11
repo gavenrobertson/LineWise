@@ -4,6 +4,10 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-11
+
+Release engineering and documentation (milestone M6). The first stable release.
+
 ### Added
 
 - App icons, the `.lwise` document icon and installer images are generated from the brand masters by `pnpm --filter @linewise/brand icons`, following the size rules (BRD-02..04).
@@ -12,6 +16,15 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 - A documentation site (VitePress on GitHub Pages) with a user guide page per topic, the developer guide, the file format and a release checklist; Help → Documentation opens it (DOC-01, DOC-02).
 - A DCO sign-off check for contributor pull requests and an importable branch ruleset for `main` (OSS-05, REL-21).
 - Release builds fail if an installer reaches 25 MB, and the native smoke test checks that the idle app uses under 250 MB (NFR-PERF-06).
+
+### Changed
+
+- Help → Documentation opens the documentation site instead of the README.
+- The mark on the welcome screen, in the About dialog and in the toolbar is drawn from the brand master for its size.
+
+### Fixed
+
+- The 16 and 32 px app icons were the full mark scaled down and blurred; they now use the small master.
 
 ## [0.9.0-beta] - 2026-10-11
 
