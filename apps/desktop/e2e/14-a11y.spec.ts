@@ -140,7 +140,10 @@ test('NFR-A11Y-04 reduced motion, increased contrast, forced colors and interfac
         edges: [...document.querySelectorAll('.react-flow__edge-path')].every(
           (e) => getComputedStyle(e).stroke === text,
         ),
-        icon: getComputedStyle(document.querySelector('.react-flow__node-device svg')!).forcedColorAdjust,
+        // WebKit has no forced-color-adjust (it never forces colors), so there is nothing to opt out of.
+        icon: CSS.supports('forced-color-adjust', 'none')
+          ? getComputedStyle(document.querySelector('.react-flow__node-device svg')!).forcedColorAdjust
+          : 'none',
       };
     });
   await expect.poll(look).toEqual({ edges: true, icon: 'none' });
