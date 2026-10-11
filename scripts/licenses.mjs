@@ -100,6 +100,15 @@ function pnpm(args) {
   return execFileSync('pnpm', args, { ...opts, shell: process.platform === 'win32' });
 }
 
+/**
+ * Packages whose registry metadata is missing or not SPDX, with the license their shipped license
+ * file states (checked by hand). Pinned to the exact version so an upgrade is checked again.
+ */
+export const LICENSE_CORRECTIONS = {
+  'khroma@2.1.0': 'MIT', // no license field; ships an MIT `license` file (mermaid, docs site only)
+  'speakingurl@14.0.1': 'BSD-3-Clause', // reported as "BSD"; ships the BSD 3-Clause text (vitepress)
+};
+
 /** npm packages from pnpm, flattened to { name, version, license, path, homepage, author }. */
 export function npmPackages({ prod }) {
   const args = ['licenses', 'list', '--json'];
@@ -114,7 +123,7 @@ export function npmPackages({ prod }) {
           ecosystem: 'npm',
           name: p.name,
           version,
-          license,
+          license: LICENSE_CORRECTIONS[`${p.name}@${version}`] ?? license,
           path: p.paths[idx] ?? p.paths[0],
           homepage: p.homepage ?? '',
           author: typeof p.author === 'string' ? p.author : (p.author?.name ?? ''),
