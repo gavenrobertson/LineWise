@@ -85,6 +85,21 @@ export async function startFrom(page: Page, starter: RegExp): Promise<void> {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
+/** Zoom to fit eases the view (FR-UX-03); wait until it stops moving before pointing at things. */
+export async function viewportSettled(page: Page): Promise<void> {
+  const transform = () =>
+    page.evaluate(() => document.querySelector('.react-flow__viewport')?.getAttribute('style') ?? '');
+  let last = '';
+  await expect
+    .poll(async () => {
+      const now = await transform();
+      const same = now === last;
+      last = now;
+      return same;
+    })
+    .toBe(true);
+}
+
 /** Exported files captured by the BrowserPlatform test hooks. */
 /** Exports through the Export dialog; `configure` sets options before pressing Export. */
 export async function exportAs(

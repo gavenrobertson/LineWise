@@ -2,7 +2,7 @@
 // Canvas behavior (FR-CAN-01..09): pan and zoom, grid snap and guides, minimap, selection,
 // nudge, arrange, undo coalescing, copy/paste, drag from the library and drop on a link.
 import { expect, test, type Page } from '@playwright/test';
-import { doc, MOD, node, openApp, startBlank, startFrom } from './helpers.ts';
+import { doc, MOD, node, openApp, startBlank, startFrom, viewportSettled } from './helpers.ts';
 
 interface Positions {
   pages: { nodePositions: Record<string, { x: number; y: number }> }[];
@@ -42,21 +42,6 @@ async function palette(page: Page, command: string) {
     .getByRole('option', { name: new RegExp(`^${command}`) })
     .first()
     .click();
-}
-
-/** Zoom to fit eases the view (FR-UX-03); wait until it stops moving. */
-async function viewportSettled(page: Page) {
-  const transform = () =>
-    page.evaluate(() => document.querySelector('.react-flow__viewport')?.getAttribute('style') ?? '');
-  let last = '';
-  await expect
-    .poll(async () => {
-      const now = await transform();
-      const same = now === last;
-      last = now;
-      return same;
-    })
-    .toBe(true);
 }
 
 async function canvasCenter(page: Page) {

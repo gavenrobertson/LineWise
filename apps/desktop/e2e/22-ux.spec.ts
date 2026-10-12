@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /** The UX polish pass (FR-UX-02, FR-UX-04, FR-UX-07, FR-UX-08): labels, cards, tooltips, motion. */
 import { expect, test } from '@playwright/test';
-import { MOD, openApp, startFrom, tabKey } from './helpers.ts';
+import { MOD, openApp, startFrom, tabKey, viewportSettled } from './helpers.ts';
 
 test('FR-UX-04 link labels are pills of at least 11 px at 100% zoom', async ({ page }) => {
   await openApp(page);
@@ -18,6 +18,7 @@ test('FR-UX-04 link labels are pills of at least 11 px at 100% zoom', async ({ p
 test('FR-UX-07 hovering or focusing a link shows its card', async ({ page, browserName }) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
+  await viewportSettled(page);
   const edge = page.locator('.react-flow__edge').first();
   const name = (await edge.getAttribute('aria-label')) ?? '';
   expect(name).toMatch(/^Link \S+ \S+ to \S+ \S+$/);
