@@ -35,6 +35,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: VitePress build (fails on dead links)
+        # Set the repository variable DOCS_DOMAIN (e.g. linewire.online) when the Pages custom
+        # domain is on; the site then builds for the domain's root instead of /LineWise/.
+        env:
+          DOCS_DOMAIN: ${{ vars.DOCS_DOMAIN }}
         run: pnpm docs:build
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

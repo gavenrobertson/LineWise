@@ -118,6 +118,16 @@ describe('BRD-04 docs-site logo and favicon', () => {
     assert.match(read('docs/index.md'), /<LandingPage \/>/);
     assert.match(read('docs/.vitepress/theme/LandingPage.vue'), /withBase\('\/app-icon\.svg'\)/);
   });
+  it('moves to a custom domain only when the DOCS_DOMAIN repository variable is set', () => {
+    assert.match(config, /const base = domain \? '\/' : '\/LineWise\/';/);
+    assert.match(config, /process\.env\.DOCS_DOMAIN/);
+    assert.match(read('.github/workflows/docs.yml'), /DOCS_DOMAIN: \$\{\{ vars\.DOCS_DOMAIN \}\}/);
+    // The app links to the github.io address, which GitHub redirects to the custom domain.
+    assert.match(
+      read('apps/desktop/src/lib/actions.ts'),
+      /DOCS_URL = 'https:\/\/gavenrobertson\.github\.io\/LineWise\/'/,
+    );
+  });
   it('the site is published to GitHub Pages from main', () => {
     const wf = read('.github/workflows/docs.yml');
     assert.match(wf, /pnpm docs:build/);
