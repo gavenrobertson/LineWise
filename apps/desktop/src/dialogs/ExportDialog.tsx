@@ -23,6 +23,7 @@ import { platform, type FileFilter } from '../platform/index.ts';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { linkTerms } from '../lib/labels.ts';
 
 type Format = 'png' | 'svg' | 'pdf' | 'csv' | 'html' | 'md' | 'drawio' | 'clab' | 'mermaid' | 'dot';
 type CsvKind = 'devices' | 'interfaces' | 'links' | 'ipplan' | 'portmap';
@@ -124,6 +125,7 @@ export function ExportDialog() {
         grid,
         theme,
         issues,
+        terms: linkTerms(),
         ...(scope === 'selection' && hasSelection ? { selection: selection.devices } : {}),
       };
       let data: string | Uint8Array;
@@ -173,7 +175,7 @@ export function ExportDialog() {
           if (withImage) {
             const { svgToPngDataUrl } = await import('../export/raster.ts');
             imageDataUrl = await svgToPngDataUrl(
-              renderPageSvg(doc, { pageId: page.id, layer, theme: 'light' }),
+              renderPageSvg(doc, { pageId: page.id, layer, theme: 'light', terms: linkTerms() }),
               1.5,
             );
           }

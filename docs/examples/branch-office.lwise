@@ -161,6 +161,7 @@
     "defaultLinkRouting": "straight",
     "disabledRules": [],
     "iconStyle": "classic",
+    "interfaceNames": "short",
     "labelTemplate": "{hostname}",
     "showInterfaceIps": false,
     "showInterfaceNames": true,

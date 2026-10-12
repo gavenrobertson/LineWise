@@ -17,7 +17,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { Button, Dialog, Field, IconButton, Select, TextInput } from '../components/ui.tsx';
+import { Button, Dialog, Field, IconButton, Select, TextInput, Tooltip } from '../components/ui.tsx';
 import { platform } from '../platform/index.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -339,14 +339,15 @@ export function TemplateEditorDialog({ templateId }: { templateId?: string }) {
                 return (
                   <tr key={i} className="border-b border-line">
                     <td className="py-1 pr-2">
-                      <TextInput
-                        aria-label={t('tpl.range', 'Name or range')}
-                        className="font-mono"
-                        value={r.range}
-                        onChange={(e) => upd({ range: e.target.value })}
-                        aria-invalid={!!r.range.trim() && n === 0}
-                        title={t('tpl.rangeCount', '{{n}} interfaces', { n })}
-                      />
+                      <Tooltip text={t('tpl.rangeCount', '{{n}} interfaces', { n })}>
+                        <TextInput
+                          aria-label={t('tpl.range', 'Name or range')}
+                          className="font-mono"
+                          value={r.range}
+                          onChange={(e) => upd({ range: e.target.value })}
+                          aria-invalid={!!r.range.trim() && n === 0}
+                        />
+                      </Tooltip>
                     </td>
                     <td className="py-1 pr-2">
                       <Select

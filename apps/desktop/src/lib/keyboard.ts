@@ -24,7 +24,8 @@ function isTyping(el: EventTarget | null): boolean {
   return (
     e.isContentEditable ||
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.tagName) ||
-    !!e.closest('[role="dialog"]')
+    // A dialog or popover that is closing (its exit animation) no longer holds the keyboard.
+    !!e.closest('[role="dialog"]:not([data-state="closed"])')
   );
 }
 
@@ -112,7 +113,7 @@ export function useKeyboard(): void {
       }
       if (isTyping(e.target)) {
         const el = e.target as HTMLElement;
-        if (!(e.metaKey || e.ctrlKey) || el.closest?.('[role="dialog"]')) return;
+        if (!(e.metaKey || e.ctrlKey) || el.closest?.('[role="dialog"]:not([data-state="closed"])')) return;
         const c = commandList().find(
           (x) =>
             x.shortcut && WHILE_TYPING.has(x.id) && handlesShortcut(x.id, kind, os) && matches(e, x.shortcut),

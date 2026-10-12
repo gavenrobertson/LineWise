@@ -12,10 +12,10 @@ Last updated: **2026-10-11**. Repository setup, updater signing and all six mile
 - [ ] **Create the `v1.0.0` draft when ready.** Use a green commit on current `main` containing the docs, public updater key and workflow fixes from [PR #2](https://github.com/gavenrobertson/LineWise/pull/2) and [PR #4](https://github.com/gavenrobertson/LineWise/pull/4). Confirm version files and release notes before tagging. Do not use the obsolete `fd5ea8a20e4e3af43fd4511dc808303e4dfe5613` baseline, which predates these fixes. No `v1.0.0` tag exists yet.
 - [ ] **Complete four-platform acceptance and publish `v1.0.0`.** Run [the release checklist](release-checklist.md) on Windows 10 x64, Windows 11 ARM64, macOS Intel and macOS Apple Silicon. Record installer names, SHA-256 hashes and every result, including the `v0.9.0-beta` → `v1.0.0` update. Keep 1.0 as a draft until the checklist and signing requirements pass. Building updater artifacts does not establish that an installed app successfully updates.
 
-- [ ] **Put the website on `linewire.online`.** The download page is the docs site's home; it reads the newest published release from GitHub and shows the right installer.
+- [ ] **Put the website on `linewise.online`.** The download page is the docs site's home; it reads the newest published release from GitHub and shows the right installer.
   1. At the registrar, add `A` records for `@` to `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`; `AAAA` records for `@` to `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153` and `2606:50c0:8003::153`; and a `CNAME` for `www` to `gavenrobertson.github.io`. Remove any parking records.
-  2. Optional: Account settings → Pages → add and verify `linewire.online`, so no one else can claim it.
-  3. Repository Settings → Pages → Custom domain: `linewire.online` → Save. Then, without waiting, Settings → Secrets and variables → Actions → Variables → add `DOCS_DOMAIN` = `linewire.online`, and re-run the latest `docs` workflow on `main` (Actions → docs → Re-run). Until it finishes, the site's styles may not load.
+  2. Optional: Account settings → Pages → add and verify `linewise.online`, so no one else can claim it.
+  3. Repository Settings → Pages → Custom domain: `linewise.online` → Save. Then, without waiting, Settings → Secrets and variables → Actions → Variables → add `DOCS_DOMAIN` = `linewise.online`, and re-run the latest `docs` workflow on `main` (Actions → docs → Re-run). Until it finishes, the site's styles may not load.
   4. When GitHub shows the certificate is issued, tick **Enforce HTTPS**. `gavenrobertson.github.io/LineWise/` then redirects to the domain, so the app's Help → Documentation link keeps working.
 
 ## Other implementation follow-ups

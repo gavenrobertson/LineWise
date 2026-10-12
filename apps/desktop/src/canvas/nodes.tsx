@@ -60,7 +60,7 @@ export function DeviceIcon({
 
 const SEV_COLOR = { error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--info)' } as const;
 
-export type DeviceNodeData = { view: DeviceView; iconStyle: IconStyle; summary: string; iconUrl?: string };
+export type DeviceNodeData = { view: DeviceView; iconStyle: IconStyle; iconUrl?: string };
 export type DeviceNodeType = Node<DeviceNodeData, 'device'>;
 
 const handleStyle: CSSProperties = { background: 'var(--accent)', border: '2px solid var(--surface)' };
@@ -102,7 +102,7 @@ function Anchor({ top }: { top: number | string }) {
 
 export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeProps<DeviceNodeType>) {
   const { t } = useTranslation();
-  const { view, iconStyle, summary, iconUrl } = data;
+  const { view, iconStyle, iconUrl } = data;
   const d = view.device;
   const pos = LABEL_POS[d.labelPosition] ?? LABEL_POS.bottom;
   // The four connection handles exist only on the device under the pointer: each handle is a
@@ -128,7 +128,8 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
       // reports whenever the hostname text is hidden (labels are hidden at low zoom).
       role="group"
       aria-label={`${roleLabel(d.role)} ${d.hostname}${view.issueCount ? `, ${t('node.problems', '{{n}} problems', { n: view.issueCount })}` : ''}${d.locked ? `, ${t('node.locked', 'locked')}` : ''}`}
-      title={summary}
+      // The hover card is the canvas's one shared card (HoverCards.tsx), not a title per node.
+      aria-describedby={undefined}
     >
       <div
         className={cx(
@@ -191,14 +192,20 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
       <Anchor top={ICON / 2} />
       {showHandles && (
         <>
-          <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: -4 }} />
+          <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: 0 }} />
           <Handle
             type="source"
             position={Position.Right}
             id="r"
             style={{ ...handleStyle, top: ICON / 2, right: 12 }}
           />
-          <Handle type="source" position={Position.Bottom} id="b" style={{ ...handleStyle, top: ICON + 2 }} />
+          {/* On the icon's edge, clear of the hostname below it. */}
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="b"
+            style={{ ...handleStyle, top: ICON - 10 }}
+          />
           <Handle
             type="source"
             position={Position.Left}

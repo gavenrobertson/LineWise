@@ -33,12 +33,28 @@ import { IconPicker } from '../components/IconPicker.tsx';
 import { InterfaceTable } from './InterfaceTable.tsx';
 import { roleLabel } from '../lib/labels.ts';
 import { mediumLabel } from '../lib/labels.ts';
+import { HelpButton } from '../components/HelpButton.tsx';
+import { term, type HelpId } from '../lib/help.ts';
 
-function Group({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
+function Group({
+  title,
+  children,
+  actions,
+  help,
+}: {
+  title: string;
+  children: ReactNode;
+  actions?: ReactNode;
+  /** A "?" beside the heading that explains the section (FR-UX-10). */
+  help?: HelpId;
+}) {
   return (
     <section className="border-b border-line px-3 py-3 last:border-b-0">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-subtle">{title}</h3>
+        <h3 className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+          {title}
+          {help && <HelpButton topic={help} />}
+        </h3>
         {actions}
       </div>
       <div className="flex flex-col gap-1.5">{children}</div>
@@ -101,6 +117,7 @@ function DeviceFields({ devices }: { devices: Device[] }) {
         {text(t('field.os', 'OS version'), 'osVersion')}
         <TextField
           label={t('field.mgmtIp', 'Mgmt IP')}
+          term={term('mgmtIp')}
           value={shared(devices, (d) => d.mgmtIp)}
           mono
           validate={(v) => (isValidIp(v) ? null : t('field.ipInvalid', 'Not a valid IPv4 or IPv6 address'))}
@@ -168,7 +185,7 @@ function DeviceFields({ devices }: { devices: Device[] }) {
       </Group>
       {single && <RoutingAnnotations device={single} />}
       {single && (
-        <Group title={t('inspector.interfaces', 'Interfaces')}>
+        <Group title={t('inspector.interfaces', 'Interfaces')} help="interfaces">
           <InterfaceTable device={single} />
         </Group>
       )}
@@ -185,6 +202,7 @@ function RoutingAnnotations({ device }: { device: Device }) {
   return (
     <Group
       title={t('inspector.routing', 'Routing')}
+      help="routing"
       actions={
         <IconButton
           label={t('inspector.addRouting', 'Add routing annotation')}
@@ -265,6 +283,7 @@ function LinkFields({ links }: { links: Link[] }) {
           ? t('inspector.linksN', '{{n}} links', { n: links.length })
           : t('inspector.link', 'Link')
       }
+      help="link"
     >
       {single && (
         <div className="mb-1 rounded-md bg-surface-2 px-2 py-1.5 font-mono text-[11.5px] text-ink">
@@ -275,12 +294,14 @@ function LinkFields({ links }: { links: Link[] }) {
       )}
       <SelectField
         label={t('field.medium', 'Medium')}
+        term={term('medium')}
         value={shared(links, (l) => l.medium)}
         options={LINK_MEDIA.map((m) => ({ value: m, label: mediumLabel(m) }))}
         onCommit={(v) => v && set({ medium: v })}
       />
       <NumberField
         label={t('field.bandwidth', 'Bandwidth (Mb/s)')}
+        term={term('bandwidth')}
         value={shared(links, (l) => l.bandwidthMbps)}
         min={1}
         onCommit={(v) => set({ bandwidthMbps: v })}
@@ -298,6 +319,7 @@ function LinkFields({ links }: { links: Link[] }) {
       />
       <TextField
         label={t('field.circuitId', 'Circuit ID')}
+        term={term('circuitId')}
         value={shared(links, (l) => l.circuitId)}
         mono
         onCommit={(v) => set({ circuitId: v })}
@@ -479,6 +501,7 @@ function ZoneFields({ zones }: { zones: Zone[] }) {
           ? t('inspector.zonesN', '{{n}} zones', { n: zones.length })
           : t('inspector.zone', 'Zone')
       }
+      help="zone"
     >
       {single && (
         <TextField
@@ -705,7 +728,7 @@ function DocumentFields() {
           />
         </Group>
       )}
-      <Group title={t('inspector.display', 'Display')}>
+      <Group title={t('inspector.display', 'Display')} help="display">
         <SelectField
           label={t('field.iconStyle', 'Icons')}
           value={s.iconStyle}
@@ -717,6 +740,7 @@ function DocumentFields() {
         />
         <TextField
           label={t('field.labelTemplate', 'Label')}
+          term={term('labelTemplate')}
           mono
           value={s.labelTemplate}
           hint={t('field.labelTemplateHint', 'Fields: {hostname} {model} {mgmtIp} {site} {role}')}
@@ -732,18 +756,28 @@ function DocumentFields() {
           ]}
           onCommit={(v) => v && set({ defaultLinkRouting: v })}
         />
+        <SelectField
+          label={t('field.interfaceNames', 'Interface names')}
+          term={term('interfaceNames')}
+          value={s.interfaceNames}
+          options={[
+            { value: 'short', label: t('field.namesShort', 'Short (Gi1/0/1)') },
+            { value: 'long', label: t('field.namesLong', 'Long (GigabitEthernet1/0/1)') },
+          ]}
+          onCommit={(v) => v && set({ interfaceNames: v })}
+        />
         <BoolField
-          label={t('field.showNames', 'Port names')}
+          label={t('field.showNames', 'Show interface names')}
           value={s.showInterfaceNames}
           onCommit={(v) => set({ showInterfaceNames: v })}
         />
         <BoolField
-          label={t('field.showIps', 'Port IPs')}
+          label={t('field.showIps', 'Show IP addresses')}
           value={s.showInterfaceIps}
           onCommit={(v) => set({ showInterfaceIps: v })}
         />
         <BoolField
-          label={t('field.showVlans', 'Port VLANs')}
+          label={t('field.showVlans', 'Show VLANs')}
           value={s.showVlans}
           onCommit={(v) => set({ showVlans: v })}
         />
@@ -771,7 +805,7 @@ export function Inspector() {
   return (
     <aside
       aria-label={t('inspector.title', 'Inspector')}
-      className="lw-no-print flex h-full w-[320px] shrink-0 flex-col border-l border-line bg-surface"
+      className="lw-no-print lw-panel-right flex h-full w-[320px] shrink-0 flex-col border-l border-line bg-surface"
     >
       <div className="flex h-10 shrink-0 items-center border-b border-line px-3">
         <h2 className="font-brand text-[13px] font-semibold text-ink">{t('inspector.title', 'Inspector')}</h2>
@@ -783,7 +817,7 @@ export function Inspector() {
           </span>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="lw-stagger min-h-0 flex-1 overflow-y-auto">
         {nothing && <DocumentFields />}
         {devices.length > 0 && <DeviceFields devices={devices} />}
         {links.length > 0 && <LinkFields links={links} />}

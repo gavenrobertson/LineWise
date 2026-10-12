@@ -861,6 +861,13 @@ export function commandList(): CommandDef[] {
       run: () => platform().openExternal(DOCS_URL),
     },
     {
+      id: 'help.tour',
+      group: 'Help',
+      label: L('tour', 'Take the tour'),
+      // A short walk through library, canvas, links and inspector (FR-UX-12).
+      run: () => useUi.getState().setTour(0),
+    },
+    {
       id: 'help.updates',
       group: 'Help',
       label: L('updates', 'Check for updates…'),

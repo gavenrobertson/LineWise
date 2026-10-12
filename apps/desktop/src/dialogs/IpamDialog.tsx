@@ -15,13 +15,25 @@ import {
   removeVrfs,
   upsertSubnet,
   upsertVrf,
+  subnetInfo,
   vlsm,
   type Subnet,
 } from '@linewise/core';
 import { Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Dialog, Field, IconButton, Select, TextInput } from '../components/ui.tsx';
+import { HelpButton } from '../components/HelpButton.tsx';
+import {
+  Badge,
+  Button,
+  CardRows,
+  Dialog,
+  Field,
+  HoverCard,
+  IconButton,
+  Select,
+  TextInput,
+} from '../components/ui.tsx';
 import { assignedAddresses, overlappingSubnets, p2pCommand, subnetUtilization } from '../lib/ipam.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -188,7 +200,11 @@ function SubnetsTab() {
               return (
                 <tr key={s.id} className="border-b border-line">
                   <td className="py-1 pr-2 font-mono">
-                    {s.cidr}
+                    <SubnetCard cidr={s.cidr} used={u}>
+                      <span tabIndex={0} className="rounded-sm">
+                        {s.cidr}
+                      </span>
+                    </SubnetCard>
                     {overlaps.has(s.id) && (
                       <span className="ml-1">
                         <Badge tone="error">{t('ipam.overlap', 'overlap')}</Badge>
@@ -234,7 +250,7 @@ function SubnetsTab() {
                   </td>
                   <td className="py-1 pr-2 font-mono text-muted">{next ?? t('ipam.full', 'full')}</td>
                   <td className="py-1 pr-2">
-                    <div className="flex items-center gap-2" title={`${(u * 100).toFixed(1)}%`}>
+                    <div className="flex items-center gap-2">
                       <div
                         className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3"
                         role="meter"
@@ -557,6 +573,7 @@ export function IpamDialog() {
       open
       onOpenChange={(o) => !o && close()}
       title={t('ipam.title', 'Subnets and IPAM')}
+      help={<HelpButton topic="subnets" />}
       width={920}
       footer={<Button onClick={close}>{t('common.done', 'Done')}</Button>}
     >
@@ -593,4 +610,50 @@ export function IpamDialog() {
       </Tabs.Root>
     </Dialog>
   );
+}
+
+/** The subnet card (FR-UX-09): the numbers the subnet table leaves out. */
+function SubnetCard({ cidr, used, children }: { cidr: string; used: number; children: ReactNode }) {
+  const { t } = useTranslation();
+  const info = safeSubnetInfo(cidr);
+  if (!info) return <>{children}</>;
+  return (
+    <HoverCard
+      side="right"
+      content={
+        <div className="flex flex-col gap-1.5">
+          <span className="font-mono font-semibold">{info.cidr}</span>
+          <CardRows
+            rows={[
+              [t('calc.network', 'Network'), info.network],
+              ...(info.broadcast
+                ? [[t('calc.broadcast', 'Broadcast'), info.broadcast] as [string, string]]
+                : []),
+              ...(info.mask ? [[t('calc.mask', 'Mask'), info.mask] as [string, string]] : []),
+              ...(info.firstUsable && info.lastUsable
+                ? [
+                    [t('calc.range', 'Usable range'), `${info.firstUsable} – ${info.lastUsable}`] as [
+                      string,
+                      string,
+                    ],
+                  ]
+                : []),
+              [t('calc.hosts', 'Usable hosts'), info.hosts.toLocaleString()],
+              [t('ipam.inUse', 'In use'), `${Math.round(used * 100)}%`],
+            ]}
+          />
+        </div>
+      }
+    >
+      {children}
+    </HoverCard>
+  );
+}
+
+function safeSubnetInfo(cidr: string): ReturnType<typeof subnetInfo> | null {
+  try {
+    return subnetInfo(cidr);
+  } catch {
+    return null;
+  }
 }

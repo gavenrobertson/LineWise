@@ -4,7 +4,7 @@ import * as RDialog from '@radix-ui/react-dialog';
 import { Command as CmdIcon, Monitor } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cx, Kbd } from '../components/ui.tsx';
+import { cx, Keys } from '../components/ui.tsx';
 import { commandList, formatShortcut, runCommand } from '../lib/actions.ts';
 import { searchDocument } from '../lib/search.ts';
 import { revealHit } from './FindPanel.tsx';
@@ -70,9 +70,9 @@ export function CommandPalette() {
       }}
     >
       <RDialog.Portal>
-        <RDialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
+        <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.24)]" />
         <RDialog.Content
-          className="fixed left-1/2 top-[14vh] z-50 w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow)]"
+          className="lw-sheet lw-material fixed left-1/2 top-[14vh] z-50 w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-line shadow-elev-3"
           aria-describedby={undefined}
         >
           <RDialog.Title className="sr-only">{t('cmd.palette', 'Command palette')}</RDialog.Title>
@@ -121,7 +121,7 @@ export function CommandPalette() {
                 onMouseMove={() => setActive(n)}
                 onClick={() => run(i)}
                 className={cx(
-                  'flex cursor-default items-center gap-2 rounded-md px-2 py-1.5',
+                  'lw-row flex cursor-default items-center gap-2 rounded-md px-2 py-1.5',
                   n === active && 'bg-accent-soft',
                 )}
               >
@@ -130,7 +130,7 @@ export function CommandPalette() {
                 <span className="truncate text-[11.5px] text-subtle">{i.detail}</span>
                 {i.shortcut && (
                   <span className="ml-auto">
-                    <Kbd>{formatShortcut(i.shortcut)}</Kbd>
+                    <Keys shortcut={formatShortcut(i.shortcut)} />
                   </span>
                 )}
               </li>

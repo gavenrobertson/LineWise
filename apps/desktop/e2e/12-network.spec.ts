@@ -2,7 +2,7 @@
 // Network features in the UI (M2): point-to-point addressing, IPAM, hover cards, the template
 // editor, annotations, zones, pages with off-page references and layers.
 import { expect, test, type Page } from '@playwright/test';
-import { doc, exportsList, MOD, node, openApp, startBlank, startFrom } from './helpers.ts';
+import { doc, exportsList, MOD, node, openApp, startBlank, startFrom, viewportSettled } from './helpers.ts';
 
 async function palette(page: Page, command: string) {
   await page.keyboard.press(`${MOD}+k`);
@@ -61,10 +61,18 @@ test('FR-NET-09 hovering a device shows its info card', async ({ page }) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
   const r1 = (await doc(page)).devices.find((x) => x.hostname === 'R1')!;
-  const card = await node(page, 'R1').locator('[title]').first().getAttribute('title');
-  expect(card).toContain('R1');
-  expect(card).toMatch(/router/i);
-  expect(card).toMatch(new RegExp(`${r1.interfaces.length}`));
+  // One shared card for the canvas (FR-UX-09), opened from the device under the pointer. Wait
+  // for zoom to fit to finish first: a moving view closes the card and slides R1 away.
+  await viewportSettled(page);
+  await node(page, 'R1').locator('.lw-device-icon').hover();
+  const card = page.locator('[data-lw-linkcard]');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('R1');
+  await expect(card).toContainText(/router/i);
+  await expect(card).toContainText(new RegExp(`of ${r1.interfaces.length} in use`));
+  // Moving away closes it.
+  await page.mouse.move(5, 300, { steps: 4 });
+  await expect(card).toHaveCount(0);
 });
 
 test('FR-TPL-04 build a template from scratch with a range, save it and place it', async ({ page }) => {

@@ -4,7 +4,7 @@ import { removePage, reorderPages, updatePage } from '@linewise/core';
 import { Plus, X } from 'lucide-react';
 import { useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconButton, cx } from '../components/ui.tsx';
+import { IconButton, Tooltip, cx } from '../components/ui.tsx';
 import { newPage } from '../lib/actions.ts';
 import { platform } from '../platform/index.ts';
 import { useEditor } from '../store/editor.ts';
@@ -78,18 +78,23 @@ export function PagesBar() {
                   }}
                 />
               ) : (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setPage(p.id)}
-                  onDoubleClick={() => !readOnly && setEditing(p.id)}
-                  onKeyDown={(e) => e.key === 'F2' && !readOnly && setEditing(p.id)}
-                  className="h-full px-3"
-                  title={t('pages.hint', 'Double-click or F2 to rename; drag to reorder')}
+                <Tooltip
+                  text={p.name}
+                  description={t('pages.hint', 'Double-click or F2 to rename; drag to reorder')}
+                  side="top"
                 >
-                  {p.name}
-                </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setPage(p.id)}
+                    onDoubleClick={() => !readOnly && setEditing(p.id)}
+                    onKeyDown={(e) => e.key === 'F2' && !readOnly && setEditing(p.id)}
+                    className="h-full px-3"
+                  >
+                    {p.name}
+                  </button>
+                </Tooltip>
               )}
               {sorted.length > 1 && !readOnly && (
                 <button

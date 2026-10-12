@@ -62,6 +62,10 @@ export interface Rule {
   id: string;
   severity: Severity;
   title: string;
+  /** Why the problem matters, in one or two plain sentences (FR-UX-11). */
+  why: string;
+  /** How to fix it by hand, when the quick fix does not apply. */
+  fix: string;
   run: (ctx: RuleContext) => Omit<Issue, 'ruleId' | 'severity'>[];
 }
 
@@ -187,6 +191,8 @@ registerRule({
   id: 'VAL-001',
   severity: 'error',
   title: 'Duplicate IP address',
+  why: 'Two interfaces with the same address in one VRF fight over it: traffic goes to whichever answers ARP last.',
+  fix: 'Give one interface another address, or put the two in different VRFs if that is the design.',
   run: (ctx) => {
     const seen = new Map<string, Interface[]>();
     for (const d of ctx.doc.devices) {
@@ -212,6 +218,8 @@ registerRule({
   id: 'VAL-002',
   severity: 'error',
   title: 'Link endpoints in different subnets',
+  why: "The ends of a routed link must share a subnet; otherwise neither can reach the other's address.",
+  fix: "Readdress one end into the other's subnet, or use Point-to-point addressing on the link.",
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       const a = primary4(e.a.iface);
@@ -263,6 +271,8 @@ registerRule({
   id: 'VAL-003',
   severity: 'error',
   title: 'Invalid interface address',
+  why: "A malformed address, or a subnet's network or broadcast address, cannot be configured on an interface.",
+  fix: 'Correct the address or the prefix length in the interface table.',
   run: (ctx) => {
     const out: Omit<Issue, 'ruleId' | 'severity'>[] = [];
     for (const d of ctx.doc.devices) {
@@ -301,6 +311,8 @@ registerRule({
   id: 'VAL-004',
   severity: 'error',
   title: 'Overlapping subnets',
+  why: 'Overlapping subnets in one VRF make routing ambiguous, so some hosts become unreachable.',
+  fix: 'Shrink or move one of the subnets, or put it in another VRF.',
   run: (ctx) => {
     const subs = ctx.doc.subnets.filter((s) => isValidCidr(s.cidr));
     const out: Omit<Issue, 'ruleId' | 'severity'>[] = [];
@@ -326,6 +338,8 @@ registerRule({
   id: 'VAL-005',
   severity: 'error',
   title: 'Interface used by more than one link',
+  why: 'A physical interface takes one cable. Two links on it mean one of them is drawn on the wrong port.',
+  fix: 'Move one link to a free interface, or bundle the links into a port-channel.',
   run: (ctx) => {
     const out: Omit<Issue, 'ruleId' | 'severity'>[] = [];
     for (const [ifaceId, count] of ctx.linkCount) {
@@ -350,6 +364,8 @@ registerRule({
   id: 'VAL-006',
   severity: 'warning',
   title: 'Duplicate hostname',
+  why: 'Hostnames identify devices in logs, monitoring and this diagram; two with one name are easy to mix up.',
+  fix: 'Rename one of the devices.',
   run: (ctx) => {
     const groups = new Map<string, Device[]>();
     for (const d of ctx.doc.devices) {
@@ -370,6 +386,8 @@ registerRule({
   id: 'VAL-007',
   severity: 'warning',
   title: 'Trunk on one end, access on the other',
+  why: 'A trunk sends tagged frames that an access port does not expect, so only the native VLAN gets through.',
+  fix: 'Set both ends to trunk, or both to access.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       const modes = [e.a.iface.mode, e.b.iface.mode];
@@ -388,6 +406,8 @@ registerRule({
   id: 'VAL-008',
   severity: 'warning',
   title: 'Native VLAN mismatch',
+  why: 'Untagged frames land in a different VLAN on each side, which joins two VLANs by accident.',
+  fix: 'Set the same native VLAN on both ends of the trunk.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       if (e.a.iface.mode !== 'trunk' || e.b.iface.mode !== 'trunk') return [];
@@ -415,6 +435,8 @@ registerRule({
   id: 'VAL-009',
   severity: 'warning',
   title: 'Allowed VLANs differ across a trunk',
+  why: 'A VLAN allowed on one end only is dropped at the other, so it works on one side of the link and not across it.',
+  fix: 'Make the allowed VLAN lists match on both ends.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       if (e.a.iface.mode !== 'trunk' || e.b.iface.mode !== 'trunk') return [];
@@ -452,6 +474,8 @@ registerRule({
   id: 'VAL-010',
   severity: 'warning',
   title: 'Access VLAN mismatch',
+  why: 'The two ends put the same cable in different VLANs, which joins two broadcast domains.',
+  fix: 'Set the same access VLAN on both ends.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       if (e.a.iface.mode !== 'access' || e.b.iface.mode !== 'access') return [];
@@ -479,6 +503,8 @@ registerRule({
   id: 'VAL-011',
   severity: 'warning',
   title: 'Speed or duplex mismatch',
+  why: 'A speed or duplex mismatch gives a link that is up but slow and loses packets.',
+  fix: 'Set both ends to the same speed and duplex, or both to auto.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       const a = e.a.iface;
@@ -503,6 +529,8 @@ registerRule({
   id: 'VAL-012',
   severity: 'warning',
   title: 'Inconsistent port-channel members',
+  why: 'Members of a port-channel must match in speed, mode and VLANs, or the odd ones are suspended from the bundle.',
+  fix: 'Give every member the same settings, or take the odd one out of the port-channel.',
   run: (ctx) =>
     ctx.doc.portChannels.flatMap((pc) => {
       const dev = ctx.doc.devices.find((d) => d.id === pc.deviceId);
@@ -536,6 +564,8 @@ registerRule({
   id: 'VAL-013',
   severity: 'warning',
   title: 'Reference to a missing VLAN or VRF',
+  why: 'An interface refers to a VLAN or VRF that is not defined, so its configuration would not apply.',
+  fix: 'Create the VLAN or VRF, or choose one that exists.',
   run: (ctx) => {
     const out: Omit<Issue, 'ruleId' | 'severity'>[] = [];
     const vlans = new Set([1, ...ctx.doc.vlans.map((v) => v.number)]);
@@ -576,6 +606,8 @@ registerRule({
   id: 'VAL-014',
   severity: 'warning',
   title: 'Gateway problem',
+  why: 'Hosts send traffic for other subnets to their gateway; a gateway outside the subnet, or one no device holds, leaves them cut off.',
+  fix: 'Set a gateway inside the subnet and give that address to a router or L3 switch interface.',
   run: (ctx) => {
     const owned = new Set<string>();
     for (const d of ctx.doc.devices)
@@ -604,6 +636,8 @@ registerRule({
   id: 'VAL-015',
   severity: 'warning',
   title: 'FHRP group mismatch',
+  why: 'HSRP, VRRP and GLBP peers back each other up only when they share the protocol, the group number and the virtual IP.',
+  fix: 'Use the same protocol, group and virtual IP on every member.',
   run: (ctx) => {
     const groups = new Map<string, Interface[]>();
     for (const d of ctx.doc.devices) {
@@ -642,6 +676,8 @@ registerRule({
   id: 'VAL-016',
   severity: 'info',
   title: 'Device with no links',
+  why: 'A device with no links is often a leftover, or a link that was never drawn.',
+  fix: 'Connect the device, or delete it if it is not part of the design.',
   run: (ctx) => {
     const linked = new Set(ctx.ends.flatMap((e) => [e.a.device.id, e.b.device.id]));
     return ctx.doc.devices
@@ -654,6 +690,8 @@ registerRule({
   id: 'VAL-017',
   severity: 'info',
   title: 'Addressed interface without a link',
+  why: 'An address on an interface without a link suggests a link missing from the diagram.',
+  fix: 'Draw the link, or remove the address.',
   run: (ctx) =>
     ctx.doc.devices.flatMap((d) =>
       d.interfaces
@@ -677,6 +715,8 @@ registerRule({
   id: 'VAL-018',
   severity: 'info',
   title: 'Subnet over 90% utilized',
+  why: 'A subnet that is almost full leaves little room for new hosts.',
+  fix: 'Plan a larger subnet, or move some hosts to another one.',
   run: (ctx) => {
     const addrs = ctx.doc.devices.flatMap((d) => d.interfaces.flatMap((i) => i.ipv4.map((a) => a.address)));
     return ctx.doc.subnets.flatMap((s) => {
@@ -693,6 +733,8 @@ registerRule({
   id: 'VAL-019',
   severity: 'info',
   title: 'Device missing management IP',
+  why: 'Without a management address the device cannot be reached for monitoring or configuration.',
+  fix: "Add a management IP in the device's fields.",
   run: (ctx) =>
     ctx.doc.devices
       .filter((d) => MANAGED_ROLES.has(d.role) && !d.mgmtIp.trim())
@@ -703,6 +745,8 @@ registerRule({
   id: 'VAL-020',
   severity: 'info',
   title: 'Media mismatch',
+  why: 'One cable cannot join a copper port to a fiber port.',
+  fix: 'Move the link to interfaces of the same media, or change the medium if it was set wrong.',
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       const m = [e.a.iface.media, e.b.iface.media];

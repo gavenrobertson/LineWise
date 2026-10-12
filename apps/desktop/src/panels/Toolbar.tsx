@@ -33,7 +33,7 @@ import {
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark } from '../components/BrandMark.tsx';
-import { cx, IconButton, Segmented, Tooltip } from '../components/ui.tsx';
+import { cx, IconButton, Keys, Segmented, Tooltip } from '../components/ui.tsx';
 import { formatShortcut, runCommand } from '../lib/actions.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -56,7 +56,7 @@ function MenuItem({
     <Menu.Item
       disabled={disabled}
       onSelect={onSelect}
-      className="flex cursor-default select-none items-center gap-2 rounded px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
+      className="lw-row flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
     >
       {children}
     </Menu.Item>
@@ -69,7 +69,7 @@ export function MenuContent({ children }: { children: ReactNode }) {
       <Menu.Content
         sideOffset={6}
         align="start"
-        className="z-50 min-w-48 rounded-lg border border-line bg-surface p-1 shadow-[var(--shadow)]"
+        className="lw-pop lw-material z-50 min-w-48 rounded-lg border border-line p-1 shadow-elev-2"
       >
         {children}
       </Menu.Content>
@@ -95,11 +95,14 @@ function ArrangeMenu() {
   return (
     <Menu.Root>
       {/* Icon-only below xl, so it gets a tooltip like every toolbar button (DOC-05). */}
-      <Tooltip text={t('toolbar.arrange', 'Arrange')}>
+      <Tooltip
+        text={t('toolbar.arrange', 'Arrange')}
+        description={t('toolbar.arrangeHint', 'Align, distribute or auto-layout the selection')}
+      >
         <Menu.Trigger asChild>
           <button
             type="button"
-            className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] text-ink hover:bg-surface-3"
+            className="lw-btn inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[13px] text-ink hover:bg-surface-3 data-[state=open]:bg-surface-3"
             aria-label={t('toolbar.arrange', 'Arrange')}
           >
             <LayoutGrid size={16} />
@@ -149,22 +152,28 @@ function VlanHighlight() {
   return (
     <label className="inline-flex items-center gap-1 text-xs text-muted">
       <span className="sr-only">{t('toolbar.vlanHighlight', 'Highlight VLAN')}</span>
-      <select
-        className="h-8 rounded-md border border-line bg-surface px-1.5 text-xs text-ink"
-        value={value}
-        title={t('toolbar.vlanHighlight', 'Highlight VLAN')}
-        onChange={(e) => setHighlight(e.target.value ? { kind: 'vlan', vlan: Number(e.target.value) } : null)}
+      <Tooltip
+        text={t('toolbar.vlanHighlight', 'Highlight VLAN')}
+        description={t('toolbar.vlanHint', 'Dims everything that does not carry the VLAN')}
       >
-        <option value="">{t('toolbar.noVlan', 'VLAN: none')}</option>
-        {[...vlans]
-          .sort((a, b) => a.number - b.number)
-          .map((v) => (
-            <option key={v.id} value={v.number}>
-              VLAN {v.number}
-              {v.name ? ` · ${v.name}` : ''}
-            </option>
-          ))}
-      </select>
+        <select
+          className="lw-btn h-8 rounded-md border border-line bg-surface px-1.5 text-xs text-ink hover:border-line-strong"
+          value={value}
+          onChange={(e) =>
+            setHighlight(e.target.value ? { kind: 'vlan', vlan: Number(e.target.value) } : null)
+          }
+        >
+          <option value="">{t('toolbar.noVlan', 'VLAN: none')}</option>
+          {[...vlans]
+            .sort((a, b) => a.number - b.number)
+            .map((v) => (
+              <option key={v.id} value={v.number}>
+                VLAN {v.number}
+                {v.name ? ` · ${v.name}` : ''}
+              </option>
+            ))}
+        </select>
+      </Tooltip>
     </label>
   );
 }
@@ -232,6 +241,10 @@ export function Toolbar() {
       <Sep />
       <IconButton
         label={t('cmd.zone', 'Insert zone')}
+        description={t(
+          'toolbar.zoneHint',
+          'A labeled area, such as a site or a DMZ; devices inside move with it',
+        )}
         disabled={readOnly}
         onClick={() => runCommand('insert.zone')}
       >
@@ -265,9 +278,9 @@ export function Toolbar() {
         value={layer}
         onChange={setLayer}
         options={[
-          { value: 'l1', label: 'L1', title: `${t('cmd.l1', 'Physical view (L1)')} (${sc('mod+1')})` },
-          { value: 'l2', label: 'L2', title: `${t('cmd.l2', 'Data link view (L2)')} (${sc('mod+2')})` },
-          { value: 'l3', label: 'L3', title: `${t('cmd.l3', 'Network view (L3)')} (${sc('mod+3')})` },
+          { value: 'l1', label: 'L1', title: t('cmd.l1', 'Physical view (L1)'), shortcut: sc('mod+1') },
+          { value: 'l2', label: 'L2', title: t('cmd.l2', 'Data link view (L2)'), shortcut: sc('mod+2') },
+          { value: 'l3', label: 'L3', title: t('cmd.l3', 'Network view (L3)'), shortcut: sc('mod+3') },
         ]}
       />
       <div className="ml-1 hidden lg:block">
@@ -278,6 +291,11 @@ export function Toolbar() {
           highlight?.kind === 'path'
             ? t('toolbar.clearPath', 'Clear path highlight')
             : t('toolbar.path', 'Highlight path between two devices')
+        }
+        description={
+          highlight?.kind === 'path'
+            ? undefined
+            : t('toolbar.pathHint', 'Click two devices to light up every link between them')
         }
         active={ui.pathStart !== null || highlight?.kind === 'path'}
         onClick={() => {
@@ -304,16 +322,20 @@ export function Toolbar() {
         <Download size={16} />
       </IconButton>
       <Sep />
-      <button
-        type="button"
-        onClick={() => ui.setPalette(true)}
-        className="mr-1 hidden h-8 items-center gap-2 rounded-md border border-line bg-surface-2 px-2 text-xs text-muted hover:text-ink md:inline-flex"
-        title={t('cmd.palette', 'Command palette')}
+      <Tooltip
+        text={t('cmd.palette', 'Command palette')}
+        description={t('toolbar.paletteHint', 'Run any menu command, or find a device by hostname or IP')}
       >
-        <Command size={13} />
-        <span>{t('toolbar.search', 'Search or run a command')}</span>
-        <kbd className="font-mono text-[11px]">{sc('mod+K')}</kbd>
-      </button>
+        <button
+          type="button"
+          onClick={() => ui.setPalette(true)}
+          className="lw-btn mr-1 hidden h-8 items-center gap-2 rounded-lg border border-line bg-surface-2 px-2 text-xs text-muted hover:border-line-strong hover:text-ink md:inline-flex"
+        >
+          <Command size={13} />
+          <span>{t('toolbar.search', 'Search or run a command')}</span>
+          <Keys shortcut={sc('mod+K')} />
+        </button>
+      </Tooltip>
       <IconButton
         label={t('toolbar.library', 'Toggle library')}
         active={ui.libraryOpen}

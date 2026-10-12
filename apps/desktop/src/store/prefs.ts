@@ -26,6 +26,11 @@ export interface Prefs {
   recentTemplates: string[];
   customTemplates: DeviceTemplate[];
   lastUpdateCheck: string | null;
+  /** Contextual tips (FR-UX-12): on, and the ones dismissed with "Don't show again". */
+  showTips: boolean;
+  dismissedTips: string[];
+  /** The first-run tour was finished or skipped. */
+  tourDone: boolean;
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -48,6 +53,9 @@ export const DEFAULT_PREFS: Prefs = {
   recentTemplates: [],
   customTemplates: [],
   lastUpdateCheck: null,
+  showTips: true,
+  dismissedTips: [],
+  tourDone: false,
 };
 
 const KEY = 'linewise.prefs';

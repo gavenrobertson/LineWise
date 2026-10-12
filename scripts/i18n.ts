@@ -8,7 +8,8 @@
  * Sources of keys:
  * - every t('key', 'English') / i18n.t('key', { defaultValue: 'English' }) call with literal
  *   arguments in apps/desktop/src, and the command palette's L('name', 'English') (key cmd.name);
- * - data-backed vocabularies from the device library: roles, role categories, starter diagrams.
+ * - data-backed vocabularies from the device library: roles, role categories, starter diagrams;
+ *   and from the validation rules: each rule's title, why it matters and how to fix it.
  *
  * A t() call whose key is not a literal fails the run unless its prefix is one of the
  * data-backed ones, so every string a user can see ends up in the resource file. So does any
@@ -19,11 +20,12 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { ROLE_CATEGORY, ROLE_LABELS, STARTERS } from '../packages/device-library/src/index.ts';
+import { listRules } from '../packages/core/src/validation.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 const SRC = join(ROOT, 'apps/desktop/src');
 const OUT = join(SRC, 'i18n/locales/en.json');
-const DATA_PREFIXES = ['role.', 'category.', 'starter.'];
+const DATA_PREFIXES = ['role.', 'category.', 'starter.', 'rule.'];
 /** Words that are the same in every language: the brand, protocol names, units and keys. */
 const TECHNICAL = new Set([
   'LineWise',
@@ -134,6 +136,11 @@ export function extract(): { strings: Record<string, string>; problems: string[]
     visit(sf);
   }
   for (const [role, label] of Object.entries(ROLE_LABELS)) add(`role.${role}`, label, 'device-library');
+  for (const r of listRules()) {
+    add(`rule.${r.id}.title`, r.title, 'core');
+    add(`rule.${r.id}.why`, r.why, 'core');
+    add(`rule.${r.id}.fix`, r.fix, 'core');
+  }
   for (const c of new Set(Object.values(ROLE_CATEGORY))) add(`category.${c}`, c, 'device-library');
   for (const s of STARTERS) {
     add(`starter.${s.id}.name`, s.name, 'device-library');

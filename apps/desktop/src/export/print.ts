@@ -7,6 +7,7 @@ import { useEditor } from '../store/editor.ts';
 import { platform } from '../platform/index.ts';
 import { renderPageSvg } from './svg.ts';
 import { svgDataUrl } from './raster.ts';
+import { linkTerms } from '../lib/labels.ts';
 
 export async function printDiagram(): Promise<void> {
   const { doc, layer } = useEditor.getState();
@@ -19,6 +20,7 @@ export async function printDiagram(): Promise<void> {
       pageId: page.id,
       layer,
       theme: 'light',
+      terms: linkTerms(),
       titleBlock: { name: doc.name, author: doc.author, date, revision: '', page: page.name },
     });
     const img = document.createElement('img');

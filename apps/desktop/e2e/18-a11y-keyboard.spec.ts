@@ -66,8 +66,13 @@ test('NFR-A11Y-02 the outline is a tree of zones, devices, interfaces and link p
 
   await page.keyboard.press('ArrowRight'); // first interface
   const iface = tree.getByRole('treeitem', { name: new RegExp(`^${port.replace(/[/.]/g, '\\$&')}( |$)`) });
-  for (let i = 0; i < 60 && !(await iface.evaluate((el) => el === document.activeElement)); i++)
+  // Focus moves on the next frame; wait for it after each press, or a slow runner walks past.
+  const active = () => page.evaluate(() => document.activeElement?.id ?? '');
+  for (let i = 0; i < 60 && !(await iface.evaluate((el) => el === document.activeElement)); i++) {
+    const before = await active();
     await page.keyboard.press('ArrowDown');
+    await expect.poll(active).not.toBe(before);
+  }
   await expect(iface).toBeFocused();
   await expect(iface).toHaveAttribute('aria-level', '3');
   await page.keyboard.press('ArrowRight');

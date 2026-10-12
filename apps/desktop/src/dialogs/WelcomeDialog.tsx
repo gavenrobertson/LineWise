@@ -9,7 +9,7 @@ import { FilePlus, FolderOpen, History, LifeBuoy, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark, Wordmark } from '../components/BrandMark.tsx';
-import { Button, Dialog } from '../components/ui.tsx';
+import { Button, Dialog, Tooltip } from '../components/ui.tsx';
 import i18n, { formatDate } from '../i18n/index.ts';
 import { newDocument, openFile } from '../lib/actions.ts';
 import { platform, type RecentFile, type RecoveryEntry } from '../platform/index.ts';
@@ -92,14 +92,15 @@ export function WelcomeDialog() {
               <ul className="flex flex-col gap-1">
                 {recovery.map((r) => (
                   <li key={r.docId} className="flex items-center gap-1 text-xs">
-                    <button
-                      type="button"
-                      className="min-w-0 flex-1 truncate text-left text-ink underline"
-                      onClick={() => restoreRecovery(r)}
-                      title={t('welcome.restore', 'Restore this copy')}
-                    >
-                      {r.name}
-                    </button>
+                    <Tooltip text={t('welcome.restore', 'Restore this copy')}>
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 truncate text-left text-ink underline"
+                        onClick={() => restoreRecovery(r)}
+                      >
+                        {r.name}
+                      </button>
+                    </Tooltip>
                     <span className="shrink-0 text-subtle">{formatDate(r.savedAt)}</span>
                     <button
                       type="button"

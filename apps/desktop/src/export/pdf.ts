@@ -7,6 +7,7 @@ import type { NetworkDocument, ViewLayer } from '@linewise/core';
 import { renderPageSvg, type ExportTheme } from './svg.ts';
 
 import { PAPER, type PaperSize } from './paper.ts';
+import { linkTerms } from '../lib/labels.ts';
 
 export { PAPER, type PaperSize };
 
@@ -81,6 +82,7 @@ export async function exportPdf(doc: NetworkDocument, opts: PdfOptions): Promise
       pageId,
       layer: opts.layer,
       theme: opts.theme,
+      terms: linkTerms(),
       titleBlock: opts.titleBlock
         ? { name: doc.name, author: doc.author, date, revision: opts.revision, page: page?.name ?? '' }
         : null,

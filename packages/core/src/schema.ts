@@ -306,6 +306,8 @@ export const DocumentSettings = z.object({
   showInterfaceNames: z.boolean().default(true),
   showInterfaceIps: z.boolean().default(false),
   showVlans: z.boolean().default(false),
+  /** Interface names on links: `Gi1/0/1` (short) or `GigabitEthernet1/0/1` (long). */
+  interfaceNames: z.enum(['short', 'long']).default('short'),
   disabledRules: z.array(z.string()).default([]),
   suppressions: z.array(Suppression).default([]),
 });
@@ -337,6 +339,7 @@ export const NetworkDocument = z.object({
     showInterfaceNames: true,
     showInterfaceIps: false,
     showVlans: false,
+    interfaceNames: 'short',
     disabledRules: [],
     suppressions: [],
   }),

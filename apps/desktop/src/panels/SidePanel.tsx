@@ -8,7 +8,8 @@ import { LibraryBody } from './LibraryPanel.tsx';
 import { OutlinePanel } from './OutlinePanel.tsx';
 
 const tabCls =
-  'h-8 flex-1 border-b-2 border-transparent text-[12px] font-medium text-muted hover:text-ink data-[state=active]:border-accent data-[state=active]:text-ink';
+  'lw-btn relative h-8 flex-1 text-[12px] font-medium text-muted hover:text-ink data-[state=active]:text-ink';
+const TABS = ['library', 'outline', 'layers'];
 
 export function SidePanel() {
   const { t } = useTranslation();
@@ -35,12 +36,12 @@ export function SidePanel() {
   return (
     <aside
       aria-label={t('side.label', 'Sidebar')}
-      className="lw-no-print flex h-full w-64 shrink-0 flex-col border-r border-line bg-surface"
+      className="lw-no-print lw-panel-left flex h-full w-64 shrink-0 flex-col border-r border-line bg-surface"
     >
       <Tabs.Root value={tab} onValueChange={change} className="flex min-h-0 flex-1 flex-col">
         <Tabs.List
           aria-label={t('side.label', 'Sidebar')}
-          className="flex shrink-0 border-b border-line px-2"
+          className="relative flex shrink-0 border-b border-line px-2"
         >
           <Tabs.Trigger value="library" className={tabCls}>
             {t('side.library', 'Library')}
@@ -51,14 +52,23 @@ export function SidePanel() {
           <Tabs.Trigger value="layers" className={tabCls}>
             {t('side.layers', 'Layers')}
           </Tabs.Trigger>
+          {/* The active tab's underline glides to the new tab (FR-UX-02). */}
+          <span
+            aria-hidden="true"
+            className="lw-thumb bottom-[-1px] left-2 h-0.5 rounded-full bg-accent"
+            style={{
+              width: 'calc((100% - 16px) / 3)',
+              transform: `translateX(${Math.max(0, TABS.indexOf(tab)) * 100}%)`,
+            }}
+          />
         </Tabs.List>
-        <Tabs.Content value="library" className="min-h-0 flex-1 outline-none">
+        <Tabs.Content value="library" className="min-h-0 flex-1 focus-visible:outline-offset-[-2px]">
           <LibraryBody />
         </Tabs.Content>
-        <Tabs.Content value="outline" className="min-h-0 flex-1 pt-2 outline-none">
+        <Tabs.Content value="outline" className="min-h-0 flex-1 pt-2 focus-visible:outline-offset-[-2px]">
           <OutlinePanel />
         </Tabs.Content>
-        <Tabs.Content value="layers" className="min-h-0 flex-1 pt-2 outline-none">
+        <Tabs.Content value="layers" className="min-h-0 flex-1 pt-2 focus-visible:outline-offset-[-2px]">
           <LayersPanel />
         </Tabs.Content>
       </Tabs.Root>

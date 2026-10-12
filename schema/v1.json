@@ -1005,6 +1005,7 @@
         "defaultLinkRouting": "straight",
         "disabledRules": [],
         "iconStyle": "classic",
+        "interfaceNames": "short",
         "labelTemplate": "{hostname}",
         "showInterfaceIps": false,
         "showInterfaceNames": true,
@@ -1033,6 +1034,14 @@
           "enum": [
             "classic",
             "line"
+          ],
+          "type": "string"
+        },
+        "interfaceNames": {
+          "default": "short",
+          "enum": [
+            "short",
+            "long"
           ],
           "type": "string"
         },

@@ -68,7 +68,8 @@ export function FindPanel() {
   return (
     <div
       role="search"
-      className="lw-no-print absolute right-3 top-3 z-20 flex w-80 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow)]"
+      className="lw-no-print lw-pop lw-material absolute right-3 top-3 z-20 flex w-80 origin-top-right flex-col overflow-hidden rounded-lg border border-line shadow-elev-2 focus-within:border-accent"
+      data-state="open"
     >
       <div className="flex items-center gap-1 px-2">
         <Search size={14} className="text-subtle" />

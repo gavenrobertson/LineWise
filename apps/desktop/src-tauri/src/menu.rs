@@ -306,6 +306,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
             Some("CmdOrCtrl+/"),
         )?)
         .item(&item(app, "help.docs", "Documentation", None)?)
+        .item(&item(app, "help.tour", "Take the Tour", None)?)
         .separator()
         .item(&item(app, "help.updates", "Check for Updates…", None)?)
         .item(&item(app, "help.logs", "Open Logs Folder", None)?)

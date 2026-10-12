@@ -2,7 +2,7 @@
 // Canvas behavior (FR-CAN-01..09): pan and zoom, grid snap and guides, minimap, selection,
 // nudge, arrange, undo coalescing, copy/paste, drag from the library and drop on a link.
 import { expect, test, type Page } from '@playwright/test';
-import { doc, MOD, node, openApp, startBlank, startFrom } from './helpers.ts';
+import { doc, MOD, node, openApp, startBlank, startFrom, viewportSettled } from './helpers.ts';
 
 interface Positions {
   pages: { nodePositions: Record<string, { x: number; y: number }> }[];
@@ -17,16 +17,8 @@ async function viewport(page: Page): Promise<{ x: number; y: number; zoom: numbe
 
 /** The viewport once it has stopped moving (the opening fit animates). */
 async function settledViewport(page: Page): Promise<{ x: number; y: number; zoom: number }> {
-  let last = await viewport(page);
-  await expect
-    .poll(async () => {
-      const v = await viewport(page);
-      const same = v.zoom === last.zoom && v.x === last.x && v.y === last.y;
-      last = v;
-      return same;
-    })
-    .toBe(true);
-  return last;
+  await viewportSettled(page);
+  return viewport(page);
 }
 
 async function positionOf(page: Page, hostname: string) {
@@ -85,7 +77,15 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
       const before = await settledZoom();
       if (Math.abs(before - limit) < 0.005) break;
       await page.keyboard.press(key);
-      if ((await settledZoom()) === before) break;
+      // A step's animation can start a frame or two late; give it a moment before calling it the limit.
+      const moved = await expect
+        .poll(async () => (await viewport(page)).zoom, { timeout: 1000 })
+        .not.toBe(before)
+        .then(
+          () => true,
+          () => false,
+        );
+      if (!moved) break;
     }
     expect(await settledZoom()).toBeCloseTo(limit, 2);
   };
@@ -204,6 +204,7 @@ test('FR-CAN-04 click, Shift-click, marquee, select all, same type and connected
   // Marquee: drag a rectangle around everything on empty canvas.
   await page.keyboard.press('Escape');
   await page.keyboard.press(`${MOD}+0`);
+  await viewportSettled(page);
   const { box } = await canvasCenter(page);
   await page.mouse.move(box.x + 5, box.y + 5);
   await page.mouse.down();
@@ -216,6 +217,8 @@ test('FR-CAN-05, FR-CAN-07 nudge with arrows (Shift = 10×) and a drag is one un
   await openApp(page);
   await startFrom(page, /CCNA lab/);
   await node(page, 'R1').click();
+  // Arrows pan when nothing is selected, so wait for the click to select R1.
+  await expect(node(page, 'R1')).toHaveClass(/\bselected\b/);
   const p0 = await positionOf(page, 'R1');
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => (await positionOf(page, 'R1')).x).toBe(p0.x + 1);

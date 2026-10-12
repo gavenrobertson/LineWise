@@ -9,6 +9,13 @@ Read this first, then `CLAUDE.md`, then `docs/SPEC.md` (the source of truth) and
 - **Open, owner only:** updater keys, Apple and Windows signing, pushing the tags, enabling GitHub Pages, importing the branch ruleset (REL-21), vendor datasheets (FR-TPL-03), and the manual release checklist on four machines. `v1.0.0` is tagged after the checklist passes (`docs/HUMAN-TODO.md`).
 - `node scripts/traceability.mjs --summary` gives the live status per requirement; `--require-must` is the v1.0 gate (FR-TPL-03 and REL-21 are the open MUSTs).
 
+- **UI/UX polish (2026-10-12):** motion and depth tokens, readable link labels with placement,
+  hover cards, tooltips everywhere, help in context, tips, a first-run tour and empty states
+  (FR-UX-01..13, SHOULD, in `TRACEABILITY.md`). See `docs/reports/ui-ux-polish.md`. Link-label
+  placement lives in `canvas/model.ts` (`placeLinkLabels`) and keeps per-link caches; keep edits
+  under the 20% bench budget when touching it. Tips and the tour are off under `navigator.webdriver`
+  unless `localStorage['linewise.e2e.help'] = '1'`.
+
 ## How the work is checked
 
 | Check                   | Command                                                          | Where it runs                        |

@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { useEditor } from '../store/editor.ts';
 import { edgeGeometryPure as edgeGeometry } from './edgeGeometry.ts';
 import { midDirection, nodeCenter, type XY } from './geometry.ts';
-import { SEVERITY_GLYPH, type LinkView } from './model.ts';
+import { badgeAt, SEVERITY_GLYPH, type LabelPart, type LinkView } from './model.ts';
+import { cx } from '../components/ui.tsx';
 
 /** Link anchor for a node: device icon center, or the middle of an off-page reference pill. */
 export function anchorOf(n: InternalNode): XY {
@@ -99,6 +100,24 @@ function EdgeLabels({ children }: { children: ReactNode }) {
   return layer ? createPortal(children, layer) : null;
 }
 
+/** The middle label's runs; a VLAN number gets a chip in its VLAN color (FR-UX-06). */
+function MidParts({ parts }: { parts: LabelPart[] }) {
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.color ? (
+          <span key={i} className="lw-chip">
+            <i style={{ background: p.color }} aria-hidden="true" />
+            {p.text}
+          </span>
+        ) : (
+          p.text
+        ),
+      )}
+    </>
+  );
+}
+
 export type NetworkEdgeData = { view: LinkView };
 export type NetworkEdgeType = Edge<NetworkEdgeData, 'network'>;
 
@@ -126,6 +145,7 @@ export const NetworkEdge = memo(function NetworkEdge({
   const px = -uy;
   const py = ux;
   const stroke = view.severity === 'error' ? SEV.error : view.color;
+  const badge = badgeAt(anchors.mid, view);
   return (
     <g className={view.dimmed ? 'lw-dim' : undefined}>
       {selected && (
@@ -176,9 +196,10 @@ export const NetworkEdge = memo(function NetworkEdge({
         <Waypoints linkId={view.link.id} points={data.view.waypoints} onPreview={setPreview} />
       )}
       {view.severity && (
-        // Problem badge at the middle of the link, drawn with the link so it shows at every zoom.
+        // Problem badge at the middle of the link (beside its middle label), drawn with the link so
+        // it shows at every zoom.
         <g
-          transform={`translate(${anchors.mid.x} ${anchors.mid.y + 10})`}
+          transform={`translate(${badge.x} ${badge.y})`}
           data-lw-badge={view.severity}
           aria-hidden="true"
           pointerEvents="none"
@@ -192,28 +213,32 @@ export const NetworkEdge = memo(function NetworkEdge({
       <EdgeLabels>
         {view.labelA && (
           <div
-            className="lw-edge-label nodrag nopan"
+            className={cx('lw-edge-label nodrag nopan', selected && 'is-selected', view.dimmed && 'lw-dim')}
             style={{ transform: `translate(-50%, -50%) translate(${anchors.a.x}px, ${anchors.a.y}px)` }}
           >
-            {view.labelA}
+            <span className="lw-pill">{view.labelA}</span>
           </div>
         )}
         {view.labelB && (
           <div
-            className="lw-edge-label nodrag nopan"
+            className={cx('lw-edge-label nodrag nopan', selected && 'is-selected', view.dimmed && 'lw-dim')}
             style={{ transform: `translate(-50%, -50%) translate(${anchors.b.x}px, ${anchors.b.y}px)` }}
           >
-            {view.labelB}
+            <span className="lw-pill">{view.labelB}</span>
           </div>
         )}
         {view.labelMid && (
           <div
-            className="lw-edge-label lw-edge-label--mid nodrag nopan"
-            style={{
-              transform: `translate(-50%, -50%) translate(${anchors.mid.x}px, ${anchors.mid.y - 10}px)`,
-            }}
+            className={cx(
+              'lw-edge-label lw-edge-label--mid nodrag nopan',
+              selected && 'is-selected',
+              view.dimmed && 'lw-dim',
+            )}
+            style={{ transform: `translate(-50%, -50%) translate(${anchors.mid.x}px, ${anchors.mid.y}px)` }}
           >
-            {view.labelMid}
+            <span className="lw-pill">
+              <MidParts parts={view.midParts} />
+            </span>
           </div>
         )}
       </EdgeLabels>

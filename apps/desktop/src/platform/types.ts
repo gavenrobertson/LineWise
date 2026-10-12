@@ -109,6 +109,7 @@ export type MenuCommand =
   | 'window.prevTab'
   | 'help.shortcuts'
   | 'help.docs'
+  | 'help.tour'
   | 'help.updates'
   | 'help.about'
   | 'help.logs';

@@ -24,8 +24,12 @@ export type DialogState =
 
 export interface Toast {
   id: number;
-  kind: 'info' | 'success' | 'error';
+  kind: 'info' | 'success' | 'error' | 'tip';
   message: string;
+  /** How long it stays, in ms; the countdown pauses while the pointer or focus is on it. */
+  ms: number;
+  /** Buttons after the message, such as a tip's "Don't show again". */
+  actions?: { label: string; run: () => void }[];
 }
 
 interface UiState {
@@ -42,6 +46,8 @@ interface UiState {
   /** Device chosen as the start of a path highlight, waiting for the second click. */
   pathStart: string | null;
   autosavedAt: string | null;
+  /** The first-run tour's step, or null when it is not showing (FR-UX-12). */
+  tour: number | null;
 
   open: (d: DialogState) => void;
   close: () => void;
@@ -52,11 +58,18 @@ interface UiState {
   set: (
     patch: Partial<Pick<UiState, 'zoom' | 'pathStart' | 'autosavedAt' | 'problemsOpen' | 'outlineOpen'>>,
   ) => void;
-  toast: (message: string, kind?: Toast['kind']) => void;
+  toast: (message: string, kind?: Toast['kind'], extra?: Pick<Toast, 'actions'> & { ms?: number }) => number;
   dismiss: (id: number) => void;
+  setTour: (step: number | null) => void;
+  /** Pause (true) or resume (false) a toast's countdown. */
+  hold: (id: number, paused: boolean) => void;
 }
 
 let toastId = 0;
+const toastTimers = new Map<
+  number,
+  { timer: ReturnType<typeof setTimeout> | null; due: number; left: number }
+>();
 
 /**
  * Where keyboard focus goes back to when the last dialog closes. Dialogs can replace each other
@@ -104,6 +117,7 @@ export const useUi = create<UiState>((set, get) => ({
   toasts: [],
   pathStart: null,
   autosavedAt: null,
+  tour: null,
 
   open: (dialog) => {
     if (!get().dialog) rememberFocus();
@@ -118,10 +132,30 @@ export const useUi = create<UiState>((set, get) => ({
   setPresentation: (presentation) => set({ presentation }),
   toggle: (k) => set({ [k]: !get()[k] } as Partial<UiState>),
   set: (patch) => set(patch),
-  toast: (message, kind = 'info') => {
+  toast: (message, kind = 'info', extra) => {
     const id = ++toastId;
-    set({ toasts: [...get().toasts, { id, kind, message }] });
-    setTimeout(() => get().dismiss(id), kind === 'error' ? 7000 : 3500);
+    const ms = extra?.ms ?? (kind === 'error' ? 7000 : kind === 'tip' ? 12000 : 3500);
+    set({ toasts: [...get().toasts, { id, kind, message, ms, actions: extra?.actions }] });
+    toastTimers.set(id, { timer: setTimeout(() => get().dismiss(id), ms), due: Date.now() + ms, left: ms });
+    return id;
   },
-  dismiss: (id) => set({ toasts: get().toasts.filter((t) => t.id !== id) }),
+  dismiss: (id) => {
+    const t = toastTimers.get(id);
+    if (t?.timer) clearTimeout(t.timer);
+    toastTimers.delete(id);
+    set({ toasts: get().toasts.filter((x) => x.id !== id) });
+  },
+  setTour: (tour) => set({ tour }),
+  hold: (id, paused) => {
+    const t = toastTimers.get(id);
+    if (!t) return;
+    if (paused && t.timer) {
+      clearTimeout(t.timer);
+      t.timer = null;
+      t.left = Math.max(0, t.due - Date.now());
+    } else if (!paused && !t.timer) {
+      t.due = Date.now() + t.left;
+      t.timer = setTimeout(() => get().dismiss(id), t.left);
+    }
+  },
 }));

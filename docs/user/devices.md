@@ -121,4 +121,4 @@ With nothing selected, the Inspector's **Display** group applies to the whole di
 - **Label**: the device label template. Use the fields `{hostname}`, `{model}`, `{mgmtIp}`,
   `{site}` and `{role}`, for example `{hostname}\n{mgmtIp}`.
 - **Links**: the default line style for links.
-- **Port names**, **Port IPs** and **Port VLANs**: show these at the link ends in every view.
+- **Show interface names**, **Show IP addresses** and **Show VLANs**: show these at the link ends in every view.
