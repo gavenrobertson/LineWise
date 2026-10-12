@@ -178,6 +178,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         )?)
         .separator()
         .item(&item(app, "view.minimap", "Toggle Minimap", None)?)
+        .item(&item(app, "view.theme", "Toggle Dark Mode", None)?)
         .item(&item(
             app,
             "view.problemBadges",

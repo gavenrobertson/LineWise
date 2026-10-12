@@ -14,6 +14,7 @@ import { HelpButton } from '../components/HelpButton.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import { ruleText, severityLabel } from '../lib/labels.ts';
+import { presenceProps, useClosing } from '../components/Presence.tsx';
 
 const ICON = {
   error: <CircleAlert size={14} className="shrink-0 text-danger" aria-hidden="true" />,
@@ -51,6 +52,7 @@ function issueKey(i: Issue): string {
 
 export function ProblemsPanel() {
   const { t } = useTranslation();
+  const closing = useClosing();
   const issues = useEditor((s) => s.issues);
   const suppressed = useEditor((s) => s.suppressed);
   const settings = useEditor((s) => s.doc.settings);
@@ -101,6 +103,7 @@ export function ProblemsPanel() {
   return (
     <section
       aria-label={t('problems.title', 'Problems')}
+      {...presenceProps(closing)}
       className="lw-no-print lw-panel-bottom flex h-56 shrink-0 flex-col border-t border-line bg-surface"
     >
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3">

@@ -10,9 +10,10 @@
  */
 import { applyFix, deviceSummary, type Interface, type Issue } from '@linewise/core';
 import { ArrowLeftRight, CircleAlert, Info, TriangleAlert, Wand2 } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
+import { presenceProps, usePresence } from '../components/Presence.tsx';
 import { cx } from '../components/ui.tsx';
 import { mediumLabel, roleLabel } from '../lib/labels.ts';
 import { useEditor } from '../store/editor.ts';
@@ -97,12 +98,16 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+type Shown = Pick<HoverState, 'kind' | 'x' | 'y'> & { id: string };
+
 export function CanvasHoverCard({ links, devices }: { links: LinkView[]; devices: DeviceView[] }) {
-  const { t } = useTranslation();
   const { kind, id, x, y, open } = useCanvasHover();
-  const issues = useEditor((s) => s.issues);
-  const execute = useEditor((s) => s.execute);
-  const readOnly = useEditor((s) => s.readOnly);
+  // The card keeps what it last showed while it fades out (FR-UX-02).
+  const live = open && id ? { kind, id, x, y } : null;
+  const [shown, setShown] = useState<Shown | null>(live);
+  if (live && (live.id !== shown?.id || live.kind !== shown.kind || live.x !== shown.x || live.y !== shown.y))
+    setShown(live);
+  const { mounted, closing } = usePresence(!!live);
   // Any scroll or press elsewhere closes it, like a tooltip.
   useEffect(() => {
     if (!open) return;
@@ -120,11 +125,29 @@ export function CanvasHoverCard({ links, devices }: { links: LinkView[]; devices
       window.removeEventListener('keydown', esc);
     };
   }, [open]);
-  if (!open || !id) return null;
+  if (!mounted || !shown) return null;
+  return <CardBody links={links} devices={devices} shown={shown} closing={closing} />;
+}
+
+function CardBody({
+  links,
+  devices,
+  shown: { kind, id, x, y },
+  closing,
+}: {
+  links: LinkView[];
+  devices: DeviceView[];
+  shown: Shown;
+  closing: boolean;
+}) {
+  const { t } = useTranslation();
+  const issues = useEditor((s) => s.issues);
+  const execute = useEditor((s) => s.execute);
+  const readOnly = useEditor((s) => s.readOnly);
   if (kind === 'device') {
     const dv = devices.find((d) => d.device.id === id);
     return dv ? (
-      <Card x={x} y={y}>
+      <Card x={x} y={y} closing={closing}>
         <DeviceBody view={dv} issues={issues} />
       </Card>
     ) : null;
@@ -161,7 +184,7 @@ export function CanvasHoverCard({ links, devices }: { links: LinkView[]; devices
   };
 
   return (
-    <Card x={x} y={y}>
+    <Card x={x} y={y} closing={closing}>
       <div className="flex items-center gap-2">
         <End host={a.device.hostname} port={a.iface.name} align="start" />
         <ArrowLeftRight size={14} className="shrink-0 text-subtle" aria-label={t('linkCard.to', 'to')} />
@@ -211,7 +234,7 @@ export function CanvasHoverCard({ links, devices }: { links: LinkView[]; devices
 }
 
 /** The card frame: above the pointer, flipped below near the top of the window, kept inside it. */
-function Card({ x, y, children }: { x: number; y: number; children: ReactNode }) {
+function Card({ x, y, closing, children }: { x: number; y: number; closing: boolean; children: ReactNode }) {
   const W = 300;
   const left = Math.max(8, Math.min(x - W / 2, window.innerWidth - W - 8));
   const below = y < 260;
@@ -220,7 +243,7 @@ function Card({ x, y, children }: { x: number; y: number; children: ReactNode })
       data-lw-linkcard=""
       role="tooltip"
       id="lw-canvas-card"
-      data-state="delayed-open"
+      {...presenceProps(closing)}
       onMouseEnter={() => useCanvasHover.getState().keep()}
       onMouseLeave={() => useCanvasHover.getState().hide()}
       className="lw-pop lw-material lw-no-print fixed z-[80] rounded-lg border border-line px-3 py-2.5 text-[12px] leading-snug shadow-elev-2"

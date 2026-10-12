@@ -52,13 +52,13 @@ for (const theme of ['light', 'dark'] as const) {
     });
 
     test('welcome screen', async ({ page }) => {
-      await openApp(page);
+      await openApp(page, { theme: 'system' });
       await expect(page.getByRole('dialog', { name: 'Welcome to LineWise' })).toBeVisible();
       await axe(page, 'welcome');
     });
 
     test('main window in each view, with the problems panel open', async ({ page }) => {
-      await openApp(page);
+      await openApp(page, { theme: 'system' });
       await startFrom(page, /Three-tier campus/);
       for (const layer of ['L1', 'L2', 'L3']) {
         await page.getByRole('radio', { name: layer }).click();
@@ -84,7 +84,7 @@ for (const theme of ['light', 'dark'] as const) {
     });
 
     test('dialogs', async ({ page }) => {
-      await openApp(page);
+      await openApp(page, { theme: 'system' });
       await startFrom(page, /CCNA lab/);
       for (const [cmd, title] of [
         ['Import', 'Import network data'],
@@ -113,7 +113,7 @@ for (const theme of ['light', 'dark'] as const) {
 
 test('NFR-A11Y-04 reduced motion, increased contrast, forced colors and interface size', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce', contrast: 'more' });
-  await openApp(page);
+  await openApp(page, { theme: 'system' });
   await startFrom(page, /CCNA lab/);
   // Reduced motion: transitions are cut to nothing.
   const transition = await page

@@ -44,6 +44,7 @@ import {
 import { dirtyTabIds, selectDirty, selectPage, useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { toggleTheme } from './theme.ts';
 
 /** The documentation site (DOC-01), published from docs/ by docs.yml. */
 export const DOCS_URL = 'https://gavenrobertson.github.io/LineWise/';
@@ -734,6 +735,12 @@ export function commandList(): CommandDef[] {
       group: 'View',
       label: L('minimap', 'Toggle minimap'),
       run: () => usePrefs.getState().set({ showMinimap: !usePrefs.getState().showMinimap }),
+    },
+    {
+      id: 'view.theme',
+      group: 'View',
+      label: L('theme', 'Toggle dark mode'),
+      run: toggleTheme,
     },
     {
       id: 'view.problemBadges',

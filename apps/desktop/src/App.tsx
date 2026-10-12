@@ -11,6 +11,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Canvas } from './canvas/Canvas.tsx';
 import { cx } from './components/ui.tsx';
+import { Presence, presenceProps, useLeavingList } from './components/Presence.tsx';
 import { Tour } from './components/Tour.tsx';
 import { AboutDialog } from './dialogs/AboutDialog.tsx';
 import { CalculatorDialog } from './dialogs/CalculatorDialog.tsx';
@@ -92,7 +93,7 @@ function ActiveDialog({ dialog }: { dialog: DialogState }): ReactNode {
 }
 
 function Toasts() {
-  const toasts = useUi((s) => s.toasts);
+  const toasts = useLeavingList(useUi((s) => s.toasts));
   const dismiss = useUi((s) => s.dismiss);
   const hold = useUi((s) => s.hold);
   const { t: tr } = useTranslation();
@@ -105,8 +106,9 @@ function Toasts() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          role={t.kind === 'error' ? 'alert' : undefined}
+          role={t.kind === 'error' && !t.leaving ? 'alert' : undefined}
           data-lw-toast={t.kind}
+          {...presenceProps(!!t.leaving)}
           // Springs up from the bottom; the countdown hairline pauses on hover and focus (FR-UX-02).
           className={cx(
             'lw-toast lw-material pointer-events-auto relative flex max-w-md items-start gap-2 overflow-hidden rounded-lg border px-3 py-2 text-[13px] text-ink shadow-elev-2',
@@ -363,7 +365,9 @@ export function App() {
             </div>
           )}
           <div className="flex min-h-0 flex-1">
-            {!presentation && libraryOpen && <SidePanel />}
+            <Presence present={!presentation && libraryOpen}>
+              <SidePanel />
+            </Presence>
             <main
               id="lw-canvas"
               className="flex min-w-0 flex-1 flex-col"
@@ -372,12 +376,18 @@ export function App() {
               {!presentation && <TabBar />}
               <div className="relative min-h-0 flex-1">
                 <Canvas />
-                {find && !presentation && <FindPanel />}
+                <Presence present={find && !presentation}>
+                  <FindPanel />
+                </Presence>
               </div>
-              {!presentation && problemsOpen && <ProblemsPanel />}
+              <Presence present={!presentation && problemsOpen}>
+                <ProblemsPanel />
+              </Presence>
               {!presentation && <PagesBar />}
             </main>
-            {!presentation && inspectorOpen && <Inspector />}
+            <Presence present={!presentation && inspectorOpen}>
+              <Inspector />
+            </Presence>
           </div>
           {!presentation && <StatusBar />}
         </div>

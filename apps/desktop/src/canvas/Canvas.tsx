@@ -82,6 +82,25 @@ export function fitPadding(minimap = usePrefs.getState().showMinimap) {
 }
 
 /** Imperative canvas API for menus, the command palette and find. */
+/**
+ * Hover feedback (the device halo and handles, the link glow) exists only on the element under the
+ * pointer. When the pointer leaves, mark that one element for a moment so its feedback fades out
+ * instead of vanishing (FR-UX-02).
+ */
+const unhoverTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+/** The view is panning or zooming: devices slide under a still pointer, so skip the fade-outs. */
+let viewMoving = false;
+function fadeOutHover(el: Element, buttons: number): void {
+  const ms = motionMs(DUR.base);
+  if (!ms || viewMoving || buttons !== 0) return;
+  clearTimeout(unhoverTimers.get(el));
+  el.classList.add('lw-unhover');
+  unhoverTimers.set(
+    el,
+    setTimeout(() => el.classList.remove('lw-unhover'), ms),
+  );
+}
+
 export const canvasApi: {
   instance: ReactFlowInstance | null;
   fit: () => void;
@@ -705,7 +724,10 @@ export function Canvas() {
     onConnect,
     onConnectEnd,
     onDelete,
-    onMoveEnd: (_: unknown, vp: { zoom: number }) => setUi({ zoom: vp.zoom }),
+    onMoveEnd: (_: unknown, vp: { zoom: number }) => {
+      viewMoving = false;
+      setUi({ zoom: vp.zoom });
+    },
     // The link hover card (FR-UX-07) opens after the hover-card delay and follows the pointer
     // until it opens; leaving the link closes it after a moment, so the card can be reached.
     onEdgeMouseEnter: (e: ReactMouseEvent, edge: Edge) => {
@@ -715,7 +737,10 @@ export function Canvas() {
       const h = useCanvasHover.getState();
       if (!h.open && h.id === edge.id) useCanvasHover.setState({ x: e.clientX, y: e.clientY });
     },
-    onEdgeMouseLeave: () => useCanvasHover.getState().hideSoon(),
+    onEdgeMouseLeave: (e: ReactMouseEvent) => {
+      fadeOutHover(e.currentTarget, e.buttons);
+      useCanvasHover.getState().hideSoon();
+    },
     // The device card (FR-NET-09) uses the same card, opened from the node under the pointer.
     onNodeMouseEnter: (e: ReactMouseEvent, n: Node) => {
       if (n.type !== 'device' || e.buttons !== 0) return;
@@ -728,8 +753,14 @@ export function Canvas() {
       const r = (e.currentTarget as Element).getBoundingClientRect();
       useCanvasHover.getState().show(n.id, r.left + r.width / 2, r.top, 450, 'device');
     },
-    onNodeMouseLeave: () => useCanvasHover.getState().hideSoon(),
-    onMoveStart: () => useCanvasHover.getState().hide(),
+    onNodeMouseLeave: (e: ReactMouseEvent) => {
+      fadeOutHover(e.currentTarget, e.buttons);
+      useCanvasHover.getState().hideSoon();
+    },
+    onMoveStart: () => {
+      viewMoving = true;
+      useCanvasHover.getState().hide();
+    },
   });
   const snapGrid = useMemo<[number, number]>(
     () => [prefs.gridSize / 2, prefs.gridSize / 2],

@@ -10,6 +10,7 @@
         "minWidth": 960,
         "minHeight": 600,
         "center": true,
+        "backgroundColor": "#0e1726",
         "dragDropEnabled": false,
         "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-debugging-port=9222"
       }

@@ -8,6 +8,7 @@ import * as RPopover from '@radix-ui/react-popover';
 import * as RTooltip from '@radix-ui/react-tooltip';
 import { CircleHelp, ExternalLink, X } from 'lucide-react';
 import i18n from '../i18n/index.ts';
+import { useReleaseOnClose } from './Presence.tsx';
 import {
   forwardRef,
   useEffect,
@@ -424,11 +425,13 @@ export function Dialog({
   /** A help button beside the title (FR-UX-10). */
   help?: ReactNode;
 }) {
+  const content = useReleaseOnClose(open);
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
         <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.32)]" />
         <RDialog.Content
+          ref={content}
           // Open on the first real control, not on a help button in the title (whose tooltip
           // would take the first Escape).
           onOpenAutoFocus={(e) => {
