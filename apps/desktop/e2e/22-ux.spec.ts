@@ -40,12 +40,15 @@ test('FR-UX-07 hovering or focusing a link shows its card', async ({ page, brows
   await expect(card).toHaveCount(0);
 });
 
-test('FR-UX-08 a toolbar tooltip opens on keyboard focus with its shortcut as key caps', async ({ page }) => {
+test('FR-UX-08 a toolbar tooltip opens on keyboard focus with its shortcut as key caps', async ({
+  page,
+  browserName,
+}) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
-  // Tab from Open… to Save, as a keyboard user would.
+  // Tab from Open… to Save, as a keyboard user would (Option+Tab in Safari on macOS).
   await page.getByRole('toolbar').getByRole('button', { name: 'Open…' }).focus();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tabKey(browserName));
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeFocused();
   // A tooltip that is fading out keeps its element for a moment; count only the open one.
   const tip = page.locator('[data-lw-tooltip]:not([data-state="closed"])');

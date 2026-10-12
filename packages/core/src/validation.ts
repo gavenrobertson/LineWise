@@ -218,8 +218,8 @@ registerRule({
   id: 'VAL-002',
   severity: 'error',
   title: 'Link endpoints in different subnets',
-  why: 'The ends of a routed link must share a subnet; otherwise neither can reach the other\'s address.',
-  fix: 'Readdress one end into the other\'s subnet, or use Point-to-point addressing on the link.',
+  why: "The ends of a routed link must share a subnet; otherwise neither can reach the other's address.",
+  fix: "Readdress one end into the other's subnet, or use Point-to-point addressing on the link.",
   run: (ctx) =>
     ctx.ends.flatMap((e) => {
       const a = primary4(e.a.iface);
@@ -271,7 +271,7 @@ registerRule({
   id: 'VAL-003',
   severity: 'error',
   title: 'Invalid interface address',
-  why: 'A malformed address, or a subnet\'s network or broadcast address, cannot be configured on an interface.',
+  why: "A malformed address, or a subnet's network or broadcast address, cannot be configured on an interface.",
   fix: 'Correct the address or the prefix length in the interface table.',
   run: (ctx) => {
     const out: Omit<Issue, 'ruleId' | 'severity'>[] = [];
@@ -734,7 +734,7 @@ registerRule({
   severity: 'info',
   title: 'Device missing management IP',
   why: 'Without a management address the device cannot be reached for monitoring or configuration.',
-  fix: 'Add a management IP in the device\'s fields.',
+  fix: "Add a management IP in the device's fields.",
   run: (ctx) =>
     ctx.doc.devices
       .filter((d) => MANAGED_ROLES.has(d.role) && !d.mgmtIp.trim())
