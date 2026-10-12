@@ -76,3 +76,30 @@ test('FR-UX-02 with reduced motion nothing animates or transitions', async ({ pa
   });
   expect(slow).toEqual([]);
 });
+
+test('FR-UX-12 the first-run tour walks four steps and is remembered', async ({ page }) => {
+  await openApp(page);
+  // Automated runs keep tips and the tour out of the way unless asked for.
+  await page.evaluate(() => localStorage.setItem('linewise.e2e.help', '1'));
+  await page.reload();
+  await startFrom(page, /CCNA lab/);
+  const tour = page.getByRole('region', { name: 'Quick tour' });
+  await expect(tour).toContainText('Step 1 of 4');
+  await expect(tour.getByRole('button', { name: 'Next' })).toBeFocused();
+  for (const n of [2, 3, 4]) {
+    await page.keyboard.press('Enter');
+    await expect(tour).toContainText(`Step ${n} of 4`);
+  }
+  await tour.getByRole('button', { name: 'Done' }).click();
+  await expect(tour).toHaveCount(0);
+  // Not offered again; Help → Take the tour brings it back.
+  await page.reload();
+  await startFrom(page, /CCNA lab/);
+  await expect(tour).toHaveCount(0);
+  await page.keyboard.press(`${MOD}+k`);
+  await page.getByRole('combobox').fill('Take the tour');
+  await page.getByRole('option', { name: /^Take the tour/ }).click();
+  await expect(tour).toContainText('Step 1 of 4');
+  await page.keyboard.press('Escape');
+  await expect(tour).toHaveCount(0);
+});

@@ -89,6 +89,25 @@ Welcome screen, About dialog, macOS DMG background, Windows NSIS and MSI install
 header, docs-site logo and favicon. The `.lwise` file association uses the document icon on both
 operating systems (BRD-03).
 
+## Voice and glossary
+
+UI text is short, plain and in sentence case ("Show interface names", not "Show Interface Names").
+Buttons start with a verb. A networking term the reader might not know gets a one-sentence
+explanation where it appears (the ⓘ beside a field, the ? beside a section). Problems say what is
+wrong, why it matters and how to fix it.
+
+| Use                   | For                                                                                                     | Not                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| link                  | One cable or circuit between two interfaces                                                             | connection, edge, wire          |
+| interface             | A configured port on a device, by name (`Gi1/0/1`), in fields and tables                                | port (in fields)                |
+| port                  | Where a cable plugs in, when choosing the ends of a link; also in port group, port-channel and port map | interface (there)               |
+| device                | Anything on the canvas with interfaces                                                                  | node, host (except end hosts)   |
+| zone                  | A labeled area that holds devices                                                                       | group, container, box           |
+| view                  | Physical (L1), Data link (L2), Network (L3)                                                             | layer (except the Layers panel) |
+| problem               | A finding of a validation rule                                                                          | issue, error (unless severity)  |
+| suppress              | Hide a problem you accept, with a reason saved in the diagram                                           | ignore, dismiss                 |
+| access, trunk, routed | Interface modes, lower case in labels                                                                   | Access port, Trunk port         |
+
 ## Don'ts
 
 Don't rotate, stretch or outline the mark, and don't add gradients or shadows. Don't change the

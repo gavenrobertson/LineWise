@@ -362,6 +362,17 @@ body {
 .lw-panel-bottom {
   animation: lw-slide-in-up var(--dur-base) var(--ease-standard);
 }
+.lw-tour-ring {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 6px var(--accent-soft);
+  animation: lw-fade-in var(--dur-base) var(--ease-standard);
+  transition:
+    left var(--dur-base) var(--ease-standard),
+    top var(--dur-base) var(--ease-standard),
+    width var(--dur-base) var(--ease-standard),
+    height var(--dur-base) var(--ease-standard);
+}
 .lw-rise {
   animation: lw-rise-in var(--dur-base) var(--ease-standard);
 }
@@ -505,6 +516,10 @@ body {
   }
   .lw-device-icon::before {
     display: none;
+  }
+  .lw-tour-ring {
+    box-shadow: none;
+    outline: 2px solid Highlight;
   }
 }
 

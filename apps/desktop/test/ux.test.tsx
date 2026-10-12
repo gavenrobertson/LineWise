@@ -24,7 +24,10 @@ import { renderPageSvg } from '../src/export/svg.ts';
 import { HelpButton } from '../src/components/HelpButton.tsx';
 import { helpTopic, term, type HelpId } from '../src/lib/help.ts';
 import { ruleText } from '../src/lib/labels.ts';
-import { keyParts } from '../src/components/ui.tsx';
+import { EmptyState, keyParts } from '../src/components/ui.tsx';
+import { Tour } from '../src/components/Tour.tsx';
+import { noteDrop, noteManualLink, offerTip, resetTips } from '../src/lib/tips.ts';
+import { usePrefs } from '../src/store/prefs.ts';
 import { cubicBezier, easeStandard, motionMs } from '../src/lib/motion.ts';
 import { useUi } from '../src/store/ui.ts';
 
@@ -433,5 +436,74 @@ describe('FR-UX-11 validation insights', () => {
       expect(ruleText(r.id, 'why')).toBe(r.why);
       expect(ruleText(r.id, 'fix')).toBe(r.fix);
     }
+  });
+});
+
+describe('FR-UX-12 smart tips and the first-run tour', () => {
+  afterEach(() => {
+    resetTips();
+    usePrefs.getState().set({ showTips: true, dismissedTips: [], tourDone: false });
+    useUi.setState({ toasts: [], tour: null, dialog: null });
+  });
+  it('shows the import tip after the third link drawn by hand, once, and remembers "Don’t show again"', () => {
+    useUi.setState({ toasts: [] });
+    noteManualLink();
+    noteManualLink();
+    expect(useUi.getState().toasts).toHaveLength(0);
+    noteManualLink();
+    const tip = useUi.getState().toasts.at(-1)!;
+    expect(tip.kind).toBe('tip');
+    expect(tip.message).toMatch(/show cdp neighbors detail/);
+    // At most one tip per session.
+    expect(offerTip('auto-layout')).toBe(false);
+    tip.actions![0]!.run();
+    expect(usePrefs.getState().dismissedTips).toContain('import-cdp');
+    resetTips();
+    expect(offerTip('import-cdp')).toBe(false);
+  });
+  it('offers the auto-layout tip when a dropped device covers another; never when tips are off', () => {
+    noteDrop([{ x: 100, y: 100 }], [{ x: 400, y: 400 }]);
+    expect(useUi.getState().toasts).toHaveLength(0);
+    usePrefs.getState().set({ showTips: false });
+    noteDrop([{ x: 100, y: 100 }], [{ x: 110, y: 105 }]);
+    expect(useUi.getState().toasts).toHaveLength(0);
+    usePrefs.getState().set({ showTips: true });
+    noteDrop([{ x: 100, y: 100 }], [{ x: 110, y: 105 }]);
+    expect(useUi.getState().toasts.at(-1)?.message).toMatch(/Auto-layout/);
+  });
+  it('walks four steps with the keyboard, and Skip remembers it is done', async () => {
+    const canvas = document.createElement('main');
+    canvas.id = 'lw-canvas';
+    document.body.append(canvas);
+    render(<Tour />);
+    expect(await screen.findByText('Step 1 of 4')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toHaveFocus();
+    await act(async () => screen.getByRole('button', { name: 'Next' }).click());
+    expect(screen.getByText('Step 2 of 4')).toBeInTheDocument();
+    await act(async () => screen.getByRole('button', { name: 'Back' }).click());
+    expect(screen.getByText('Step 1 of 4')).toBeInTheDocument();
+    await act(async () => screen.getByRole('button', { name: 'Skip tour' }).click());
+    expect(screen.queryByText(/Step \d of 4/)).toBeNull();
+    expect(usePrefs.getState().tourDone).toBe(true);
+    canvas.remove();
+  });
+});
+
+describe('FR-UX-13 empty states', () => {
+  it('say what is empty and offer one clear action', async () => {
+    const onClick = vi.fn();
+    render(
+      <EmptyState art="search" title="No devices match “zz”." action={{ label: 'Clear the search', onClick }}>
+        Search by model, role or vendor.
+      </EmptyState>,
+    );
+    expect(screen.getByText('No devices match “zz”.')).toBeInTheDocument();
+    await act(async () => screen.getByRole('button', { name: 'Clear the search' }).click());
+    expect(onClick).toHaveBeenCalled();
+  });
+  it('the glossary in the brand guide pins down the terms the UI uses', () => {
+    const brand = readFileSync(resolve(import.meta.dirname, '../../../docs/brand.md'), 'utf8');
+    expect(brand).toContain('## Voice and glossary');
+    for (const w of ['| link ', '| interface ', '| port ', '| problem ']) expect(brand).toContain(w);
   });
 });

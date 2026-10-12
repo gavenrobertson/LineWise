@@ -23,7 +23,7 @@ import {
   type IpAssignment,
 } from '@linewise/core';
 import { ChevronRight, Link2, Plus, Trash2 } from 'lucide-react';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoolField, NumberField, SelectField, TextField } from '../components/fields.tsx';
 import { Button, CardRows, cx, HoverCard, Tooltip } from '../components/ui.tsx';
@@ -314,6 +314,145 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
   );
 }
 
+/**
+ * One interface row. Memoized: a hostname edit or a change to another interface leaves the row
+ * (with its hover card and tooltip) as it was (NFR-PERF-04).
+ */
+const IfaceRow = memo(function IfaceRow({
+  i,
+  peer,
+  pc,
+  isOpen,
+  checked,
+  summaryText,
+  onToggle,
+  onOpen,
+  onSelectLink,
+}: {
+  i: Interface;
+  peer: { linkId: string; text: string } | undefined;
+  pc: { number: number } | undefined;
+  isOpen: boolean;
+  checked: boolean;
+  summaryText: string;
+  onToggle: (id: string) => void;
+  onOpen: (id: string | null) => void;
+  onSelectLink: (linkId: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <tr className={cx('border-b border-line hover:bg-surface-2', isOpen && 'bg-surface-2')}>
+      <td className="py-1 pl-3">
+        <input
+          type="checkbox"
+          className="h-3.5 w-3.5 accent-[var(--accent)]"
+          aria-label={t('iface.selectX', 'Select {{n}}', { n: i.name })}
+          checked={checked}
+          onChange={() => onToggle(i.id)}
+        />
+      </td>
+      <td className="py-1">
+        <HoverCard
+          side="left"
+          delay={500}
+          // The interface card (FR-UX-09): everything the row abbreviates, built when shown.
+          content={() => (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-mono font-semibold">{i.name}</span>
+                <span className={cx(!i.enabled ? 'text-danger' : 'text-muted')}>
+                  {!i.enabled
+                    ? t('iface.shutdown', 'shut down')
+                    : peer
+                      ? t('iface.up', 'connected')
+                      : t('iface.free', 'free')}
+                </span>
+              </div>
+              <CardRows
+                rows={[
+                  [t('iface.mode', 'Mode'), i.mode === 'unset' ? t('linkCard.unset', 'not set') : i.mode],
+                  ...(i.mode === 'access'
+                    ? [[t('iface.accessVlan', 'Access VLAN'), String(i.accessVlan ?? 1)] as [string, string]]
+                    : []),
+                  ...(i.mode === 'trunk'
+                    ? [
+                        [t('iface.allowed', 'Allowed VLANs'), i.allowedVlans || t('linkCard.all', 'all')] as [
+                          string,
+                          string,
+                        ],
+                        [t('iface.native', 'Native VLAN'), String(i.nativeVlan ?? 1)] as [string, string],
+                      ]
+                    : []),
+                  ...(formatIp(i.ipv4) || formatIp(i.ipv6)
+                    ? [
+                        [
+                          t('iface.addresses', 'Addresses'),
+                          [formatIp(i.ipv4), formatIp(i.ipv6)].filter(Boolean).join(', '),
+                        ] as [string, string],
+                      ]
+                    : []),
+                  [
+                    t('linkCard.speed', 'Speed'),
+                    `${i.speedMbps ? fmtBandwidth(i.speedMbps) : t('linkCard.auto', 'auto')} · ${i.duplex}`,
+                  ],
+                  ...(pc
+                    ? [[t('iface.portChannel', 'Port-channel'), `Po${pc.number}`] as [string, string]]
+                    : []),
+                  ...(peer ? [[t('iface.peer', 'Connected to'), peer.text] as [string, string]] : []),
+                  ...(i.description
+                    ? [[t('iface.description', 'Description'), i.description] as [string, string]]
+                    : []),
+                ]}
+              />
+            </div>
+          )}
+        >
+          <button
+            type="button"
+            aria-expanded={isOpen}
+            aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
+            onClick={() => onOpen(isOpen ? null : i.id)}
+            className="flex w-full items-center gap-1 text-left font-mono"
+          >
+            <ChevronRight
+              size={11}
+              className={cx('shrink-0 text-subtle transition-transform', isOpen && 'rotate-90')}
+            />
+            <span
+              className={cx(
+                'h-1.5 w-1.5 shrink-0 rounded-full',
+                !i.enabled ? 'bg-danger' : peer ? 'bg-accent-fill' : 'bg-line-strong',
+              )}
+              aria-hidden="true"
+            />
+            <span className="truncate">{i.shortName}</span>
+          </button>
+        </HoverCard>
+      </td>
+      <td className="truncate py-1 font-mono text-muted">
+        {summaryText}
+        {pc && <span className="ml-1 rounded bg-accent-soft px-1 text-accent-ink">Po{pc.number}</span>}
+      </td>
+      <td className="truncate py-1 pr-3">
+        {peer ? (
+          <Tooltip text={peer.text} description={t('iface.peerHint', 'Select this link')}>
+            <button
+              type="button"
+              className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent-ink"
+              onClick={() => onSelectLink(peer.linkId)}
+            >
+              <Link2 size={11} className="shrink-0" />
+              <span className="truncate">{peer.text}</span>
+            </button>
+          </Tooltip>
+        ) : (
+          <span className="text-subtle">—</span>
+        )}
+      </td>
+    </tr>
+  );
+});
+
 export function InterfaceTable({ device }: { device: Device }) {
   const { t } = useTranslation();
   const doc = useEditor((s) => s.doc);
@@ -323,6 +462,7 @@ export function InterfaceTable({ device }: { device: Device }) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [range, setRange] = useState('');
   const [filter, setFilter] = useState('');
+  const prevPeers = useRef(new Map<string, { linkId: string; text: string }>());
   const peers = useMemo(() => {
     const m = new Map<string, { linkId: string; text: string }>();
     for (const l of doc.links) {
@@ -333,9 +473,16 @@ export function InterfaceTable({ device }: { device: Device }) {
         if (mine.deviceId !== device.id) continue;
         const od = doc.devices.find((d) => d.id === other.deviceId);
         const oi = od?.interfaces.find((i) => i.id === other.interfaceId);
-        m.set(mine.interfaceId, { linkId: l.id, text: `${od?.hostname ?? '?'} ${oi?.shortName ?? ''}` });
+        const text = `${od?.hostname ?? '?'} ${oi?.shortName ?? ''}`;
+        // The same object while nothing about the peer changed, so the row stays memoized.
+        const was = prevPeers.current.get(mine.interfaceId);
+        m.set(
+          mine.interfaceId,
+          was && was.linkId === l.id && was.text === text ? was : { linkId: l.id, text },
+        );
       }
     }
+    prevPeers.current = m;
     return m;
   }, [doc, device.id]);
   const rows = useMemo(() => {
@@ -351,12 +498,15 @@ export function InterfaceTable({ device }: { device: Device }) {
       );
   }, [device.interfaces, filter, peers]);
   const pcs = doc.portChannels.filter((p) => p.deviceId === device.id);
-  const toggle = (id: string) => {
-    const n = new Set(checked);
-    if (n.has(id)) n.delete(id);
-    else n.add(id);
-    setChecked(n);
-  };
+  const toggle = useCallback((id: string) => {
+    setChecked((c) => {
+      const n = new Set(c);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }, []);
+  const selectLink = useCallback((linkId: string) => setSelection({ links: [linkId] }), [setSelection]);
   const add = () => {
     if (!range.trim()) return;
     try {
@@ -457,130 +607,17 @@ export function InterfaceTable({ device }: { device: Device }) {
             const isOpen = open === i.id;
             return (
               <Fragment key={i.id}>
-                <tr className={cx('border-b border-line hover:bg-surface-2', isOpen && 'bg-surface-2')}>
-                  <td className="py-1 pl-3">
-                    <input
-                      type="checkbox"
-                      className="h-3.5 w-3.5 accent-[var(--accent)]"
-                      aria-label={t('iface.selectX', 'Select {{n}}', { n: i.name })}
-                      checked={checked.has(i.id)}
-                      onChange={() => toggle(i.id)}
-                    />
-                  </td>
-                  <td className="py-1">
-                    <HoverCard
-                      side="left"
-                      delay={500}
-                      content={
-                        // The interface card (FR-UX-09): everything the row abbreviates.
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-mono font-semibold">{i.name}</span>
-                            <span className={cx(!i.enabled ? 'text-danger' : 'text-muted')}>
-                              {!i.enabled
-                                ? t('iface.shutdown', 'shut down')
-                                : peer
-                                  ? t('iface.up', 'connected')
-                                  : t('iface.free', 'free')}
-                            </span>
-                          </div>
-                          <CardRows
-                            rows={[
-                              [
-                                t('iface.mode', 'Mode'),
-                                i.mode === 'unset' ? t('linkCard.unset', 'not set') : i.mode,
-                              ],
-                              ...(i.mode === 'access'
-                                ? [
-                                    [t('iface.accessVlan', 'Access VLAN'), String(i.accessVlan ?? 1)] as [
-                                      string,
-                                      string,
-                                    ],
-                                  ]
-                                : []),
-                              ...(i.mode === 'trunk'
-                                ? [
-                                    [
-                                      t('iface.allowed', 'Allowed VLANs'),
-                                      i.allowedVlans || t('linkCard.all', 'all'),
-                                    ] as [string, string],
-                                    [t('iface.native', 'Native VLAN'), String(i.nativeVlan ?? 1)] as [
-                                      string,
-                                      string,
-                                    ],
-                                  ]
-                                : []),
-                              ...(formatIp(i.ipv4) || formatIp(i.ipv6)
-                                ? [
-                                    [
-                                      t('iface.addresses', 'Addresses'),
-                                      [formatIp(i.ipv4), formatIp(i.ipv6)].filter(Boolean).join(', '),
-                                    ] as [string, string],
-                                  ]
-                                : []),
-                              [
-                                t('linkCard.speed', 'Speed'),
-                                `${i.speedMbps ? fmtBandwidth(i.speedMbps) : t('linkCard.auto', 'auto')} · ${i.duplex}`,
-                              ],
-                              ...(pc
-                                ? [[t('iface.portChannel', 'Port-channel'), `Po${pc.number}`] as [string, string]]
-                                : []),
-                              ...(peer
-                                ? [[t('iface.peer', 'Connected to'), peer.text] as [string, string]]
-                                : []),
-                              ...(i.description
-                                ? [[t('iface.description', 'Description'), i.description] as [string, string]]
-                                : []),
-                            ]}
-                          />
-                        </div>
-                      }
-                    >
-                      <button
-                        type="button"
-                        aria-expanded={isOpen}
-                        aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
-                        onClick={() => setOpen(isOpen ? null : i.id)}
-                        className="flex w-full items-center gap-1 text-left font-mono"
-                      >
-                        <ChevronRight
-                          size={11}
-                          className={cx('shrink-0 text-subtle transition-transform', isOpen && 'rotate-90')}
-                        />
-                        <span
-                          className={cx(
-                            'h-1.5 w-1.5 shrink-0 rounded-full',
-                            !i.enabled ? 'bg-danger' : peer ? 'bg-accent-fill' : 'bg-line-strong',
-                          )}
-                          aria-hidden="true"
-                        />
-                        <span className="truncate">{i.shortName}</span>
-                      </button>
-                    </HoverCard>
-                  </td>
-                  <td className="truncate py-1 font-mono text-muted">
-                    {summary(i)}
-                    {pc && (
-                      <span className="ml-1 rounded bg-accent-soft px-1 text-accent-ink">Po{pc.number}</span>
-                    )}
-                  </td>
-                  <td className="truncate py-1 pr-3">
-                    {peer ? (
-                      <Tooltip text={peer.text} description={t('iface.peerHint', 'Select this link')}>
-                        <button
-                          type="button"
-                          className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent-ink"
-                          onClick={() => setSelection({ links: [peer.linkId] })}
-                        >
-                          <Link2 size={11} className="shrink-0" />
-                          <span className="truncate">{peer.text}</span>
-                        </button>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-subtle">—</span>
-                    )}
-                  </td>
-                </tr>
+                <IfaceRow
+                  i={i}
+                  peer={peer}
+                  pc={pc}
+                  isOpen={isOpen}
+                  checked={checked.has(i.id)}
+                  summaryText={summary(i)}
+                  onToggle={toggle}
+                  onOpen={setOpen}
+                  onSelectLink={selectLink}
+                />
                 {isOpen && (
                   <tr>
                     <td colSpan={4} className="border-b border-line">

@@ -11,7 +11,7 @@ import { useMemo, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi, TEMPLATE_MIME } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx, HoverCard, IconButton } from '../components/ui.tsx';
+import { cx, EmptyState, HoverCard, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -259,9 +259,13 @@ export function LibraryBody() {
           </Section>
         ))}
         {results.length === 0 && (
-          <p className="px-2 py-6 text-center text-xs text-muted">
-            {t('library.none', 'No devices match “{{q}}”.', { q: query })}
-          </p>
+          <EmptyState
+            art="search"
+            title={t('library.none', 'No devices match “{{q}}”.', { q: query })}
+            action={{ label: t('library.clearSearch', 'Clear the search'), onClick: () => setQuery('') }}
+          >
+            {t('library.noneHint', 'Search by model, role or vendor, such as “switch” or “48”.')}
+          </EmptyState>
         )}
       </div>
     </div>

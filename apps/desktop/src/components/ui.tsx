@@ -179,7 +179,8 @@ export function HoverCard({
   children,
   delay,
 }: {
-  content: ReactNode;
+  /** The card's content, or a function that builds it only when the card opens. */
+  content: ReactNode | (() => ReactNode);
   side?: 'top' | 'bottom' | 'left' | 'right';
   align?: 'start' | 'center' | 'end';
   children: ReactNode;
@@ -197,7 +198,7 @@ export function HoverCard({
           data-lw-hovercard=""
           className="lw-pop lw-material z-[80] max-w-80 rounded-lg border border-line px-3 py-2.5 text-[12px] leading-snug text-ink shadow-elev-2"
         >
-          {content}
+          {typeof content === 'function' ? content() : content}
         </RTooltip.Content>
       </RTooltip.Portal>
     </RTooltip.Root>
@@ -392,6 +393,17 @@ export function Badge({
   );
 }
 
+const FIRST_CONTROL = [
+  'input:not([disabled]):not([type="hidden"])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'button:not([disabled]):not([data-lw-help])',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+]
+  .map((x) => `${x}:not([data-lw-help])`)
+  .join(', ');
+
 export function Dialog({
   open,
   onOpenChange,
@@ -417,6 +429,15 @@ export function Dialog({
       <RDialog.Portal>
         <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.32)]" />
         <RDialog.Content
+          // Open on the first real control, not on a help button in the title (whose tooltip
+          // would take the first Escape).
+          onOpenAutoFocus={(e) => {
+            const first = (e.currentTarget as HTMLElement | null)?.querySelector<HTMLElement>(FIRST_CONTROL);
+            if (first) {
+              e.preventDefault();
+              first.focus();
+            }
+          }}
           className="lw-sheet fixed inset-0 z-50 m-auto flex h-fit max-h-[88vh] w-[calc(100vw-32px)] flex-col rounded-xl border border-line bg-surface shadow-elev-3"
           style={{ maxWidth: width }}
           aria-describedby={description ? undefined : undefined}
@@ -492,11 +513,77 @@ export function SectionTitle({ children, actions }: { children: ReactNode; actio
   );
 }
 
-export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+/** Line drawings in the brand's style (the Routed L: port node, orthogonal link, teal endpoint). */
+function EmptyArt({ kind }: { kind: 'network' | 'check' | 'search' }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1 p-6 text-center">
-      <p className="font-medium text-ink">{title}</p>
-      {children && <div className="text-xs text-muted">{children}</div>}
+    <svg
+      width="64"
+      height="48"
+      viewBox="0 0 64 48"
+      fill="none"
+      aria-hidden="true"
+      className="text-line-strong"
+    >
+      {[8, 20, 32, 44, 56].flatMap((x) =>
+        [8, 24, 40].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1" fill="currentColor" />),
+      )}
+      {kind === 'network' && (
+        <>
+          <rect x="6" y="6" width="14" height="12" rx="3" stroke="var(--text-muted)" strokeWidth="1.5" />
+          <path d="M20 12h18v18" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="38" cy="36" r="5" fill="var(--accent)" />
+          <circle cx="38" cy="36" r="2" fill="var(--surface)" />
+        </>
+      )}
+      {kind === 'check' && (
+        <>
+          <circle cx="32" cy="24" r="13" stroke="var(--accent)" strokeWidth="1.5" />
+          <path
+            d="M26 24.5l4 4 8-8.5"
+            stroke="var(--accent)"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      )}
+      {kind === 'search' && (
+        <>
+          <circle cx="29" cy="21" r="9" stroke="var(--text-muted)" strokeWidth="1.5" />
+          <path d="M36 28l7 7" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/**
+ * An empty panel (FR-UX-13): a small drawing, a friendly line, a hint and at most one clear action.
+ */
+export function EmptyState({
+  title,
+  children,
+  art,
+  action,
+}: {
+  title: string;
+  children?: ReactNode;
+  art?: 'network' | 'check' | 'search';
+  action?: { label: string; onClick: () => void };
+}) {
+  return (
+    <div
+      className="lw-rise flex flex-col items-center justify-center gap-1.5 px-4 py-6 text-center"
+      data-lw-empty=""
+    >
+      {art && <EmptyArt kind={art} />}
+      <p className="text-[12.5px] font-medium text-ink">{title}</p>
+      {children && <div className="max-w-60 text-[11.5px] leading-snug text-muted">{children}</div>}
+      {action && (
+        <Button size="sm" className="mt-1" onClick={action.onClick}>
+          {action.label}
+        </Button>
+      )}
     </div>
   );
 }

@@ -86,6 +86,19 @@ under **Recovery copy every** in Preferences (`Ctrl+,`); `0` turns recovery copi
 After a crash, the welcome screen lists the copies under **Recovered work**. Click a name to
 restore it, or **×** to discard it. A restored diagram counts as unsaved until you save it.
 
+## Help as you go
+
+- **The tour.** The first time you open a diagram, a four-step tour points out the library, the
+  canvas, drawing links and the Inspector. Skip it with **Escape**; **Help → Take the Tour** shows
+  it again.
+- **Tooltips.** Rest the pointer on a button, or Tab to it, to see what it does and its shortcut.
+- **? and ⓘ.** A **?** beside a heading explains that section, with an example and a link to this
+  guide. An **ⓘ** beside a field explains the networking term.
+- **Hover cards.** Rest the pointer on a device, a link, an interface or a subnet to see its details.
+- **Why?** Each problem in the Problems panel can tell you why it matters and how to fix it.
+- **Tips.** Now and then a tip suggests a quicker way, at most once per session. Turn tips off, or
+  back on, with **Show tips** in Preferences.
+
 ## Next steps
 
 - [Drawing basics](drawing.md) covers selecting, arranging, zones, notes and pages.

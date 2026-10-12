@@ -9,7 +9,7 @@ import { CircleAlert, CircleHelp, EyeOff, Info, TriangleAlert, Wand2, X } from '
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
-import { Button, cx, IconButton, Tooltip } from '../components/ui.tsx';
+import { Button, cx, EmptyState, IconButton, Tooltip } from '../components/ui.tsx';
 import { HelpButton } from '../components/HelpButton.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -169,12 +169,29 @@ export function ProblemsPanel() {
       </div>
       <ul className="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
         {shown.length === 0 && (
-          <li className="px-3 py-6 text-center text-xs text-muted">
-            {showSuppressed
-              ? t('problems.noneSuppressed', 'No suppressed problems.')
-              : issues.length
-                ? t('problems.filtered', 'No problems match the filters.')
-                : t('problems.none', 'No problems found. Nice network.')}
+          <li>
+            {showSuppressed ? (
+              <EmptyState art="check" title={t('problems.noneSuppressed', 'No suppressed problems.')} />
+            ) : issues.length ? (
+              <EmptyState
+                art="search"
+                title={t('problems.filtered', 'No problems match the filters.')}
+                action={{
+                  label: t('problems.clearFilters', 'Show all problems'),
+                  onClick: () => {
+                    setSev(new Set(['error', 'warning', 'info']));
+                    setRule('');
+                  },
+                }}
+              />
+            ) : (
+              <EmptyState art="check" title={t('problems.none', 'No problems found. Nice network.')}>
+                {t(
+                  'problems.noneHint',
+                  'LineWise checks addresses, subnets, VLANs, trunks and speeds as you draw.',
+                )}
+              </EmptyState>
+            )}
           </li>
         )}
         {shown.map((issue, idx) => {

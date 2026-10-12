@@ -20,12 +20,21 @@ import { fmtBandwidth, type DeviceView, type LinkView } from './model.ts';
 
 interface HoverState {
   kind: 'link' | 'device';
+  /** What opened it: a blur closes only a card that focus opened. */
+  source: 'hover' | 'focus';
   id: string | null;
   /** Where the card points, in window coordinates. */
   x: number;
   y: number;
   open: boolean;
-  show: (id: string, x: number, y: number, delay: number, kind?: 'link' | 'device') => void;
+  show: (
+    id: string,
+    x: number,
+    y: number,
+    delay: number,
+    kind?: 'link' | 'device',
+    source?: 'hover' | 'focus',
+  ) => void;
   hide: () => void;
   /** Hide after a moment, so the pointer can move from the link onto the card. */
   hideSoon: () => void;
@@ -37,14 +46,15 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 
 export const useCanvasHover = create<HoverState>((set, get) => ({
   kind: 'link',
+  source: 'hover',
   id: null,
   x: 0,
   y: 0,
   open: false,
-  show: (id, x, y, delay, kind = 'link') => {
+  show: (id, x, y, delay, kind = 'link', source = 'hover') => {
     if (timer) clearTimeout(timer);
     if (get().open && get().id === id) return;
-    set({ kind, id, x, y, open: false });
+    set({ kind, source, id, x, y, open: false });
     timer = setTimeout(() => set({ open: true }), delay);
   },
   hide: () => {

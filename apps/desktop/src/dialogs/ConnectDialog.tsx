@@ -22,6 +22,7 @@ import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import { roleLabel } from '../lib/labels.ts';
 import { mediumLabel } from '../lib/labels.ts';
+import { noteManualLink } from '../lib/tips.ts';
 
 const NEW = '__new';
 
@@ -282,7 +283,10 @@ export function ConnectDialog({
         },
       };
       cmds.push(named);
-      if (execute(cmds.length === 1 ? named : batch('Connect', cmds))) setSelection({ links: [link.linkId] });
+      if (execute(cmds.length === 1 ? named : batch('Connect', cmds))) {
+        setSelection({ links: [link.linkId] });
+        noteManualLink();
+      }
       close();
     } catch (e) {
       toast((e as Error).message, 'error');

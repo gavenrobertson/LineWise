@@ -11,6 +11,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Canvas } from './canvas/Canvas.tsx';
 import { cx } from './components/ui.tsx';
+import { Tour } from './components/Tour.tsx';
 import { AboutDialog } from './dialogs/AboutDialog.tsx';
 import { CalculatorDialog } from './dialogs/CalculatorDialog.tsx';
 import { CommandPalette } from './dialogs/CommandPalette.tsx';
@@ -382,6 +383,7 @@ export function App() {
         </div>
         <ActiveDialog dialog={dialog} />
         <CommandPalette />
+        <Tour />
         <Toasts />
       </ReactFlowProvider>
     </RTooltip.Provider>

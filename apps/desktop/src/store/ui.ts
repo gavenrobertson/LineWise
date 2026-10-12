@@ -46,6 +46,8 @@ interface UiState {
   /** Device chosen as the start of a path highlight, waiting for the second click. */
   pathStart: string | null;
   autosavedAt: string | null;
+  /** The first-run tour's step, or null when it is not showing (FR-UX-12). */
+  tour: number | null;
 
   open: (d: DialogState) => void;
   close: () => void;
@@ -58,6 +60,7 @@ interface UiState {
   ) => void;
   toast: (message: string, kind?: Toast['kind'], extra?: Pick<Toast, 'actions'> & { ms?: number }) => number;
   dismiss: (id: number) => void;
+  setTour: (step: number | null) => void;
   /** Pause (true) or resume (false) a toast's countdown. */
   hold: (id: number, paused: boolean) => void;
 }
@@ -114,6 +117,7 @@ export const useUi = create<UiState>((set, get) => ({
   toasts: [],
   pathStart: null,
   autosavedAt: null,
+  tour: null,
 
   open: (dialog) => {
     if (!get().dialog) rememberFocus();
@@ -141,6 +145,7 @@ export const useUi = create<UiState>((set, get) => ({
     toastTimers.delete(id);
     set({ toasts: get().toasts.filter((x) => x.id !== id) });
   },
+  setTour: (tour) => set({ tour }),
   hold: (id, paused) => {
     const t = toastTimers.get(id);
     if (!t) return;

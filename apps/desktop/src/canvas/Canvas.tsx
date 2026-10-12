@@ -60,12 +60,14 @@ import {
   type XY,
 } from './geometry.ts';
 import { assetDataUrl } from './icons.ts';
-import { buildPageModel, type PageModel } from './model.ts';
+import { buildPageModel, type LinkView, type PageModel } from './model.ts';
 import { DUR, easeStandard, motionMs } from '../lib/motion.ts';
 import { linkTerms } from '../lib/labels.ts';
+import { runCommand } from '../lib/actions.ts';
 import { CanvasHoverCard, useCanvasHover } from './HoverCards.tsx';
+import { noteDrop } from '../lib/tips.ts';
 import { Minimap } from './Minimap.tsx';
-import { cx } from '../components/ui.tsx';
+import { cx, EmptyState } from '../components/ui.tsx';
 import { anchorOf, EdgeLabelLayer, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
 
@@ -161,6 +163,7 @@ function useStableHandlers<T extends Record<string, (...args: never[]) => unknow
   );
 }
 
+const linkNames = new WeakMap<LinkView['a'], { b: LinkView['b']; tpl: string; name: string }>();
 const EMPTY_MODEL: PageModel = { devices: [], links: [], zones: [], annotations: [], offPage: [] };
 /**
  * React Flow with the drag preview applied. A pointer move re-renders this and the moved nodes,
@@ -322,20 +325,26 @@ export function Canvas() {
   const nodeTypeOf = useMemo(() => new Map(baseNodes.map((n) => [n.id, n.type])), [baseNodes]);
 
   const edges: NetworkEdgeType[] = useMemo(() => {
-    // The accessible name's wording is translated once, then filled in per link (NFR-PERF-04).
+    // The accessible name's wording is translated once, then filled in per link and kept while
+    // the link's ends are the same objects (NFR-PERF-04).
     const tpl = t('link.aria', 'Link {{a}} {{pa}} to {{b}} {{pb}}', {
       a: '\u0001a',
       pa: '\u0001pa',
       b: '\u0001b',
       pb: '\u0001pb',
     });
-    // A function replacement, so a `$` in a hostname is taken literally.
-    const linkName = (a: string, pa: string, b: string, pb: string) =>
-      tpl
-        .replace('\u0001pa', () => pa)
-        .replace('\u0001pb', () => pb)
-        .replace('\u0001a', () => a)
-        .replace('\u0001b', () => b);
+    const linkName = (l: LinkView) => {
+      const c = linkNames.get(l.a);
+      if (c && c.b === l.b && c.tpl === tpl) return c.name;
+      // A function replacement, so a `$` in a hostname is taken literally.
+      const name = tpl
+        .replace('\u0001pa', () => l.a.iface.name)
+        .replace('\u0001pb', () => l.b.iface.name)
+        .replace('\u0001a', () => l.a.device.hostname)
+        .replace('\u0001b', () => l.b.device.hostname);
+      linkNames.set(l.a, { b: l.b, tpl, name });
+      return name;
+    };
     const next: NetworkEdgeType[] = (model?.links ?? []).map((l) => ({
       id: l.link.id,
       type: 'network',
@@ -343,7 +352,7 @@ export function Canvas() {
       target: l.targetId,
       selected: sel.has(l.link.id),
       // Read as "Link CORE1 Te1/0/1 to CORE2 Te1/0/1" instead of React Flow's node IDs.
-      ariaLabel: linkName(l.a.device.hostname, l.a.iface.name, l.b.device.hostname, l.b.iface.name),
+      ariaLabel: linkName(l),
       data: { view: l },
     }));
     prevEdges.current = stabilize(prevEdges.current, next, 6);
@@ -545,9 +554,16 @@ export function Canvas() {
       if (zoneId !== dev.zoneId) cmds.push(updateDevices([id], zoneId ? { zoneId } : { zoneId: undefined }));
     }
     if (cmds.length) execute(cmds.length === 1 ? (cmds[0] as Command) : { ...batch('Move', cmds) });
+    // A device dropped on top of another: offer the auto-layout tip (FR-UX-12).
+    const moved = Object.keys(moveMap);
+    if (moved.length && moved.length <= 20)
+      noteDrop(
+        moved.map((id) => moveMap[id] as XY),
+        centersExcept(new Set(moved)),
+      );
     endGesture();
     dragCtx.current = null;
-  }, [page, pageId, doc, execute, setDrag, endGesture]);
+  }, [page, pageId, doc, execute, setDrag, endGesture, centersExcept]);
 
   // ---------------------------------------------------------------- selection
 
@@ -773,12 +789,19 @@ export function Canvas() {
         const id = el?.getAttribute('data-id');
         if (!el || !id) return;
         const r = el.getBoundingClientRect();
-        if (edge) useCanvasHover.getState().show(id, r.left + r.width / 2, r.top + r.height / 2, 150);
-        else useCanvasHover.getState().show(id, r.left + r.width / 2, r.top, 450, 'device');
+        if (edge)
+          useCanvasHover
+            .getState()
+            .show(id, r.left + r.width / 2, r.top + r.height / 2, 150, 'link', 'focus');
+        else useCanvasHover.getState().show(id, r.left + r.width / 2, r.top, 450, 'device', 'focus');
       }}
       onBlur={(e) => {
-        if ((e.target as Element).closest?.('.react-flow__edge, .react-flow__node-device'))
-          useCanvasHover.getState().hide();
+        const h = useCanvasHover.getState();
+        if (
+          h.source === 'focus' &&
+          (e.target as Element).closest?.('.react-flow__edge, .react-flow__node-device')
+        )
+          h.hide();
       }}
     >
       <EdgeLabelLayer.Provider value={layers.labels}>
@@ -880,17 +903,27 @@ export function Canvas() {
         </div>
       )}
       {doc.devices.length === 0 && page.annotations.length === 0 && (
+        // The empty canvas (FR-UX-13): what to do first, with the import shortcut as its action.
+        // Only its button takes the pointer; a click anywhere else still reaches the canvas.
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-xs text-center text-muted">
-            <p className="font-brand text-[15px] font-semibold text-ink">
-              {t('canvas.emptyTitle', 'Start your network')}
-            </p>
-            <p className="mt-1 text-xs">
+          <div className="[&_button]:pointer-events-auto">
+            <EmptyState
+              art="network"
+              title={t('canvas.emptyTitle', 'Start your network')}
+              action={
+                readOnly
+                  ? undefined
+                  : {
+                      label: t('canvas.emptyImport', 'Import from CLI output…'),
+                      onClick: () => runCommand('file.import'),
+                    }
+              }
+            >
               {t(
                 'canvas.emptyHint',
                 'Drag a device from the library, or import Cisco CLI output with File → Import.',
               )}
-            </p>
+            </EmptyState>
           </div>
         </div>
       )}

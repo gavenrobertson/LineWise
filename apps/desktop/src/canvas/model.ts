@@ -288,6 +288,60 @@ export function badgeAt(mid: XY, l: Pick<LinkView, 'labelMid' | 'midParts'>): XY
   return { x: mid.x + w / 2 + 9, y: mid.y };
 }
 
+/**
+ * Per-link results kept between model builds while their inputs are the same objects (the
+ * document is immutable, so an unchanged link keeps its link and interface objects). Unchanged
+ * links then hand the canvas the same values, which its edge comparison skips (NFR-PERF-04).
+ */
+const wordingCache = new WeakMap<
+  Link,
+  {
+    a: Interface;
+    b: Interface;
+    key: string;
+    vlans: Map<number, string>;
+    terms?: LabelTerms;
+    value: ReturnType<typeof linkWording>;
+  }
+>();
+
+function cachedWording(
+  a: Interface,
+  b: Interface,
+  link: Link,
+  layer: ViewLayer,
+  s: DocumentSettings,
+  vlanColor: Map<number, string>,
+  terms?: LabelTerms,
+): ReturnType<typeof linkWording> {
+  const key = `${layer}|${s.showInterfaceNames}|${s.showInterfaceIps}|${s.showVlans}|${s.interfaceNames}`;
+  const c = wordingCache.get(link);
+  if (c && c.a === a && c.b === b && c.key === key && c.vlans === vlanColor && c.terms === terms)
+    return c.value;
+  const value = linkWording(a, b, link, layer, s, vlanColor, terms);
+  wordingCache.set(link, { a, b, key, vlans: vlanColor, terms, value });
+  return value;
+}
+
+const endCache = new WeakMap<Interface, { device: Device; iface: Interface }>();
+function endOf(device: Device, iface: Interface): { device: Device; iface: Interface } {
+  const c = endCache.get(iface);
+  if (c && c.device === device) return c;
+  const e = { device, iface };
+  endCache.set(iface, e);
+  return e;
+}
+
+const vlanColorCache = new WeakMap<object, Map<number, string>>();
+function vlanColors(vlans: NetworkDocument['vlans']): Map<number, string> {
+  let m = vlanColorCache.get(vlans);
+  if (!m) {
+    m = new Map(vlans.map((v) => [v.number, v.color]));
+    vlanColorCache.set(vlans, m);
+  }
+  return m;
+}
+
 export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOptions): PageModel {
   const s = doc.settings;
   // Issues by object: a device collects its own issues and its interfaces'.
@@ -346,7 +400,7 @@ export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOpti
     const k = [e.a.device.id, e.b.device.id].sort().join('|');
     groups.set(k, [...(groups.get(k) ?? []), e]);
   }
-  const vlanColor = new Map(doc.vlans.map((v) => [v.number, v.color]));
+  const vlanColor = vlanColors(doc.vlans);
   const links: LinkView[] = [];
   for (const group of groups.values()) {
     group.sort((x, y) => x.link.id.localeCompare(y.link.id));
@@ -365,7 +419,7 @@ export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOpti
         if (v !== undefined) color = vlanColor.get(v) ?? color;
         else if (trunk) color = 'var(--text)';
       }
-      const words = linkWording(e.a.iface, e.b.iface, e.link, opts.layer, s, vlanColor, opts.terms);
+      const words = cachedWording(e.a.iface, e.b.iface, e.link, opts.layer, s, vlanColor, opts.terms);
       let severity: Severity | null = null;
       for (const id of [e.link.id]) {
         const x = sevByObj.get(id);
@@ -374,8 +428,8 @@ export function buildPageModel(doc: NetworkDocument, page: Page, opts: ModelOpti
       const isBundle = bundled.length > 1 && bundled.includes(e);
       links.push({
         link: e.link,
-        a: e.a,
-        b: e.b,
+        a: endOf(e.a.device, e.a.iface),
+        b: endOf(e.b.device, e.b.iface),
         sourceId: endId(e.a.device.id) as string,
         targetId: endId(e.b.device.id) as string,
         routing: e.link.style.routing ?? s.defaultLinkRouting,
@@ -543,13 +597,9 @@ const SIDES: LabelSide[] = [0, 1, -1, 2, -2];
 
 /** A candidate place for a label: its box, distance (end) or fraction (middle) and side. */
 type Slot = { r: Rect; v: number; side: LabelSide };
-/**
- * A label to place: its candidate slots in order of preference, generated on demand, how to apply
- * one, and a signature (text and route) under which its last slot is remembered.
- */
+/** A label to place: its candidate slots in order of preference, generated on demand, and how to apply one. */
 type Item = {
-  key: string;
-  sig: string;
+  mid: boolean;
   slots: () => Iterable<Slot>;
   apply: (s: Slot) => void;
   taken: Slot | null;
@@ -564,12 +614,14 @@ const FALLBACK_TRIES = 130;
 const BUDGET_PER_LABEL = 12;
 const MIN_BUDGET = 4000;
 
+type LabelDist = LinkView['labelDist'];
 /**
- * The slot each label had last time, by page and view. An edit changes a few links; every other
- * label keeps its place, so an edit places only what it changed (NFR-PERF-04). Exports run in the
- * same session and reuse it, so they match the screen.
+ * Where each link's labels went last time, by page and view, with the boxes they take. An edit
+ * changes a few links; every other link keeps its labels (the same labelDist object, which the
+ * canvas's edge comparison then skips), so an edit places only what it changed (NFR-PERF-04).
+ * Exports run in the same session and reuse it, so they match the screen.
  */
-const lastSlots = new Map<string, Map<string, { sig: string; slot: Slot }>>();
+const lastPlaced = new Map<string, Map<string, { sig: string; dist: LabelDist; rects: Rect[] }>>();
 const MAX_CACHED_VIEWS = 24;
 
 /**
@@ -577,10 +629,10 @@ const MAX_CACHED_VIEWS = 24;
  * off-page pills and serial zigzags are obstacles. Each interface label walks outward from its
  * device in 10 px steps, up to 40% of the link, trying the line and then each side of it, and takes
  * the first free spot (or the least covered one). Middle labels go last, around the middle of their
- * link's longest straight segment. A short repair pass then moves any label still covered. Slots
- * are generated lazily and checks are budgeted, so a crowded page cannot stall an edit; labels
- * whose text and route did not change keep their place (lastSlots). Runs when the document
- * changes, never per frame.
+ * link's longest straight segment, moving outward over the middle three quarters of the link. A
+ * short repair pass then moves any label still covered. Slots are generated lazily and checks are
+ * budgeted, so a crowded page cannot stall an edit; links whose labels and route did not change
+ * keep their placement (lastPlaced). Runs when the document changes, never per frame.
  */
 function placeLinkLabels(
   links: LinkView[],
@@ -590,20 +642,16 @@ function placeLinkLabels(
   layer: ViewLayer,
 ): void {
   const cacheKey = `${page.id}:${layer}`;
-  const before = lastSlots.get(cacheKey);
-  const now = new Map<string, { sig: string; slot: Slot }>();
-  const items: Item[] = [];
+  const before = lastPlaced.get(cacheKey);
+  const now = new Map<string, { sig: string; dist: LabelDist; rects: Rect[] }>();
+  const kept: Rect[] = [];
+  const changed: { l: LinkView; sig: string; items: Item[] }[] = [];
   const serials: (() => { points: XY[]; len: number })[] = [];
-  // Labels whose text and route did not change keep their last slot; the rest are placed below.
-  // An edit that changes no link label (a hostname, a position elsewhere) builds no grid at all.
-  const fresh: Item[] = [];
   for (const l of links) {
     if (!l.labelA && !l.labelB && !l.labelMid) continue;
     const a = centers.get(l.sourceId);
     const b = centers.get(l.targetId);
     if (!a || !b) continue;
-    // What decides the route, without computing it.
-    const route = `${a.x},${a.y},${b.x},${b.y},${l.routing},${l.offset},${l.lane},${l.obstacles.length},${l.waypoints.map((w) => `${w.x},${w.y}`).join(';')}`;
     let geo: { points: XY[]; len: number } | null = null;
     const g = () => {
       if (!geo) {
@@ -612,13 +660,23 @@ function placeLinkLabels(
       }
       return geo;
     };
+    if (l.serial) serials.push(g);
+    // What decides the labels' places: their text and the route (without computing it).
+    const sig = `${l.labelA}|${l.labelB}|${l.labelMid}|${a.x},${a.y},${b.x},${b.y},${l.routing},${l.offset},${l.lane},${l.obstacles.length},${l.waypoints.map((w) => `${w.x},${w.y}`).join(';')}`;
+    const prev = before?.get(l.link.id);
+    if (prev && prev.sig === sig) {
+      l.labelDist = prev.dist;
+      kept.push(...prev.rects);
+      now.set(l.link.id, prev);
+      continue;
+    }
     const dist = l.labelDist;
+    const items: Item[] = [];
     for (const end of ['a', 'b'] as const) {
       const text = end === 'a' ? l.labelA : l.labelB;
       if (!text) continue;
       items.push({
-        key: `${l.link.id}:${end}`,
-        sig: `${text}|${route}`,
+        mid: false,
         taken: null,
         apply: (s) => {
           dist[end] = s.v;
@@ -639,8 +697,7 @@ function placeLinkLabels(
     if (l.labelMid) {
       const text = l.labelMid;
       items.push({
-        key: `${l.link.id}:mid`,
-        sig: `${text}|${route}`,
+        mid: true,
         taken: null,
         apply: (s) => {
           dist.mid = s.v;
@@ -649,7 +706,6 @@ function placeLinkLabels(
         *slots() {
           const { points, len } = g();
           const size = linkLabelSize(text, 'mid', l.midParts.filter((p) => p.color).length);
-          // Outward from the default spot in both directions, over the middle three quarters.
           const steps = Math.min(MAX_STEPS, Math.floor((len * 0.38) / STEP));
           const t0 = midLabelT(points);
           for (let n = 0; n <= 2 * steps; n++) {
@@ -662,19 +718,28 @@ function placeLinkLabels(
         },
       });
     }
-    if (l.serial) serials.push(g);
+    changed.push({ l, sig, items });
   }
-  for (const item of items) {
-    const prev = before?.get(item.key);
-    if (prev && prev.sig === item.sig) {
-      item.apply(prev.slot);
-      item.taken = prev.slot;
-      now.set(item.key, prev);
-    } else fresh.push(item);
-  }
-  remember(cacheKey, now);
-  if (!fresh.length) return;
+  if (changed.length) placeChanged(changed, kept, serials, devices, page);
+  for (const c of changed)
+    now.set(c.l.link.id, {
+      sig: c.sig,
+      dist: c.l.labelDist,
+      rects: c.items.flatMap((x) => (x.taken ? [x.taken.r] : [])),
+    });
+  lastPlaced.delete(cacheKey);
+  lastPlaced.set(cacheKey, now);
+  if (lastPlaced.size > MAX_CACHED_VIEWS) lastPlaced.delete(lastPlaced.keys().next().value as string);
+}
 
+/** Place the labels of changed links around everything already placed. */
+function placeChanged(
+  changed: { items: Item[] }[],
+  kept: Rect[],
+  serials: (() => { points: XY[]; len: number })[],
+  devices: DeviceView[],
+  page: Page,
+): void {
   const grid = new BoxGrid();
   for (const d of devices) {
     grid.add(iconRect(d.center, 2));
@@ -688,14 +753,13 @@ function placeLinkLabels(
     const { mid } = midDirection(g().points);
     grid.add({ x: mid.x - 9, y: mid.y - 9, w: 18, h: 18 });
   }
-  for (const item of items) if (item.taken) grid.add(item.taken.r);
-
+  for (const r of kept) grid.add(r);
+  const fresh = changed.flatMap((c) => c.items);
   let budget = Math.max(MIN_BUDGET, BUDGET_PER_LABEL * fresh.length);
   const commit = (item: Item, slot: Slot) => {
     item.apply(slot);
     grid.add(slot.r);
     item.taken = slot;
-    now.set(item.key, { sig: item.sig, slot });
   };
   /** Take the first free slot; when none is free within the tries, the least covered of the first few. */
   const take = (item: Item): void => {
@@ -724,13 +788,12 @@ function placeLinkLabels(
     }
     commit(item, best);
   };
-
   // Interface labels first, then middle labels, then a repair: a newly placed label still covered
   // by others is lifted and placed again, now that everything else has a place.
-  fresh.sort((p, q) => Number(p.key.endsWith(':mid')) - Number(q.key.endsWith(':mid')));
-  for (const item of fresh) take(item);
+  const order = [...fresh.filter((x) => !x.mid), ...fresh.filter((x) => x.mid)];
+  for (const item of order) take(item);
   for (let round = 0; round < 2 && budget > 0; round++)
-    for (const item of fresh) {
+    for (const item of order) {
       if (!item.taken || budget <= 0) continue;
       grid.remove(item.taken.r);
       budget--;
@@ -746,12 +809,6 @@ function box(p: XY, size: { w: number; h: number }): Rect {
     w: size.w + 2 * LABEL_GAP,
     h: size.h + 2 * LABEL_GAP,
   };
-}
-
-function remember(key: string, slots: Map<string, { sig: string; slot: Slot }>): void {
-  lastSlots.delete(key);
-  lastSlots.set(key, slots);
-  if (lastSlots.size > MAX_CACHED_VIEWS) lastSlots.delete(lastSlots.keys().next().value as string);
 }
 
 export function fmtBandwidth(mbps: number): string {

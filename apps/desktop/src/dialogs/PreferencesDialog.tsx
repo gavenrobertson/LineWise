@@ -200,6 +200,23 @@ export function PreferencesDialog() {
             checked={p.showProblemBadges}
             onChange={(v) => p.set({ showProblemBadges: v })}
           />
+          <div className="flex items-center gap-3">
+            <Checkbox
+              label={t('prefs.tips', 'Show tips')}
+              checked={p.showTips}
+              onChange={(v) => p.set({ showTips: v, ...(v ? { dismissedTips: [] } : {}) })}
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                useUi.getState().close();
+                useUi.getState().setTour(0);
+              }}
+            >
+              {t('prefs.tour', 'Take the tour again')}
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Field

@@ -11,7 +11,7 @@ import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx, Tooltip } from '../components/ui.tsx';
+import { cx, EmptyState, Tooltip } from '../components/ui.tsx';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { roleLabel } from '../lib/labels.ts';
 import { buildOutline, visibleNodes, type OutlineNode } from './outlineTree.ts';
@@ -238,9 +238,19 @@ export function OutlinePanel() {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {roots.length === 0 && (
-          <p className="px-2 py-6 text-center text-xs text-muted">
-            {t('outline.empty', 'No devices on this page.')}
-          </p>
+          <EmptyState
+            art="network"
+            title={t('outline.empty', 'No devices on this page.')}
+            action={{
+              label: t('outline.openLibrary', 'Open the library'),
+              onClick: () => window.dispatchEvent(new Event('linewise:library')),
+            }}
+          >
+            {t(
+              'outline.emptyHint',
+              'The outline lists every zone, device, interface and link as you add them.',
+            )}
+          </EmptyState>
         )}
         {roots.length > 0 && (
           <ul
