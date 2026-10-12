@@ -85,18 +85,26 @@ export async function startFrom(page: Page, starter: RegExp): Promise<void> {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-/** Zoom to fit eases the view (FR-UX-03); wait until it stops moving before pointing at things. */
+/**
+ * Zoom to fit eases the view (FR-UX-03); wait until it stops moving before pointing at things.
+ * Reads 150 ms apart must agree three times running: two reads in one frame, or before a fit has
+ * started, would agree too.
+ */
 export async function viewportSettled(page: Page): Promise<void> {
   const transform = () =>
     page.evaluate(() => document.querySelector('.react-flow__viewport')?.getAttribute('style') ?? '');
   let last = '';
+  let same = 0;
   await expect
-    .poll(async () => {
-      const now = await transform();
-      const same = now === last;
-      last = now;
-      return same;
-    })
+    .poll(
+      async () => {
+        const now = await transform();
+        same = now === last ? same + 1 : 0;
+        last = now;
+        return same >= 2;
+      },
+      { intervals: [150] },
+    )
     .toBe(true);
 }
 

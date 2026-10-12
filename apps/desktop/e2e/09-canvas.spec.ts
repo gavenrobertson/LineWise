@@ -17,16 +17,8 @@ async function viewport(page: Page): Promise<{ x: number; y: number; zoom: numbe
 
 /** The viewport once it has stopped moving (the opening fit animates). */
 async function settledViewport(page: Page): Promise<{ x: number; y: number; zoom: number }> {
-  let last = await viewport(page);
-  await expect
-    .poll(async () => {
-      const v = await viewport(page);
-      const same = v.zoom === last.zoom && v.x === last.x && v.y === last.y;
-      last = v;
-      return same;
-    })
-    .toBe(true);
-  return last;
+  await viewportSettled(page);
+  return viewport(page);
 }
 
 async function positionOf(page: Page, hostname: string) {
