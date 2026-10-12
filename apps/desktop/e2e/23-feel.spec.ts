@@ -38,6 +38,14 @@ test('FR-UX-14 everything that reacts to the pointer shows the hand', async ({ p
   expect(await cursor(page.getByRole('combobox', { name: 'Highlight VLAN' }))).toBe('pointer');
   expect(await cursor(node(page, 'R1'))).toBe('pointer');
   expect(await cursor(page.locator('.react-flow__edge').first())).toBe('pointer');
+  // A row that tints on hover is clickable all over: its empty space runs its main button.
+  await node(page, 'R1').click();
+  const row = page.locator('tr.cursor-pointer').first();
+  const opener = row.locator('[data-lw-row-primary]');
+  await expect(opener).toHaveAttribute('aria-expanded', 'false');
+  // The summary cell holds only text.
+  await row.locator('td').nth(2).click();
+  await expect(opener).toHaveAttribute('aria-expanded', 'true');
   // Disabled controls say so; text fields keep the I-beam.
   expect(await cursor(toolbar.getByRole('button', { name: 'Redo' }))).toBe('not-allowed');
   expect(await cursor(page.getByRole('searchbox').first())).toBe('text');

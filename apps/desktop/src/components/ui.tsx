@@ -17,6 +17,7 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -54,6 +55,21 @@ export const Button = forwardRef<
     />
   );
 });
+
+/**
+ * A row that tints on hover is clickable all over (FR-UX-14): a click on its padding runs the
+ * row's main button, marked `data-lw-row-primary`. Clicks on its own controls are left alone.
+ */
+export function clickRowPrimary(e: ReactMouseEvent<HTMLElement>): void {
+  const target = e.target as Element;
+  if (
+    target.closest(
+      'button, a, input, select, textarea, label, [role="button"], [role="checkbox"], [role="combobox"]',
+    )
+  )
+    return;
+  e.currentTarget.querySelector<HTMLElement>('[data-lw-row-primary]')?.click();
+}
 
 export const IconButton = forwardRef<
   HTMLButtonElement,

@@ -9,7 +9,7 @@ import { CircleAlert, CircleHelp, EyeOff, Info, TriangleAlert, Wand2, X } from '
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
-import { Button, cx, EmptyState, IconButton, Tooltip } from '../components/ui.tsx';
+import { Button, clickRowPrimary, cx, EmptyState, IconButton, Tooltip } from '../components/ui.tsx';
 import { HelpButton } from '../components/HelpButton.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
@@ -200,10 +200,19 @@ export function ProblemsPanel() {
         {shown.map((issue, idx) => {
           const k = issueKey(issue);
           return (
-            <li key={`${k}-${idx}`} className="group border-b border-line px-3 py-1.5 hover:bg-surface-2">
+            <li
+              key={`${k}-${idx}`}
+              className="group cursor-pointer border-b border-line px-3 py-1.5 hover:bg-surface-2"
+              onClick={clickRowPrimary}
+            >
               <div className="flex items-start gap-2">
                 <span className="mt-0.5">{ICON[issue.severity]}</span>
-                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => revealIssue(issue)}>
+                <button
+                  type="button"
+                  data-lw-row-primary=""
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => revealIssue(issue)}
+                >
                   <span className="text-[12.5px] text-ink">{issue.message}</span>
                   <Tooltip text={ruleTitle(issue.ruleId)}>
                     <span className="ml-2 font-mono text-[10.5px] text-subtle">{issue.ruleId}</span>

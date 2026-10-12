@@ -126,7 +126,7 @@ export function CommandPalette() {
                 onMouseMove={() => setActive(n)}
                 onClick={() => run(i)}
                 className={cx(
-                  'lw-row flex cursor-default items-center gap-2 rounded-md px-2 py-1.5',
+                  'lw-row flex items-center gap-2 rounded-md px-2 py-1.5',
                   n === active && 'bg-accent-soft',
                 )}
               >

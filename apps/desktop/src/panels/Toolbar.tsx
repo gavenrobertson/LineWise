@@ -59,7 +59,7 @@ function MenuItem({
     <Menu.Item
       disabled={disabled}
       onSelect={onSelect}
-      className="lw-row flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
+      className="lw-row flex select-none items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
     >
       {children}
     </Menu.Item>

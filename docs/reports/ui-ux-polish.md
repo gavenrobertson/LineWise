@@ -146,7 +146,9 @@ Views not listed had no overlaps before or after.
 
 - **Pointer cursor (FR-UX-14)** on every control, tab, option, menu and tree item, and on the
   canvas on devices, links, connection handles and the minimap. A dragged device shows the closed
-  hand, disabled controls show not-allowed and text fields keep the I-beam.
+  hand, disabled controls show not-allowed and text fields keep the I-beam. Rows that tint on hover
+  (library templates, problems, interfaces) are clickable all over. `e2e/24-cursor-sweep.spec.ts`
+  checks the cursor of all 1,300-odd hoverable elements on every screen, menu and dialog.
 - **Eased exits (FR-UX-15).** Whatever eases in now eases out, in 140 ms: dialogs and the palette,
   menus, popovers and tooltips, the side panels, the find bar, toasts, the hover card and the tour.
   Hover tints fade both ways. On the canvas, the halo, handles and link glow fade out on the one

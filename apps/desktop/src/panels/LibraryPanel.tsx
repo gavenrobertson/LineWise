@@ -11,7 +11,7 @@ import { useMemo, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi, TEMPLATE_MIME } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx, EmptyState, HoverCard, IconButton } from '../components/ui.tsx';
+import { clickRowPrimary, cx, EmptyState, HoverCard, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -81,7 +81,10 @@ function Item({
     .filter(Boolean)
     .join(' · ');
   return (
-    <li className="lw-row group flex items-center gap-1 rounded-lg pr-1 hover:bg-surface-3">
+    <li
+      className="lw-row group flex cursor-pointer items-center gap-1 rounded-lg pr-1 hover:bg-surface-3"
+      onClick={clickRowPrimary}
+    >
       <HoverCard
         side="right"
         delay={600}
@@ -102,6 +105,7 @@ function Item({
           type="button"
           draggable
           data-lw-library-item=""
+          data-lw-row-primary=""
           onDragStart={onDragStart}
           onClick={() => placeTemplate(tpl)}
           className="lw-btn relative flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1.5 py-1 text-left"
