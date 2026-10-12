@@ -6,6 +6,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { siteHref } from '../docs/.vitepress/repoLinks.ts';
+import {
+  detectPlatform,
+  formatSize,
+  installers,
+  pickRelease,
+  recommended,
+} from '../docs/.vitepress/theme/releases.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 const DOCS = join(ROOT, 'docs');
@@ -13,7 +20,7 @@ const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 const config = read('docs/.vitepress/config.mts');
 /** The page file a site link points to. */
 const pageFile = (link) => {
-  const path = link.replace(/^\//, '');
+  const path = link.replace(/^\//, '').replace(/#.*$/, '');
   return path === '' || path.endsWith('/') ? `docs/${path}index.md` : `docs/${path}.md`;
 };
 
@@ -104,16 +111,88 @@ describe('BRD-04 docs-site logo and favicon', () => {
     const brand = (f) => read(`packages/brand/svg/${f}`);
     assert.equal(read('docs/public/favicon.svg'), brand('app-icon-small.svg'));
     assert.equal(read('docs/public/logo-mark.svg'), brand('app-icon-small.svg'));
-    assert.equal(read('docs/public/lockup-light.svg'), brand('lockup-light-subline.svg'));
-    assert.equal(read('docs/public/lockup-dark.svg'), brand('lockup-dark-subline.svg'));
+    assert.equal(read('docs/public/app-icon.svg'), brand('app-icon.svg'));
     assert.match(config, /rel: 'icon', type: 'image\/svg\+xml', href: `\$\{base\}favicon\.svg`/);
     assert.match(config, /logo: \{ src: '\/logo-mark\.svg'/);
-    assert.match(read('docs/index.md'), /light: \/lockup-light\.svg\n\s+dark: \/lockup-dark\.svg/);
+    // The download page (the site's home) leads with the full mark.
+    assert.match(read('docs/index.md'), /<LandingPage \/>/);
+    assert.match(read('docs/.vitepress/theme/LandingPage.vue'), /withBase\('\/app-icon\.svg'\)/);
   });
   it('the site is published to GitHub Pages from main', () => {
     const wf = read('.github/workflows/docs.yml');
     assert.match(wf, /pnpm docs:build/);
     assert.match(wf, /actions\/deploy-pages@/);
     assert.match(wf, /github\.ref == 'refs\/heads\/main'/);
+  });
+});
+
+describe('download page', () => {
+  const v = '1.2.0';
+  const asset = (name, size = 8_000_000) => ({
+    name: `LineWise_${v}_${name}`,
+    size,
+    browser_download_url: `https://example.com/${name}`,
+  });
+  const release = (tag, prerelease, published_at, draft = false) => ({
+    tag_name: tag,
+    html_url: `https://example.com/${tag}`,
+    draft,
+    prerelease,
+    published_at,
+    assets: [],
+  });
+
+  it('offers the newest stable release, or the newest beta while there is none; never a draft', () => {
+    const beta = release('v1.3.0-beta', true, '2026-12-01T00:00:00Z');
+    const stable = release('v1.2.0', false, '2026-11-01T00:00:00Z');
+    const draft = release('v2.0.0', false, null, true);
+    assert.deepEqual(pickRelease([draft, beta, stable]), { release: stable, beta });
+    assert.deepEqual(pickRelease([draft, beta]), { release: beta, beta: null });
+    assert.deepEqual(pickRelease([draft]), { release: null, beta: null });
+    const oldBeta = release('v1.1.0-beta', true, '2026-10-01T00:00:00Z');
+    assert.deepEqual(pickRelease([stable, oldBeta]), { release: stable, beta: null });
+  });
+
+  it('finds each installer the release workflow builds and skips signatures and updater archives', () => {
+    const r = release(`v${v}`, false, '2026-11-01T00:00:00Z');
+    r.assets = [
+      asset('x64-setup.exe.sig', 400),
+      asset('x64-setup.exe', 8_074_035),
+      asset('arm64-setup.exe'),
+      asset('x64_en-US.msi'),
+      asset('universal.app.tar.gz'),
+      asset('universal.dmg', 13_841_203),
+      { name: 'SHA256SUMS.txt', size: 900, browser_download_url: 'https://example.com/sums' },
+    ];
+    const found = installers(r);
+    assert.deepEqual(Object.keys(found).sort(), ['macos', 'windows-arm64', 'windows-msi', 'windows-x64']);
+    assert.equal(found['windows-x64'].name, `LineWise_${v}_x64-setup.exe`);
+    assert.equal(formatSize(found['windows-x64'].size), '7.7 MB');
+    assert.equal(formatSize(found.macos.size), '13.2 MB');
+  });
+
+  it('matches the installer names the release workflow produced for 0.9.0-beta', () => {
+    const names = [
+      'LineWise_0.9.0-beta_arm64-setup.exe',
+      'LineWise_0.9.0-beta_universal.dmg',
+      'LineWise_0.9.0-beta_x64-setup.exe',
+      'LineWise_0.9.0-beta_x64_en-US.msi',
+    ];
+    const r = release('v0.9.0-beta', true, '2026-10-12T00:00:00Z');
+    r.assets = names.map((name) => ({ name, size: 1, browser_download_url: name }));
+    assert.equal(Object.keys(installers(r)).length, 4);
+  });
+
+  it("recommends the installer for the visitor's computer", () => {
+    const win = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/141.0';
+    const mac = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0) AppleWebKit/605.1.15 Safari/605.1.15';
+    assert.equal(detectPlatform(win, 'Win32'), 'windows-x64');
+    assert.equal(detectPlatform(win, 'Windows', 'arm'), 'windows-arm64');
+    assert.equal(detectPlatform(mac, 'MacIntel'), 'macos');
+    assert.equal(detectPlatform('Mozilla/5.0 (X11; Linux x86_64)', 'Linux x86_64'), 'linux');
+    assert.equal(detectPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', 'iPhone'), 'other');
+    assert.equal(recommended('windows-arm64'), 'windows-arm64');
+    assert.equal(recommended('macos'), 'macos');
+    assert.equal(recommended('linux'), null);
   });
 });

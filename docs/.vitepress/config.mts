@@ -59,7 +59,7 @@ export default withMermaid(
       nav: [
         { text: 'Guide', link: '/user/getting-started', activeMatch: '/user/' },
         { text: 'Developers', link: '/dev/', activeMatch: '/(dev|adr)/' },
-        { text: 'Download', link: `${REPO}/releases/latest` },
+        { text: 'Download', link: '/#download' },
       ],
       sidebar: {
         '/user/': [{ text: 'User guide', items: guide }],
