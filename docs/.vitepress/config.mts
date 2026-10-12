@@ -6,7 +6,13 @@ import { withMermaid } from 'vitepress-plugin-mermaid';
 import { docsDirOf, EXCLUDED, REPO, repoLinks } from './repoLinks.ts';
 
 const docsDir = docsDirOf(fileURLToPath(new URL('.', import.meta.url)));
-const base = '/LineWise/';
+/**
+ * Where the site is served. GitHub Pages serves it at gavenrobertson.github.io/LineWise/ until a
+ * custom domain is set; docs.yml then passes DOCS_DOMAIN (a repository variable) and the site
+ * moves to that domain's root. The github.io address redirects there, so old links keep working.
+ */
+export const domain = process.env.DOCS_DOMAIN?.trim() || '';
+const base = domain ? '/' : '/LineWise/';
 
 export const guide = [
   { text: 'Overview', link: '/user/' },
@@ -53,13 +59,14 @@ export default withMermaid(
     lastUpdated: true,
     srcExclude: EXCLUDED,
     head: [['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }]],
+    sitemap: { hostname: domain ? `https://${domain}/` : 'https://gavenrobertson.github.io/LineWise/' },
     markdown: { config: (md) => repoLinks(md, docsDir) },
     themeConfig: {
       logo: { src: '/logo-mark.svg', alt: '' },
       nav: [
         { text: 'Guide', link: '/user/getting-started', activeMatch: '/user/' },
         { text: 'Developers', link: '/dev/', activeMatch: '/(dev|adr)/' },
-        { text: 'Download', link: `${REPO}/releases/latest` },
+        { text: 'Download', link: '/#download' },
       ],
       sidebar: {
         '/user/': [{ text: 'User guide', items: guide }],

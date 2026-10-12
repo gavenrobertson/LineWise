@@ -12,7 +12,7 @@
 
 ## Download
 
-Installers are attached to each [GitHub Release](https://github.com/gavenrobertson/linewise/releases):
+Download from the [LineWise website](https://gavenrobertson.github.io/LineWise/#download), which offers the right installer for your computer, or from [GitHub Releases](https://github.com/gavenrobertson/linewise/releases):
 
 | Platform                            | File                                                                                                                |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
