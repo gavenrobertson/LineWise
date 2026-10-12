@@ -27,10 +27,11 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-accent-fill text-accent-contrast hover:bg-accent-strong border-transparent',
-  secondary: 'bg-surface text-ink border-line hover:bg-surface-2',
+  primary:
+    'lw-btn-lift bg-accent-fill text-accent-contrast hover:bg-accent-strong border-transparent shadow-elev-1',
+  secondary: 'lw-btn-lift bg-surface text-ink border-line hover:bg-surface-2 hover:border-line-strong',
   ghost: 'bg-transparent text-ink border-transparent hover:bg-surface-3',
-  danger: 'bg-danger text-white border-transparent hover:opacity-90',
+  danger: 'lw-btn-lift bg-danger text-white border-transparent hover:opacity-90',
 };
 
 export const Button = forwardRef<
@@ -42,7 +43,7 @@ export const Button = forwardRef<
       ref={ref}
       type={type}
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded-md border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'lw-btn inline-flex items-center justify-center gap-1.5 rounded-md border font-medium disabled:cursor-not-allowed disabled:opacity-50',
         size === 'sm' ? 'h-7 px-2 text-xs' : 'h-8 px-3 text-[13px]',
         VARIANTS[variant],
         className,
@@ -57,10 +58,15 @@ export const IconButton = forwardRef<
   ButtonHTMLAttributes<HTMLButtonElement> & {
     label: string;
     shortcut?: string;
+    /** One line for controls whose icon does not say everything (FR-UX-08). */
+    description?: string;
     active?: boolean;
     children: ReactNode;
   }
->(function IconButton({ label, shortcut, active, className, children, type = 'button', ...rest }, ref) {
+>(function IconButton(
+  { label, shortcut, description, active, className, children, type = 'button', ...rest },
+  ref,
+) {
   const btn = (
     <button
       ref={ref}
@@ -68,7 +74,7 @@ export const IconButton = forwardRef<
       aria-label={label}
       aria-pressed={active === undefined ? undefined : active}
       className={cx(
-        'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-ink transition-colors hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-40',
+        'lw-btn inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-ink hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-40',
         active && 'bg-accent-soft text-accent-ink',
         className,
       )}
@@ -78,35 +84,136 @@ export const IconButton = forwardRef<
     </button>
   );
   return (
-    <Tooltip text={label} shortcut={shortcut}>
+    <Tooltip text={label} shortcut={shortcut} description={description}>
       {btn}
     </Tooltip>
   );
 });
 
+/**
+ * A shortcut as key caps: `Ctrl+Shift+Z` → Ctrl, Shift, Z; `⌘⇧Z` → ⌘, ⇧, Z (FR-UX-08).
+ * Exported for tests.
+ */
+export function keyParts(formatted: string): string[] {
+  if (!formatted) return [];
+  const mods = formatted.match(/^[⌘⇧⌥⌃]+/)?.[0] ?? '';
+  if (mods) return [...mods, formatted.slice(mods.length)].filter(Boolean);
+  return formatted.split(/\+(?=.)/);
+}
+
+export function Keys({ shortcut, tone = 'light' }: { shortcut: string; tone?: 'light' | 'dark' }) {
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {keyParts(shortcut).map((k, i) => (
+        <kbd
+          key={i}
+          className={cx(
+            'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] px-1 font-ui text-[11px] font-medium leading-none',
+            tone === 'dark'
+              ? 'bg-[color-mix(in_srgb,var(--surface)_18%,transparent)] text-surface'
+              : 'border border-line bg-surface-2 text-muted shadow-[0_1px_0_var(--border)]',
+          )}
+        >
+          {k}
+        </kbd>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * The one tooltip (FR-UX-08): a short label, the shortcut as key caps and an optional one-line
+ * description. It shows on hover after the provider's delay, at once while moving between
+ * controls, and on keyboard focus; Escape, scrolling or a press dismisses it. The tooltip only
+ * adds to a control's accessible name, it never replaces it.
+ */
 export function Tooltip({
   text,
   shortcut,
+  description,
+  side = 'bottom',
   children,
 }: {
   text: string;
   shortcut?: string;
+  description?: string;
+  side?: 'top' | 'bottom' | 'left' | 'right';
   children: ReactNode;
 }) {
   return (
-    <RTooltip.Root delayDuration={400}>
+    <RTooltip.Root>
       <RTooltip.Trigger asChild>{children}</RTooltip.Trigger>
       <RTooltip.Portal>
         <RTooltip.Content
-          side="bottom"
+          side={side}
           sideOffset={6}
-          className="z-50 rounded-md bg-ink px-2 py-1 text-xs text-surface shadow"
+          collisionPadding={8}
+          data-lw-tooltip=""
+          className="lw-pop z-[80] max-w-72 rounded-lg bg-ink px-2.5 py-1.5 text-[12px] leading-snug text-surface shadow-elev-2"
         >
-          {text}
-          {shortcut && <span className="ml-2 font-mono opacity-70">{shortcut}</span>}
+          <span className="flex items-center gap-3">
+            <span className="font-medium">{text}</span>
+            {shortcut && <Keys shortcut={shortcut} tone="dark" />}
+          </span>
+          {description && (
+            <span className="mt-0.5 block text-[11.5px] text-[color-mix(in_srgb,var(--surface)_78%,transparent)]">
+              {description}
+            </span>
+          )}
         </RTooltip.Content>
       </RTooltip.Portal>
     </RTooltip.Root>
+  );
+}
+
+/**
+ * A rich hover card (FR-UX-09): the same timing as a tooltip, on a light material surface, for
+ * details of a device, link, interface, subnet or problem. Its content is read-only text; whatever
+ * it shows is also reachable without a pointer (inspector, outline, problems panel).
+ */
+export function HoverCard({
+  content,
+  side = 'top',
+  align = 'center',
+  children,
+  delay,
+}: {
+  content: ReactNode;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  align?: 'start' | 'center' | 'end';
+  children: ReactNode;
+  delay?: number;
+}) {
+  return (
+    <RTooltip.Root delayDuration={delay ?? 350}>
+      <RTooltip.Trigger asChild>{children}</RTooltip.Trigger>
+      <RTooltip.Portal>
+        <RTooltip.Content
+          side={side}
+          align={align}
+          sideOffset={8}
+          collisionPadding={8}
+          data-lw-hovercard=""
+          className="lw-pop lw-material z-[80] max-w-80 rounded-lg border border-line px-3 py-2.5 text-[12px] leading-snug text-ink shadow-elev-2"
+        >
+          {content}
+        </RTooltip.Content>
+      </RTooltip.Portal>
+    </RTooltip.Root>
+  );
+}
+
+/** Label and value rows inside a hover card. */
+export function CardRows({ rows }: { rows: [string, ReactNode][] }) {
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+      {rows.map(([k, v]) => (
+        <div key={k} className="contents">
+          <dt className="text-muted">{k}</dt>
+          <dd className="m-0 min-w-0 break-words font-medium">{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -201,32 +308,54 @@ export function Segmented<T extends string>({
   label,
 }: {
   value: T;
-  options: { value: T; label: string; title?: string }[];
+  options: { value: T; label: string; title?: string; shortcut?: string }[];
   onChange: (v: T) => void;
   label: string;
 }) {
+  const index = Math.max(
+    0,
+    options.findIndex((o) => o.value === value),
+  );
   return (
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex rounded-md border border-line bg-surface-2 p-0.5"
+      className="relative inline-grid rounded-lg border border-line bg-surface-2 p-0.5"
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          title={o.title}
-          onClick={() => onChange(o.value)}
-          className={cx(
-            'h-7 rounded px-2.5 text-xs font-medium transition-colors',
-            value === o.value ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink',
-          )}
-        >
-          {o.label}
-        </button>
-      ))}
+      {/* The selected thumb glides between equal-width options (FR-UX-02). */}
+      <span
+        aria-hidden="true"
+        className="lw-thumb inset-y-0.5 left-0.5 rounded-md bg-surface shadow-elev-1"
+        style={{
+          width: `calc((100% - 4px) / ${options.length})`,
+          transform: `translateX(${index * 100}%)`,
+        }}
+      />
+      {options.map((o) => {
+        const btn = (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => onChange(o.value)}
+            className={cx(
+              'lw-btn relative h-7 rounded-md px-2.5 text-xs font-medium',
+              value === o.value ? 'text-ink' : 'text-muted hover:text-ink',
+            )}
+          >
+            {o.label}
+          </button>
+        );
+        return o.title ? (
+          <Tooltip key={o.value} text={o.title} shortcut={o.shortcut}>
+            {btn}
+          </Tooltip>
+        ) : (
+          btn
+        );
+      })}
     </div>
   );
 }
@@ -282,9 +411,9 @@ export function Dialog({
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
-        <RDialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]" />
+        <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.32)]" />
         <RDialog.Content
-          className="fixed left-1/2 top-1/2 z-50 flex max-h-[88vh] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-line bg-surface shadow-[var(--shadow)]"
+          className="lw-sheet fixed inset-0 z-50 m-auto flex h-fit max-h-[88vh] w-[calc(100vw-32px)] flex-col rounded-xl border border-line bg-surface shadow-elev-3"
           style={{ maxWidth: width }}
           aria-describedby={description ? undefined : undefined}
         >
@@ -301,7 +430,7 @@ export function Dialog({
               <button
                 type="button"
                 aria-label={i18n.t('common.close', { defaultValue: 'Close' })}
-                className="rounded-md p-1 text-muted hover:bg-surface-3 hover:text-ink"
+                className="lw-btn rounded-full p-1 text-muted hover:bg-surface-3 hover:text-ink"
               >
                 <X size={16} />
               </button>

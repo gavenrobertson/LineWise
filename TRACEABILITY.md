@@ -193,3 +193,23 @@ Every requirement ID in `docs/SPEC.md` → implementing module(s) → test file(
 | BRD-04 | MUST | `apps/desktop/src/components/BrandMark.tsx` (welcome, About), `apps/desktop/src-tauri/installer/` (DMG, NSIS, WiX images), `README.md`, `docs/public/` and `docs/.vitepress/config.mts` (docs-site logo, favicon, home page lockups) | `scripts/brand.test.mjs`, `scripts/docs-site.test.mjs` | done |
 | BRD-05 | MUST | `apps/desktop/src/styles.css` | `scripts/brand.test.mjs`, `apps/desktop/e2e/14-a11y.spec.ts` | done |
 | BRD-06 | SHOULD | `docs/brand.md` | `scripts/repo-docs.test.mjs` | done |
+
+## UX polish (FR-UX, SHOULD)
+
+Requirements added by the UI/UX polish pass (2026-10-12; `docs/reports/ui-ux-audit.md`). They are not in the spec, so they are SHOULD and never gate v1.0.
+
+| Requirement | Priority | Module(s) | Test(s) | Status |
+| --- | --- | --- | --- | --- |
+| FR-UX-01 | SHOULD | `apps/desktop/src/styles.css` — motion, elevation, material, radius and focus tokens in light, dark and increased contrast | `apps/desktop/test/ux.test.tsx` | done |
+| FR-UX-02 | SHOULD | `apps/desktop/src/styles.css`, `apps/desktop/src/lib/motion.ts`, `apps/desktop/src/components/ui.tsx`, `apps/desktop/src/App.tsx` (toasts) — one motion vocabulary on buttons, menus, popovers, tooltips, dialogs, panels, lists and toasts; instant under reduced motion | `apps/desktop/test/ux.test.tsx` | done |
+| FR-UX-03 | SHOULD | `apps/desktop/src/styles.css`, `apps/desktop/src/canvas/nodes.tsx`, `apps/desktop/src/canvas/Canvas.tsx` — device hover halo, handle pop-in, selection spring and drop settle, link hover glow, eased viewport moves | `apps/desktop/test/ux.test.tsx` | in-progress |
+| FR-UX-04 | SHOULD | Link labels: pill style, at least 11 px, 4.5:1 contrast, zoom-aware size | | todo |
+| FR-UX-05 | SHOULD | Link labels: placement that avoids other labels and device icons; mid label on the longest straight segment | | todo |
+| FR-UX-06 | SHOULD | Link labels: wording per view, short or long interface names, VLAN chips, truncation | | todo |
+| FR-UX-07 | SHOULD | Link hover card on hover and keyboard focus | | todo |
+| FR-UX-08 | SHOULD | `apps/desktop/src/components/ui.tsx` — one tooltip with key caps and macOS-like timing on every control; no `title` attributes | `apps/desktop/test/ux.test.tsx` | in-progress |
+| FR-UX-09 | SHOULD | Rich hover cards: devices, interfaces, subnets, problems, library items | | todo |
+| FR-UX-10 | SHOULD | Help popovers and term explanations in the inspector | | todo |
+| FR-UX-11 | SHOULD | Validation rules explain why a problem matters and how to fix it | | todo |
+| FR-UX-12 | SHOULD | Smart tips and a first-run tour, dismissible and remembered | | todo |
+| FR-UX-13 | SHOULD | Empty states with one clear action; glossary and microcopy | | todo |

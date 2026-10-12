@@ -191,14 +191,15 @@ export const DeviceNode = memo(function DeviceNode({ id, data, selected }: NodeP
       <Anchor top={ICON / 2} />
       {showHandles && (
         <>
-          <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: -4 }} />
+          <Handle type="source" position={Position.Top} id="t" style={{ ...handleStyle, top: 0 }} />
           <Handle
             type="source"
             position={Position.Right}
             id="r"
             style={{ ...handleStyle, top: ICON / 2, right: 12 }}
           />
-          <Handle type="source" position={Position.Bottom} id="b" style={{ ...handleStyle, top: ICON + 2 }} />
+          {/* On the icon's edge, clear of the hostname below it. */}
+          <Handle type="source" position={Position.Bottom} id="b" style={{ ...handleStyle, top: ICON - 10 }} />
           <Handle
             type="source"
             position={Position.Left}

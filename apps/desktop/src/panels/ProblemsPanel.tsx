@@ -99,7 +99,7 @@ export function ProblemsPanel() {
   return (
     <section
       aria-label={t('problems.title', 'Problems')}
-      className="lw-no-print flex h-56 shrink-0 flex-col border-t border-line bg-surface"
+      className="lw-no-print lw-panel-bottom flex h-56 shrink-0 flex-col border-t border-line bg-surface"
     >
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3">
         <h2 className="font-brand text-[13px] font-semibold text-ink">{t('problems.title', 'Problems')}</h2>

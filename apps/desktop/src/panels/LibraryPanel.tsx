@@ -11,7 +11,7 @@ import { useMemo, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi, TEMPLATE_MIME } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx, IconButton } from '../components/ui.tsx';
+import { cx, HoverCard, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -81,28 +81,44 @@ function Item({
     .filter(Boolean)
     .join(' · ');
   return (
-    <li className="group flex items-center gap-1 rounded-md pr-1 hover:bg-surface-3">
-      <button
-        type="button"
-        draggable
-        data-lw-library-item=""
-        onDragStart={onDragStart}
-        onClick={() => placeTemplate(tpl)}
-        className="relative flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1 text-left"
-        title={`${tpl.name}${tpl.sourceUrl ? `\n${tpl.sourceUrl}` : ''}\n${t('library.dragHint', 'Drag onto the canvas, or press Enter to place it.')}`}
+    <li className="lw-row group flex items-center gap-1 rounded-lg pr-1 hover:bg-surface-3">
+      <HoverCard
+        side="right"
+        delay={600}
+        content={
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">{tpl.name}</span>
+            {subtitle && <span className="text-muted">{subtitle}</span>}
+            {tpl.sourceUrl && (
+              <span className="break-all font-mono text-[11px] text-muted">{tpl.sourceUrl}</span>
+            )}
+            <span className="mt-0.5 text-[11.5px] text-muted">
+              {t('library.dragHint', 'Drag onto the canvas, or press Enter to place it.')}
+            </span>
+          </div>
+        }
       >
-        <span className="shrink-0">
-          <DeviceIcon role={tpl.role} style={iconStyle} size={28} />
-        </span>
-        <span className="min-w-0">
-          {/* The name comes from the visible text, read as "Place <name> <subtitle>" (WCAG 2.5.3). */}
-          <span className="block truncate text-[12.5px] font-medium text-ink">
-            <span className="sr-only">{t('library.placePrefix', 'Place')} </span>
-            {tpl.name}
+        <button
+          type="button"
+          draggable
+          data-lw-library-item=""
+          onDragStart={onDragStart}
+          onClick={() => placeTemplate(tpl)}
+          className="lw-btn relative flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1.5 py-1 text-left"
+        >
+          <span className="shrink-0">
+            <DeviceIcon role={tpl.role} style={iconStyle} size={28} />
           </span>
-          <span className="block truncate text-[11px] text-subtle">{subtitle}</span>
-        </span>
-      </button>
+          <span className="min-w-0">
+            {/* The name comes from the visible text, read as "Place <name> <subtitle>" (WCAG 2.5.3). */}
+            <span className="block truncate text-[12.5px] font-medium text-ink">
+              <span className="sr-only">{t('library.placePrefix', 'Place')} </span>
+              {tpl.name}
+            </span>
+            <span className="block truncate text-[11px] text-subtle">{subtitle}</span>
+          </span>
+        </button>
+      </HoverCard>
       {custom && (
         <IconButton
           label={t('library.edit', 'Edit template')}

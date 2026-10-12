@@ -61,6 +61,7 @@ import {
 } from './geometry.ts';
 import { assetDataUrl } from './icons.ts';
 import { buildPageModel, type PageModel } from './model.ts';
+import { DUR, easeStandard, motionMs } from '../lib/motion.ts';
 import { Minimap } from './Minimap.tsx';
 import { cx } from '../components/ui.tsx';
 import { anchorOf, EdgeLabelLayer, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
@@ -90,20 +91,28 @@ export const canvasApi: {
   viewportCenter: () => XY;
 } = {
   instance: null,
-  fit: () => void canvasApi.instance?.fitView({ padding: fitPadding(), duration: 200, maxZoom: 1 }),
-  zoomIn: () => void canvasApi.instance?.zoomIn({ duration: 150 }),
-  zoomOut: () => void canvasApi.instance?.zoomOut({ duration: 150 }),
+  // Viewport moves use the standard curve, and are instant under reduced motion (FR-UX-03).
+  fit: () =>
+    void canvasApi.instance?.fitView({
+      padding: fitPadding(),
+      duration: motionMs(DUR.slow),
+      ease: easeStandard,
+      maxZoom: 1,
+    }),
+  zoomIn: () => void canvasApi.instance?.zoomIn({ duration: motionMs(DUR.base), ease: easeStandard }),
+  zoomOut: () => void canvasApi.instance?.zoomOut({ duration: motionMs(DUR.base), ease: easeStandard }),
   panBy: (dx, dy) => {
     const inst = canvasApi.instance;
     if (!inst) return;
     const v = inst.getViewport();
-    void inst.setViewport({ x: v.x - dx, y: v.y - dy, zoom: v.zoom }, { duration: 80 });
+    void inst.setViewport({ x: v.x - dx, y: v.y - dy, zoom: v.zoom }, { duration: motionMs(DUR.instant) });
   },
   focusOn: (ids) => {
     const inst = canvasApi.instance;
     if (!inst) return;
     const nodes = ids.map((id) => inst.getNode(id)).filter((n): n is Node => !!n);
-    if (nodes.length) void inst.fitView({ nodes, padding: 0.6, duration: 250, maxZoom: 1.4 });
+    if (nodes.length)
+      void inst.fitView({ nodes, padding: 0.6, duration: motionMs(DUR.slow), ease: easeStandard, maxZoom: 1.4 });
   },
   viewportCenter: () => {
     const inst = canvasApi.instance;

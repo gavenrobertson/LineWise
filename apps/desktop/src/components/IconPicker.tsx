@@ -11,7 +11,7 @@ import { packRef, type IconPack, type PackIcon } from '../lib/iconPacks.ts';
 import { usePacks } from '../store/packs.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useEditor } from '../store/editor.ts';
-import { cx } from './ui.tsx';
+import { cx, Tooltip } from './ui.tsx';
 import { roleLabel } from '../lib/labels.ts';
 
 export function IconPicker({ devices }: { devices: Device[] }) {
@@ -76,7 +76,7 @@ export function IconPicker({ devices }: { devices: Device[] }) {
           <Popover.Content
             sideOffset={6}
             align="end"
-            className="z-50 max-h-[60vh] w-[340px] overflow-y-auto rounded-lg border border-line bg-surface p-2 shadow-[var(--shadow)]"
+            className="lw-pop lw-material z-50 max-h-[60vh] w-[340px] overflow-y-auto rounded-lg border border-line p-2 shadow-elev-2"
           >
             <button
               type="button"
@@ -94,21 +94,21 @@ export function IconPicker({ devices }: { devices: Device[] }) {
               aria-label={t('field.builtIn', 'Built-in')}
             >
               {ICON_ROLES.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  role="option"
-                  aria-selected={
-                    iconRole(first.role, first.iconOverride) === r &&
-                    !first.iconOverride?.startsWith('asset:')
-                  }
-                  title={roleLabel(r)}
-                  aria-label={roleLabel(r)}
-                  className={cx(cell)}
-                  onClick={() => applyRole(r)}
-                >
-                  <DeviceIcon role={r} style={style} size={32} />
-                </button>
+                <Tooltip key={r} text={roleLabel(r)} side="top">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={
+                      iconRole(first.role, first.iconOverride) === r &&
+                      !first.iconOverride?.startsWith('asset:')
+                    }
+                    aria-label={roleLabel(r)}
+                    className={cx(cell)}
+                    onClick={() => applyRole(r)}
+                  >
+                    <DeviceIcon role={r} style={style} size={32} />
+                  </button>
+                </Tooltip>
               ))}
             </div>
             {packs.map((p) => (
@@ -118,24 +118,24 @@ export function IconPicker({ devices }: { devices: Device[] }) {
                 </h4>
                 <div className="grid grid-cols-5 gap-1" role="listbox" aria-label={p.name}>
                   {p.icons.map((i) => (
-                    <button
-                      key={i.id}
-                      type="button"
-                      role="option"
-                      aria-selected={first.iconOverride === packRef(p.id, i.id)}
-                      title={i.name}
-                      aria-label={i.name}
-                      className={cell}
-                      onClick={() => applyPackIcon(p, i)}
-                    >
-                      <img
-                        src={`data:${i.mime};base64,${i.base64}`}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className="object-contain"
-                      />
-                    </button>
+                    <Tooltip key={i.id} text={i.name} side="top">
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={first.iconOverride === packRef(p.id, i.id)}
+                        aria-label={i.name}
+                        className={cell}
+                        onClick={() => applyPackIcon(p, i)}
+                      >
+                        <img
+                          src={`data:${i.mime};base64,${i.base64}`}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="object-contain"
+                        />
+                      </button>
+                    </Tooltip>
                   ))}
                 </div>
               </div>

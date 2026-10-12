@@ -6,8 +6,8 @@
  */
 import { ReactFlowProvider } from '@xyflow/react';
 import * as RTooltip from '@radix-ui/react-tooltip';
-import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { CircleAlert, CircleCheck, Info, Lightbulb, X } from 'lucide-react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Canvas } from './canvas/Canvas.tsx';
 import { cx } from './components/ui.tsx';
@@ -93,6 +93,7 @@ function ActiveDialog({ dialog }: { dialog: DialogState }): ReactNode {
 function Toasts() {
   const toasts = useUi((s) => s.toasts);
   const dismiss = useUi((s) => s.dismiss);
+  const hold = useUi((s) => s.hold);
   const { t: tr } = useTranslation();
   return (
     <div
@@ -104,27 +105,56 @@ function Toasts() {
         <div
           key={t.id}
           role={t.kind === 'error' ? 'alert' : undefined}
+          data-lw-toast={t.kind}
+          // Springs up from the bottom; the countdown hairline pauses on hover and focus (FR-UX-02).
           className={cx(
-            'pointer-events-auto flex max-w-md items-start gap-2 rounded-lg border px-3 py-2 text-[13px] shadow-[var(--shadow)]',
-            t.kind === 'error' ? 'border-danger/40 bg-surface text-ink' : 'border-line bg-surface text-ink',
+            'lw-toast lw-material pointer-events-auto relative flex max-w-md items-start gap-2 overflow-hidden rounded-lg border px-3 py-2 text-[13px] text-ink shadow-elev-2',
+            t.kind === 'error' ? 'border-danger/40' : 'border-line',
           )}
+          style={{ '--lw-toast-ms': `${t.ms}ms` } as CSSProperties}
+          onMouseEnter={() => hold(t.id, true)}
+          onMouseLeave={() => hold(t.id, false)}
+          onFocus={() => hold(t.id, true)}
+          onBlur={() => hold(t.id, false)}
         >
           {t.kind === 'error' ? (
             <CircleAlert size={15} className="mt-0.5 shrink-0 text-danger" />
           ) : t.kind === 'success' ? (
             <CircleCheck size={15} className="mt-0.5 shrink-0 text-accent-ink" />
+          ) : t.kind === 'tip' ? (
+            <Lightbulb size={15} className="mt-0.5 shrink-0 text-accent-ink" />
           ) : (
             <Info size={15} className="mt-0.5 shrink-0 text-info" />
           )}
           <span className="min-w-0 flex-1 break-words">{t.message}</span>
+          {t.actions?.map((a) => (
+            <button
+              key={a.label}
+              type="button"
+              className="lw-btn shrink-0 rounded-md px-1.5 text-[12px] font-medium text-accent-ink hover:bg-accent-soft"
+              onClick={() => {
+                a.run();
+                dismiss(t.id);
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
           <button
             type="button"
             aria-label={tr('toast.dismiss', 'Dismiss')}
-            className="shrink-0 rounded p-0.5 text-subtle hover:text-ink"
+            className="lw-btn shrink-0 rounded-full p-0.5 text-subtle hover:bg-surface-3 hover:text-ink"
             onClick={() => dismiss(t.id)}
           >
             <X size={13} />
           </button>
+          <span
+            aria-hidden="true"
+            className={cx(
+              'lw-toast-progress absolute inset-x-0 bottom-0 h-px',
+              t.kind === 'error' ? 'bg-danger' : 'bg-accent',
+            )}
+          />
         </div>
       ))}
     </div>
@@ -310,7 +340,7 @@ export function App() {
   const problemsOpen = useUi((s) => s.problemsOpen);
   const readOnly = useEditor((s) => s.readOnly);
   return (
-    <RTooltip.Provider delayDuration={400}>
+    <RTooltip.Provider delayDuration={500} skipDelayDuration={300}>
       <ReactFlowProvider>
         <a
           href="#lw-canvas"

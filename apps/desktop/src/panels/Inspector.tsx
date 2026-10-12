@@ -771,7 +771,7 @@ export function Inspector() {
   return (
     <aside
       aria-label={t('inspector.title', 'Inspector')}
-      className="lw-no-print flex h-full w-[320px] shrink-0 flex-col border-l border-line bg-surface"
+      className="lw-no-print lw-panel-right flex h-full w-[320px] shrink-0 flex-col border-l border-line bg-surface"
     >
       <div className="flex h-10 shrink-0 items-center border-b border-line px-3">
         <h2 className="font-brand text-[13px] font-semibold text-ink">{t('inspector.title', 'Inspector')}</h2>
@@ -783,7 +783,7 @@ export function Inspector() {
           </span>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="lw-stagger min-h-0 flex-1 overflow-y-auto">
         {nothing && <DocumentFields />}
         {devices.length > 0 && <DeviceFields devices={devices} />}
         {links.length > 0 && <LinkFields links={links} />}
