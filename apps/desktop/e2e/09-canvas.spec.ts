@@ -85,7 +85,15 @@ test('FR-CAN-01 wheel pans, Ctrl/Cmd+wheel zooms within 10%–400%, fit and zoom
       const before = await settledZoom();
       if (Math.abs(before - limit) < 0.005) break;
       await page.keyboard.press(key);
-      if ((await settledZoom()) === before) break;
+      // A step's animation can start a frame or two late; give it a moment before calling it the limit.
+      const moved = await expect
+        .poll(async () => (await viewport(page)).zoom, { timeout: 1000 })
+        .not.toBe(before)
+        .then(
+          () => true,
+          () => false,
+        );
+      if (!moved) break;
     }
     expect(await settledZoom()).toBeCloseTo(limit, 2);
   };
