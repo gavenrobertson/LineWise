@@ -29,7 +29,7 @@ test('switch network views and highlight a VLAN', async ({ page }) => {
 
   // VLAN 10 highlight dims everything outside the broadcast domain.
   await page.getByRole('radio', { name: 'L2' }).click();
-  await page.getByTitle('Highlight VLAN').selectOption('10');
+  await page.getByRole('combobox', { name: 'Highlight VLAN' }).selectOption('10');
   await expect(page.getByText('Highlighting VLAN 10')).toBeVisible();
   await expect(node(page, 'ACC1').locator('.lw-dim')).toHaveCount(0);
   await expect(

@@ -151,18 +151,104 @@ export function pointAlong(points: XY[], d: number): XY {
 
 export const END_LABEL_DIST = 30;
 
-/** Label anchors: near each end (at the given distances along the link) and in the middle. */
+/**
+ * Where on the polyline the middle label sits by default, as a fraction of its length: the middle
+ * of its longest straight segment, so it never hangs off a bend (FR-UX-05).
+ */
+export function midLabelT(points: XY[]): number {
+  const len = polylineLength(points);
+  if (!len || points.length < 3) return 0.5;
+  let best = 0;
+  let bestLen = -1;
+  let at = 0;
+  let bestAt = 0;
+  for (let i = 1; i < points.length; i++) {
+    const l = segLen(points[i - 1] as XY, points[i] as XY);
+    if (l > bestLen) {
+      bestLen = l;
+      best = i;
+      bestAt = at;
+    }
+    at += l;
+  }
+  return best ? (bestAt + bestLen / 2) / len : 0.5;
+}
+
+/** Link label type sizes in px at 100% zoom: interface labels and the middle label. */
+export const LINK_LABEL = {
+  end: { size: 11, char: 6.6, mono: true },
+  mid: { size: 11.5, char: 6.5, mono: false },
+  lineHeight: 14,
+  padX: 6,
+  padY: 2,
+  chip: 9,
+} as const;
+
+/** Approximate size of a link label pill (no DOM measurement), shared by placement and exports. */
+export function linkLabelSize(text: string, kind: 'end' | 'mid', chips = 0): { w: number; h: number } {
+  const lines = text.split('\n');
+  const longest = Math.max(...lines.map((l) => l.length));
+  return {
+    w: longest * LINK_LABEL[kind].char + 2 * LINK_LABEL.padX + chips * LINK_LABEL.chip + 2,
+    h: lines.length * LINK_LABEL.lineHeight + 2 * LINK_LABEL.padY + 2,
+  };
+}
+
+/** 0: on the line; ±1: just beside it; ±2: one label row further out. */
+export type LabelSide = -2 | -1 | 0 | 1 | 2;
+
+/**
+ * A label's centre: `at` along the polyline, on the line (side 0) or beside it, pushed along the
+ * line's normal by half the label's extent in that direction plus a 5 px gap, and one more label
+ * row for ±2, which clears a label sitting on the line (FR-UX-05).
+ */
+export function labelPoint(
+  points: XY[],
+  at: number,
+  side: LabelSide = 0,
+  size?: { w: number; h: number },
+): XY {
+  const p = pointAlong(points, at);
+  if (!side || !size) return p;
+  const p0 = pointAlong(points, at - 0.5);
+  const p1 = pointAlong(points, at + 0.5);
+  const dx = p1.x - p0.x;
+  const dy = p1.y - p0.y;
+  const l = Math.hypot(dx, dy) || 1;
+  const dir = Math.sign(side);
+  const nx = (-dy / l) * dir;
+  const ny = (dx / l) * dir;
+  const off =
+    (Math.abs(nx) * size.w) / 2 +
+    (Math.abs(ny) * size.h) / 2 +
+    5 +
+    (Math.abs(side) - 1) * (LINK_LABEL.lineHeight + 8);
+  return { x: p.x + nx * off, y: p.y + ny * off };
+}
+
+export interface LabelSlots {
+  a?: number;
+  b?: number;
+  /** Middle label position as a fraction of the length. */
+  mid?: number;
+  side?: { a?: LabelSide; b?: LabelSide; mid?: LabelSide };
+}
+
+/**
+ * Label anchors: near each end (at the given distances along the link) and the middle label (at
+ * `mid` of the length, or the middle of the longest straight segment), each on the line or beside it.
+ */
 export function labelAnchors(
   points: XY[],
-  distA = END_LABEL_DIST,
-  distB = END_LABEL_DIST,
+  slots: LabelSlots = {},
+  sizes: { a?: { w: number; h: number }; b?: { w: number; h: number }; mid?: { w: number; h: number } } = {},
 ): { a: XY; b: XY; mid: XY } {
   const len = polylineLength(points);
   const cap = len * 0.4;
   return {
-    a: pointAlong(points, Math.min(distA, cap)),
-    b: pointAlong(points, len - Math.min(distB, cap)),
-    mid: pointAlong(points, len / 2),
+    a: labelPoint(points, Math.min(slots.a ?? END_LABEL_DIST, cap), slots.side?.a, sizes.a),
+    b: labelPoint(points, len - Math.min(slots.b ?? END_LABEL_DIST, cap), slots.side?.b, sizes.b),
+    mid: labelPoint(points, len * (slots.mid ?? midLabelT(points)), slots.side?.mid, sizes.mid),
   };
 }
 

@@ -4,10 +4,11 @@
  * a literal t() call so the extractor (scripts/i18n.ts) finds it. Roles, role categories and
  * starter diagrams come from the device library; the extractor adds their keys from that data.
  */
-import type { LinkMedium } from '@linewise/core';
+import { listRules, type LinkMedium } from '@linewise/core';
 import { ROLE_LABELS, type RoleCategory } from '@linewise/device-library';
 import type { DeviceRole } from '@linewise/core';
 import i18n from '../i18n/index.ts';
+import type { LabelTerms } from '../canvas/model.ts';
 
 const t = (key: string, defaultValue: string) => i18n.t(key, { defaultValue });
 
@@ -65,4 +66,32 @@ export function categoryLabel(c: RoleCategory): string {
 /** Starter diagram names and descriptions, from the device library. */
 export function starterText(id: string, field: 'name' | 'desc', english: string): string {
   return i18n.t(`starter.${id}.${field}`, { defaultValue: english });
+}
+
+/**
+ * The words link labels use (FR-UX-06), translated; the canvas and exports pass them to the model.
+ * The canvas passes its own `t`, so the words change with the language.
+ */
+export function linkTerms(tr: (key: string, defaultValue: string) => string = t): LabelTerms {
+  const t = tr;
+  return {
+    access: t('linkLabel.access', 'access'),
+    trunk: t('linkLabel.trunk', 'trunk'),
+    vlan: t('linkLabel.vlan', 'VLAN'),
+    all: t('linkLabel.all', 'all'),
+    fiber: t('linkLabel.fiber', 'fiber'),
+    serial: t('linkLabel.serial', 'serial'),
+    wireless: t('linkLabel.wireless', 'wireless'),
+    tunnel: t('linkLabel.tunnel', 'tunnel'),
+    console: t('linkLabel.console', 'console'),
+  };
+}
+
+/**
+ * A validation rule's title, why it matters, or how to fix it (FR-UX-11), translated. The English
+ * lives with the rule in the core; the extractor adds the rule.* keys from it.
+ */
+export function ruleText(id: string, field: 'title' | 'why' | 'fix'): string {
+  const rule = listRules().find((r) => r.id === id);
+  return rule ? i18n.t(`rule.${id}.${field}`, { defaultValue: rule[field] }) : '';
 }

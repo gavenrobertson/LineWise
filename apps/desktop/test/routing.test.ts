@@ -136,7 +136,12 @@ describe('FR-LNK-03 end labels spread apart instead of overlapping', () => {
       ed.execute(connect({ deviceId: sw.deviceId }, { deviceId: r.deviceId }));
     }
     const m = buildPageModel(ed.doc, ed.doc.pages[0]!, { layer: 'l1', highlight: null, issues: [] });
-    const atSwitch = m.links.map((l) => (l.sourceId === sw.deviceId ? l.labelDist.a : l.labelDist.b));
+    // Each label gets its own slot: further along its link, or beside it (FR-UX-05).
+    const atSwitch = m.links.map((l) =>
+      l.sourceId === sw.deviceId
+        ? `${l.labelDist.a}/${l.labelDist.side?.a ?? 0}`
+        : `${l.labelDist.b}/${l.labelDist.side?.b ?? 0}`,
+    );
     expect(new Set(atSwitch).size).toBe(3);
   });
 });

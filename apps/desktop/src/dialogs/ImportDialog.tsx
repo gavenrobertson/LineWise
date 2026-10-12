@@ -26,7 +26,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { pageBounds, buildPageModel } from '../canvas/model.ts';
-import { Badge, Button, cx, Dialog, Segmented, TextArea } from '../components/ui.tsx';
+import { Badge, Button, cx, Dialog, Segmented, TextArea, Tooltip } from '../components/ui.tsx';
 import { startLayout } from '../workers/client.ts';
 import { platform } from '../platform/index.ts';
 import { selectPage, useEditor } from '../store/editor.ts';
@@ -205,9 +205,11 @@ function SourcesStep({ sources, setSources }: { sources: Source[]; setSources: (
               return (
                 <li key={s.id} className="p-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink" title={s.name}>
-                      {s.name}
-                    </span>
+                    <Tooltip text={s.name}>
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+                        {s.name}
+                      </span>
+                    </Tooltip>
                     <select
                       aria-label={t('import.kind', 'Source type')}
                       className="h-7 rounded border border-line bg-surface px-1 text-[12px]"
@@ -395,9 +397,9 @@ function ReviewStep({ plan, setPlan }: { plan: ImportPlan; setPlan: (p: ImportPl
                 </Badge>
               )}
               {l.reason && (
-                <span className="max-w-40 truncate text-[11px] text-warning" title={l.reason}>
-                  {l.reason}
-                </span>
+                <Tooltip text={l.reason}>
+                  <span className="max-w-40 truncate text-[11px] text-warning">{l.reason}</span>
+                </Tooltip>
               )}
             </li>
           ))}

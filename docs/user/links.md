@@ -81,8 +81,27 @@ it again.
 
 Each end of a link can show the interface name, its address and its VLANs. Which ones appear
 depends on the [view](views.md): interface names in the physical view, VLANs in the data link view
-and addresses in the network view. Turn on **Port names**, **Port IPs** or **Port VLANs** in the
-**Display** group to show them in every view.
+and addresses in the network view. Turn on **Show interface names**, **Show IP addresses** or
+**Show VLANs** in the **Display** group to show them in every view. **Interface names** chooses
+short names (`Gi1/0/1`) or long ones (`GigabitEthernet1/0/1`).
+
+What both ends share is written once, in the label in the middle of the link:
+
+| View           | Middle label                                                       | Example                    |
+| -------------- | ------------------------------------------------------------------ | -------------------------- |
+| Physical (L1)  | The link's label, its speed, and the medium unless it is copper    | `10G · fiber`              |
+| Data link (L2) | The access VLAN, or the trunk's VLAN list (first three, then `+N`) | `trunk ●10, ●20, ●99`      |
+| Network (L3)   | The subnet; each end then shows its host part                      | `10.0.12.0/30`, `.1`, `.2` |
+
+Each VLAN number has a dot in its VLAN color. When the ends differ (an access VLAN mismatch, a
+trunk on one side only), each end keeps its own VLANs, so the difference is visible.
+
+Labels are placed so they do not cover each other, devices or hostnames: an interface label moves
+along its link, or just beside it, until it finds a free spot. Below 75% zoom labels stop
+shrinking, so they stay readable, and above 150% they stop growing; below 40% they are hidden.
+
+Hover over a link, or Tab to it, to see its details: both ends, the medium, speed and duplex, the
+mode and VLANs, the addresses, and any problems with a button that applies the fix.
 
 ## Inserting a device into a link
 

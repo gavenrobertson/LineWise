@@ -10,7 +10,12 @@ import { iconMarkup } from '@linewise/device-library';
 import { edgeGeometryPure } from '../canvas/edgeGeometry.ts';
 import { ICON, midDirection, type XY } from '../canvas/geometry.ts';
 import {
+  badgeAt,
   buildPageModel,
+  LINK_LABEL,
+  linkLabelSize,
+  type LabelPart,
+  type LabelTerms,
   labelBox,
   offPageBox,
   pageBounds,
@@ -38,6 +43,8 @@ const PALETTES: Record<ExportTheme, Record<string, string>> = {
     '--info': '#2563eb',
     '--border-strong': '#cdd4de',
     '--label-bg': '#ffffff',
+    '--label-border': '#dadee3',
+    '--surface': '#ffffff',
   },
   dark: {
     '--canvas': '#0e1726',
@@ -55,6 +62,8 @@ const PALETTES: Record<ExportTheme, Record<string, string>> = {
     '--info': '#60a5fa',
     '--border-strong': '#33435f',
     '--label-bg': '#0e1726',
+    '--label-border': '#3a4558',
+    '--surface': '#1a2436',
   },
 };
 
@@ -68,6 +77,8 @@ export interface SvgExportOptions {
   theme?: ExportTheme;
   issues?: Issue[];
   padding?: number;
+  /** Words for link labels, translated by the app (English by default). */
+  terms?: LabelTerms;
   /** Adds a title block strip at the bottom (PDF/print). */
   titleBlock?: { name: string; author: string; date: string; revision: string; page: string } | null;
 }
@@ -100,12 +111,6 @@ function textLines(x: number, y: number, text: string, attrs: string, lineHeight
   return `<text x="${f(x)}" y="${f(y)}" ${attrs}>${tspans}</text>`;
 }
 
-/** Approximate text width for label backgrounds (export has no DOM measurement). */
-function approxWidth(text: string, size: number, mono: boolean): number {
-  const longest = Math.max(...text.split('\n').map((l) => l.length));
-  return longest * size * (mono ? 0.6 : 0.56);
-}
-
 function filterModel(model: PageModel, ids: Set<string>): PageModel {
   const devices = model.devices.filter((d) => ids.has(d.device.id));
   const keep = new Set(devices.map((d) => d.device.id));
@@ -130,6 +135,7 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
     layer: opts.layer ?? 'l1',
     highlight: null,
     issues: opts.issues ?? [],
+    terms: opts.terms,
   });
   if (opts.selection?.length) model = filterModel(model, new Set(opts.selection));
   const pad = opts.padding ?? 32;
@@ -244,31 +250,53 @@ export function renderPageSvg(doc: NetworkDocument, opts: SvgExportOptions): Svg
         `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f((l.bundle.size * 14) / 2 + 6)}" ry="7" transform="rotate(${f(ang)} ${f(cx)} ${f(cy)})" fill="none" stroke="${stroke}" stroke-width="1.25"/>`,
       );
     }
-    const label = (p: XY, text: string, mono: boolean, dy = 0) => {
+    // Pills like the canvas (FR-UX-04): canvas-colored body, hairline border; sizes from the same
+    // estimate the placement uses, so labels sit where they do on screen.
+    const label = (p: XY, text: string, kind: 'end' | 'mid', parts?: LabelPart[]) => {
       if (!text) return;
-      const size = mono ? 10 : 11;
-      const w = approxWidth(text, size, mono) + 6;
-      const n = text.split('\n').length;
-      const h = n * (size + 2.5) + 2;
+      const spec = LINK_LABEL[kind];
+      const chips = parts?.filter((x) => x.color).length ?? 0;
+      const { w, h } = linkLabelSize(text, kind, chips);
+      const x0 = p.x - w / 2;
+      const y0 = p.y - h / 2;
+      const fill = kind === 'mid' ? pal['--surface'] : pal['--label-bg'];
       labels.push(
-        `<rect x="${f(p.x - w / 2)}" y="${f(p.y + dy - h / 2)}" width="${f(w)}" height="${f(h)}" rx="3" fill="${pal['--label-bg']}" fill-opacity="0.85"/>`,
-        textLines(
-          p.x,
-          p.y + dy - h / 2 + size,
-          text,
-          `font-size="${size}" text-anchor="middle" fill="${mono ? pal['--text-muted'] : pal['--text']}"${mono ? ' font-family="Menlo, Consolas, monospace"' : ' font-weight="500"'}`,
-          size + 2.5,
-        ),
+        `<rect x="${f(x0)}" y="${f(y0)}" width="${f(w)}" height="${f(h)}" rx="6" fill="${fill}" stroke="${pal['--label-border']}" stroke-width="1"/>`,
       );
+      const font =
+        kind === 'mid'
+          ? `font-size="${spec.size}" font-weight="600" fill="${pal['--text']}"`
+          : `font-size="${spec.size}" font-weight="500" fill="${pal['--text-muted']}" font-family="'IBM Plex Mono', Menlo, Consolas, monospace"`;
+      const baseline = y0 + 1 + LINK_LABEL.padY + 11;
+      if (!parts || !chips) {
+        labels.push(textLines(p.x, baseline, text, `${font} text-anchor="middle"`, LINK_LABEL.lineHeight));
+        return;
+      }
+      // One line with VLAN chips: runs left to right, a dot before each colored number.
+      let x = x0 + 1 + LINK_LABEL.padX;
+      const runs: string[] = [];
+      for (const part of parts) {
+        if (part.color) {
+          runs.push(
+            `<rect x="${f(x)}" y="${f(baseline - 7)}" width="6" height="6" rx="2" fill="${resolveColor(part.color, pal)}"/>`,
+          );
+          x += LINK_LABEL.chip;
+        }
+        runs.push(`<text x="${f(x)}" y="${f(baseline)}" ${font}>${escapeXml(part.text)}</text>`);
+        x += part.text.length * spec.char;
+      }
+      labels.push(`<g xml:space="preserve">${runs.join('')}</g>`);
     };
-    // An error link is red and carries the same ✕ badge as on screen (NFR-A11Y-03).
+    // A link with a problem carries the same badge as on screen, beside its middle label
+    // (NFR-A11Y-03).
+    const badge = badgeAt(anchors.mid, l);
     if (l.severity === 'error')
       labels.push(
-        `<g transform="translate(${f(mid.x)} ${f(mid.y + 10)})"><circle r="7" fill="${pal['--danger']}" stroke="${pal['--canvas']}" stroke-width="1.5"/><text text-anchor="middle" dy="3" font-size="8" font-weight="700" fill="#ffffff">${SEVERITY_GLYPH.error}</text></g>`,
+        `<g transform="translate(${f(badge.x)} ${f(badge.y)})"><circle r="7" fill="${pal['--danger']}" stroke="${pal['--canvas']}" stroke-width="1.5"/><text text-anchor="middle" dy="3" font-size="8" font-weight="700" fill="#ffffff">${SEVERITY_GLYPH.error}</text></g>`,
       );
-    label(anchors.a, l.labelA, true);
-    label(anchors.b, l.labelB, true);
-    label(anchors.mid, l.labelMid, false, -10);
+    label(anchors.a, l.labelA, 'end');
+    label(anchors.b, l.labelB, 'end');
+    label(anchors.mid, l.labelMid, 'mid', l.midParts);
   }
   out.push(...labels);
 

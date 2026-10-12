@@ -13,6 +13,7 @@ import {
   SelectionMode,
   useReactFlow,
   useStore as useFlowStore,
+  useStoreApi as useFlowStoreApi,
   type ReactFlowProps,
   type Connection,
   type Edge,
@@ -38,7 +39,6 @@ import {
   updateLinkStyle,
   addDevice,
   batch,
-  deviceSummary,
   insertDeviceOnLink,
   moveNodes,
   updateAnnotation,
@@ -62,14 +62,14 @@ import {
 import { assetDataUrl } from './icons.ts';
 import { buildPageModel, type PageModel } from './model.ts';
 import { DUR, easeStandard, motionMs } from '../lib/motion.ts';
+import { linkTerms } from '../lib/labels.ts';
+import { CanvasHoverCard, useCanvasHover } from './HoverCards.tsx';
 import { Minimap } from './Minimap.tsx';
 import { cx } from '../components/ui.tsx';
 import { anchorOf, EdgeLabelLayer, edgeTypes, type NetworkEdgeType } from './NetworkEdge.tsx';
 import { customIconUrl, nodeTypes } from './nodes.tsx';
 
 export const TEMPLATE_MIME = 'application/x-linewise-template';
-
-const summaryCache = new WeakMap<object, { links: unknown; text: string }>();
 
 /**
  * Fit padding that keeps content clear of the overlays: the zoom controls (bottom left) and,
@@ -112,7 +112,13 @@ export const canvasApi: {
     if (!inst) return;
     const nodes = ids.map((id) => inst.getNode(id)).filter((n): n is Node => !!n);
     if (nodes.length)
-      void inst.fitView({ nodes, padding: 0.6, duration: motionMs(DUR.slow), ease: easeStandard, maxZoom: 1.4 });
+      void inst.fitView({
+        nodes,
+        padding: 0.6,
+        duration: motionMs(DUR.slow),
+        ease: easeStandard,
+        maxZoom: 1.4,
+      });
   },
   viewportCenter: () => {
     const inst = canvasApi.instance;
@@ -226,9 +232,10 @@ export function Canvas() {
   // The model ignores drag previews: rebuilding it for 500 devices on every pointer move cost
   // ~100 ms a frame (NFR-PERF-04). Dragged nodes are moved in `nodes` below, and links follow
   // React Flow's own node positions; routing and labels catch up when the drag ends.
+  const terms = useMemo(() => linkTerms((k, d) => t(k, d)), [t]);
   const model = useMemo(
-    () => (page ? buildPageModel(doc, page, { layer, highlight, issues }) : null),
-    [doc, page, layer, highlight, issues],
+    () => (page ? buildPageModel(doc, page, { layer, highlight, issues, terms }) : null),
+    [doc, page, layer, highlight, issues, terms],
   );
 
   const sel = useMemo(
@@ -276,24 +283,6 @@ export function Canvas() {
       });
     }
     for (const dv of model.devices) {
-      // The hover card text only depends on the device and the links (NFR-PERF-04: cached by object).
-      let summary = summaryCache.get(dv.device);
-      if (!summary || summary.links !== doc.links) {
-        const s = deviceSummary(doc, dv.device);
-        summary = {
-          links: doc.links,
-          text: [
-            s.hostname,
-            s.role,
-            s.model,
-            s.mgmtIp && `mgmt ${s.mgmtIp}`,
-            `${s.usedCount}/${s.interfaceCount} interfaces used`,
-          ]
-            .filter(Boolean)
-            .join('\n'),
-        };
-        summaryCache.set(dv.device, summary);
-      }
       out.push({
         id: dv.device.id,
         type: 'device',
@@ -306,7 +295,6 @@ export function Canvas() {
           view: dv,
           iconStyle: doc.settings.iconStyle,
           iconUrl: customIconUrl(doc, dv.device.iconOverride),
-          summary: summary.text,
         },
       });
     }
@@ -334,17 +322,33 @@ export function Canvas() {
   const nodeTypeOf = useMemo(() => new Map(baseNodes.map((n) => [n.id, n.type])), [baseNodes]);
 
   const edges: NetworkEdgeType[] = useMemo(() => {
+    // The accessible name's wording is translated once, then filled in per link (NFR-PERF-04).
+    const tpl = t('link.aria', 'Link {{a}} {{pa}} to {{b}} {{pb}}', {
+      a: '\u0001a',
+      pa: '\u0001pa',
+      b: '\u0001b',
+      pb: '\u0001pb',
+    });
+    // A function replacement, so a `$` in a hostname is taken literally.
+    const linkName = (a: string, pa: string, b: string, pb: string) =>
+      tpl
+        .replace('\u0001pa', () => pa)
+        .replace('\u0001pb', () => pb)
+        .replace('\u0001a', () => a)
+        .replace('\u0001b', () => b);
     const next: NetworkEdgeType[] = (model?.links ?? []).map((l) => ({
       id: l.link.id,
       type: 'network',
       source: l.sourceId,
       target: l.targetId,
       selected: sel.has(l.link.id),
+      // Read as "Link CORE1 Te1/0/1 to CORE2 Te1/0/1" instead of React Flow's node IDs.
+      ariaLabel: linkName(l.a.device.hostname, l.a.iface.name, l.b.device.hostname, l.b.iface.name),
       data: { view: l },
     }));
     prevEdges.current = stabilize(prevEdges.current, next, 6);
     return prevEdges.current;
-  }, [model, sel]);
+  }, [model, sel, t]);
 
   // ---------------------------------------------------------------- dragging
 
@@ -673,7 +677,10 @@ export function Canvas() {
 
   const handlers = useStableHandlers({
     onNodesChange,
-    onNodeDragStart,
+    onNodeDragStart: (...args: Parameters<typeof onNodeDragStart>) => {
+      useCanvasHover.getState().hide();
+      onNodeDragStart(...args);
+    },
     onNodeDragStop,
     onEdgesChange,
     onNodeClick,
@@ -683,6 +690,30 @@ export function Canvas() {
     onConnectEnd,
     onDelete,
     onMoveEnd: (_: unknown, vp: { zoom: number }) => setUi({ zoom: vp.zoom }),
+    // The link hover card (FR-UX-07) opens after the hover-card delay and follows the pointer
+    // until it opens; leaving the link closes it after a moment, so the card can be reached.
+    onEdgeMouseEnter: (e: ReactMouseEvent, edge: Edge) => {
+      if (e.buttons === 0) useCanvasHover.getState().show(edge.id, e.clientX, e.clientY, 350);
+    },
+    onEdgeMouseMove: (e: ReactMouseEvent, edge: Edge) => {
+      const h = useCanvasHover.getState();
+      if (!h.open && h.id === edge.id) useCanvasHover.setState({ x: e.clientX, y: e.clientY });
+    },
+    onEdgeMouseLeave: () => useCanvasHover.getState().hideSoon(),
+    // The device card (FR-NET-09) uses the same card, opened from the node under the pointer.
+    onNodeMouseEnter: (e: ReactMouseEvent, n: Node) => {
+      if (n.type !== 'device' || e.buttons !== 0) return;
+      const r = (e.currentTarget as Element).getBoundingClientRect();
+      useCanvasHover.getState().show(n.id, r.left + r.width / 2, r.top, 450, 'device');
+    },
+    // A device that appears under a resting pointer (a diagram just opened) gets no enter event.
+    onNodeMouseMove: (e: ReactMouseEvent, n: Node) => {
+      if (n.type !== 'device' || e.buttons !== 0 || useCanvasHover.getState().id === n.id) return;
+      const r = (e.currentTarget as Element).getBoundingClientRect();
+      useCanvasHover.getState().show(n.id, r.left + r.width / 2, r.top, 450, 'device');
+    },
+    onNodeMouseLeave: () => useCanvasHover.getState().hideSoon(),
+    onMoveStart: () => useCanvasHover.getState().hide(),
   });
   const snapGrid = useMemo<[number, number]>(
     () => [prefs.gridSize / 2, prefs.gridSize / 2],
@@ -703,6 +734,23 @@ export function Canvas() {
       viewport: el?.querySelector('.react-flow__viewport-portal') ?? null,
     });
   }, [hasPage]);
+  // Link labels keep a readable size (FR-UX-04): between 75% and 150% zoom they scale with the
+  // diagram; outside it they are counter-scaled to what they would be at 75% or 150%. One CSS
+  // variable on the label layer, written only when it changes, so panning costs nothing.
+  const flowStore = useFlowStoreApi();
+  useEffect(() => {
+    const el = layers.labels as HTMLElement | null;
+    if (!el) return;
+    let last = '';
+    const apply = (z: number) => {
+      const k = (Math.min(1.5, Math.max(0.75, z)) / z).toFixed(3);
+      if (k === last) return;
+      last = k;
+      el.style.setProperty('--lw-label-k', k);
+    };
+    apply(flowStore.getState().transform[2]);
+    return flowStore.subscribe((st) => apply(st.transform[2]));
+  }, [layers.labels, flowStore]);
   const fitViewOptions = useMemo(
     () => ({ padding: fitPadding(prefs.showMinimap), maxZoom: 1 }),
     [prefs.showMinimap],
@@ -710,7 +758,29 @@ export function Canvas() {
 
   if (!page) return null;
   return (
-    <div ref={wrapper} className="relative h-full w-full" onDragOver={onDragOver} onDrop={onDrop}>
+    <div
+      ref={wrapper}
+      className="relative h-full w-full"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      // Keyboard focus on a link opens its card too (FR-UX-07).
+      onFocus={(e) => {
+        const target = e.target as Element;
+        if (!target.matches?.(':focus-visible')) return;
+        const edge = target.closest('.react-flow__edge');
+        const device = target.closest('.react-flow__node-device');
+        const el = edge ?? device;
+        const id = el?.getAttribute('data-id');
+        if (!el || !id) return;
+        const r = el.getBoundingClientRect();
+        if (edge) useCanvasHover.getState().show(id, r.left + r.width / 2, r.top + r.height / 2, 150);
+        else useCanvasHover.getState().show(id, r.left + r.width / 2, r.top, 450, 'device');
+      }}
+      onBlur={(e) => {
+        if ((e.target as Element).closest?.('.react-flow__edge, .react-flow__node-device'))
+          useCanvasHover.getState().hide();
+      }}
+    >
       <EdgeLabelLayer.Provider value={layers.labels}>
         <DragPreviewFlow
           className={cx(lowDetail && 'lw-lod-low', minimalDetail && 'lw-lod-min')}
@@ -794,6 +864,10 @@ export function Canvas() {
             )}
         </DragPreviewFlow>
       </EdgeLabelLayer.Provider>
+      <CanvasHoverCard
+        links={model?.links ?? EMPTY_MODEL.links}
+        devices={model?.devices ?? EMPTY_MODEL.devices}
+      />
       {pathStart !== null && (
         <div
           role="status"

@@ -175,6 +175,7 @@ ignored. LineWise warns when a file is larger than 20 MB.
   "defaultLinkRouting": "straight",
   "iconStyle": "classic",               // classic | line
   "showInterfaceNames": true, "showInterfaceIps": false, "showVlans": false,
+  "interfaceNames": "short",            // short (Gi1/0/1) | long (GigabitEthernet1/0/1) on link labels; added 2026-10, older files read as short
   "disabledRules": [],                  // validation rule ids turned off for this document
   "suppressions": []                    // [{ "ruleId", "objectIds": [...], "reason" }]
 }

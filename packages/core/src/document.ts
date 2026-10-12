@@ -56,6 +56,7 @@ export function createDocument(name = 'Untitled diagram', author = ''): NetworkD
       showInterfaceNames: true,
       showInterfaceIps: false,
       showVlans: false,
+      interfaceNames: 'short',
       disabledRules: [],
       suppressions: [],
     },

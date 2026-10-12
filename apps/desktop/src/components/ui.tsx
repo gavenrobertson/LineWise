@@ -4,8 +4,9 @@
  * labelled inputs, focus-trapped dialogs and tooltips that work with the keyboard.
  */
 import * as RDialog from '@radix-ui/react-dialog';
+import * as RPopover from '@radix-ui/react-popover';
 import * as RTooltip from '@radix-ui/react-tooltip';
-import { X } from 'lucide-react';
+import { CircleHelp, ExternalLink, X } from 'lucide-react';
 import i18n from '../i18n/index.ts';
 import {
   forwardRef,
@@ -399,6 +400,7 @@ export function Dialog({
   children,
   footer,
   width = 560,
+  help,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -407,6 +409,8 @@ export function Dialog({
   children: ReactNode;
   footer?: ReactNode;
   width?: number;
+  /** A help button beside the title (FR-UX-10). */
+  help?: ReactNode;
 }) {
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -419,7 +423,12 @@ export function Dialog({
         >
           <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div>
-              <RDialog.Title className="font-brand text-[15px] font-semibold text-ink">{title}</RDialog.Title>
+              <div className="flex items-center gap-1.5">
+                <RDialog.Title className="font-brand text-[15px] font-semibold text-ink">
+                  {title}
+                </RDialog.Title>
+                {help}
+              </div>
               {description ? (
                 <RDialog.Description className="mt-0.5 text-xs text-muted">{description}</RDialog.Description>
               ) : (
@@ -489,5 +498,68 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
       <p className="font-medium text-ink">{title}</p>
       {children && <div className="text-xs text-muted">{children}</div>}
     </div>
+  );
+}
+
+/**
+ * A "?" button that opens a short explanation (FR-UX-10): what it is, why it matters, a tiny
+ * example and a link to the user guide. Dismissed with Escape or a click outside; never blocks work.
+ */
+export function HelpPopover({
+  title,
+  what,
+  why,
+  example,
+  onLearnMore,
+}: {
+  title: string;
+  what: string;
+  why: string;
+  example?: string;
+  onLearnMore?: () => void;
+}) {
+  return (
+    <RPopover.Root>
+      <Tooltip text={i18n.t('help.about', { defaultValue: 'About {{topic}}', topic: title })}>
+        <RPopover.Trigger asChild>
+          <button
+            type="button"
+            data-lw-help=""
+            aria-label={i18n.t('help.about', { defaultValue: 'About {{topic}}', topic: title })}
+            className="lw-btn inline-flex h-5 w-5 items-center justify-center rounded-full text-subtle hover:bg-surface-3 hover:text-accent-ink data-[state=open]:bg-accent-soft data-[state=open]:text-accent-ink"
+          >
+            <CircleHelp size={13} aria-hidden="true" />
+          </button>
+        </RPopover.Trigger>
+      </Tooltip>
+      <RPopover.Portal>
+        <RPopover.Content
+          side="bottom"
+          align="start"
+          sideOffset={6}
+          collisionPadding={8}
+          className="lw-pop lw-material z-[70] w-72 rounded-lg border border-line p-3 text-[12px] leading-snug text-ink shadow-elev-2"
+        >
+          <p className="text-[13px] font-semibold">{title}</p>
+          <p className="mt-1">{what}</p>
+          <p className="mt-1.5 text-muted">{why}</p>
+          {example && (
+            <p className="mt-2 rounded-md bg-surface-2 px-2 py-1 font-mono text-[11px] text-muted">
+              {example}
+            </p>
+          )}
+          {onLearnMore && (
+            <button
+              type="button"
+              onClick={onLearnMore}
+              className="lw-btn mt-2 inline-flex items-center gap-1 rounded-md px-1 py-0.5 font-medium text-accent-ink hover:bg-accent-soft"
+            >
+              {i18n.t('help.learnMore', { defaultValue: 'Learn more in the user guide' })}
+              <ExternalLink size={11} aria-hidden="true" />
+            </button>
+          )}
+        </RPopover.Content>
+      </RPopover.Portal>
+    </RPopover.Root>
   );
 }

@@ -61,10 +61,16 @@ test('FR-NET-09 hovering a device shows its info card', async ({ page }) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
   const r1 = (await doc(page)).devices.find((x) => x.hostname === 'R1')!;
-  const card = await node(page, 'R1').locator('[title]').first().getAttribute('title');
-  expect(card).toContain('R1');
-  expect(card).toMatch(/router/i);
-  expect(card).toMatch(new RegExp(`${r1.interfaces.length}`));
+  // One shared card for the canvas (FR-UX-09), opened from the device under the pointer.
+  await node(page, 'R1').locator('.lw-device-icon').hover();
+  const card = page.locator('[data-lw-linkcard]');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('R1');
+  await expect(card).toContainText(/router/i);
+  await expect(card).toContainText(new RegExp(`of ${r1.interfaces.length} in use`));
+  // Moving away closes it.
+  await page.mouse.move(5, 300, { steps: 4 });
+  await expect(card).toHaveCount(0);
 });
 
 test('FR-TPL-04 build a template from scratch with a range, save it and place it', async ({ page }) => {

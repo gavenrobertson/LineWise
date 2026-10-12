@@ -11,7 +11,7 @@ import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx } from '../components/ui.tsx';
+import { cx, Tooltip } from '../components/ui.tsx';
 import { selectPage, useEditor } from '../store/editor.ts';
 import { roleLabel } from '../lib/labels.ts';
 import { buildOutline, visibleNodes, type OutlineNode } from './outlineTree.ts';
@@ -267,24 +267,27 @@ export function OutlinePanel() {
                     <span className="block truncate text-[11px] text-subtle">{home?.name}</span>
                   </span>
                   {!readOnly && (
-                    <button
-                      type="button"
-                      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-accent-ink hover:bg-accent-soft"
-                      title={t('outline.refHint', 'Show a connector to this device on the current page')}
-                      onClick={() => {
-                        if (ref) execute(removeOffPageRef(page?.id ?? '', d.id));
-                        else {
-                          const c = canvasApi.viewportCenter();
-                          execute(
-                            addOffPageRef(page?.id ?? '', d.id, { x: Math.round(c.x), y: Math.round(c.y) }),
-                          );
-                        }
-                      }}
+                    <Tooltip
+                      text={t('outline.refHint', 'Show a connector to this device on the current page')}
                     >
-                      {ref
-                        ? t('outline.removeRef', 'Remove connector')
-                        : t('outline.addRef', 'Add connector')}
-                    </button>
+                      <button
+                        type="button"
+                        className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-accent-ink hover:bg-accent-soft"
+                        onClick={() => {
+                          if (ref) execute(removeOffPageRef(page?.id ?? '', d.id));
+                          else {
+                            const c = canvasApi.viewportCenter();
+                            execute(
+                              addOffPageRef(page?.id ?? '', d.id, { x: Math.round(c.x), y: Math.round(c.y) }),
+                            );
+                          }
+                        }}
+                      >
+                        {ref
+                          ? t('outline.removeRef', 'Remove connector')
+                          : t('outline.addRef', 'Add connector')}
+                      </button>
+                    </Tooltip>
                   )}
                 </li>
               ))}

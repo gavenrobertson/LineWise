@@ -43,8 +43,8 @@ On macOS the shortcuts are `⌘1`, `⌘2` and `⌘3`.
 
 ## Showing details in every view
 
-With nothing selected, the Inspector's **Display** group has **Port names**, **Port IPs** and
-**Port VLANs**. Turn one on to show that detail at the link ends in all three views.
+With nothing selected, the Inspector's **Display** group has **Show interface names**, **Show IP addresses** and
+**Show VLANs**. Turn one on to show that detail at the link ends in all three views.
 
 ## Highlights
 

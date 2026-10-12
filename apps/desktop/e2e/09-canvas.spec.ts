@@ -44,6 +44,21 @@ async function palette(page: Page, command: string) {
     .click();
 }
 
+/** Zoom to fit eases the view (FR-UX-03); wait until it stops moving. */
+async function viewportSettled(page: Page) {
+  const transform = () =>
+    page.evaluate(() => document.querySelector('.react-flow__viewport')?.getAttribute('style') ?? '');
+  let last = '';
+  await expect
+    .poll(async () => {
+      const now = await transform();
+      const same = now === last;
+      last = now;
+      return same;
+    })
+    .toBe(true);
+}
+
 async function canvasCenter(page: Page) {
   const box = (await page.locator('.react-flow__pane').boundingBox())!;
   return { x: box.x + box.width / 2, y: box.y + box.height / 2, box };
@@ -204,6 +219,7 @@ test('FR-CAN-04 click, Shift-click, marquee, select all, same type and connected
   // Marquee: drag a rectangle around everything on empty canvas.
   await page.keyboard.press('Escape');
   await page.keyboard.press(`${MOD}+0`);
+  await viewportSettled(page);
   const { box } = await canvasCenter(page);
   await page.mouse.move(box.x + 5, box.y + 5);
   await page.mouse.down();
@@ -216,6 +232,8 @@ test('FR-CAN-05, FR-CAN-07 nudge with arrows (Shift = 10×) and a drag is one un
   await openApp(page);
   await startFrom(page, /CCNA lab/);
   await node(page, 'R1').click();
+  // Arrows pan when nothing is selected, so wait for the click to select R1.
+  await expect(node(page, 'R1')).toHaveClass(/\bselected\b/);
   const p0 = await positionOf(page, 'R1');
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => (await positionOf(page, 'R1')).x).toBe(p0.x + 1);

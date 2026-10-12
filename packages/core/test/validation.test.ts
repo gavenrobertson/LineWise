@@ -63,10 +63,19 @@ describe('rule registry [FR-VAL-04]', () => {
       id: 'VAL-900',
       severity: 'info',
       title: 'test',
+      why: 'why',
+      fix: 'fix',
       run: () => [{ message: 'hello', objectIds: [], fixes: [] }],
     });
     expect(validate(createDocument()).issues.some((i) => i.ruleId === 'VAL-900')).toBe(true);
-    registerRule({ id: 'VAL-900', severity: 'info', title: 'test', run: () => [] });
+    registerRule({ id: 'VAL-900', severity: 'info', title: 'test', why: '', fix: '', run: () => [] });
+  });
+  it('explains every rule: why it matters and how to fix it (FR-UX-11)', () => {
+    for (const r of listRules().filter((x) => x.id < 'VAL-900')) {
+      expect(r.why.length, r.id).toBeGreaterThan(20);
+      expect(r.fix.length, r.id).toBeGreaterThan(10);
+      expect(r.why.endsWith('.') && r.fix.endsWith('.'), r.id).toBe(true);
+    }
   });
 });
 

@@ -26,9 +26,11 @@ import { ChevronRight, Link2, Plus, Trash2 } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoolField, NumberField, SelectField, TextField } from '../components/fields.tsx';
-import { Button, cx } from '../components/ui.tsx';
+import { Button, CardRows, cx, HoverCard, Tooltip } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { fmtBandwidth } from '../canvas/model.ts';
+import { term } from '../lib/help.ts';
 
 export function formatIp(list: IpAssignment[]): string {
   const p = list.find((x) => !x.secondary) ?? list[0];
@@ -136,6 +138,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
       />
       <SelectField
         label={t('iface.mode', 'Mode')}
+        term={term('mode')}
         value={iface.mode}
         options={[
           { value: 'unset', label: t('mode.unset', 'Not set') },
@@ -148,6 +151,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
       {iface.mode === 'access' && (
         <NumberField
           label={t('iface.accessVlan', 'Access VLAN')}
+          term={term('accessVlan')}
           value={iface.accessVlan}
           min={1}
           max={4094}
@@ -159,6 +163,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
         <>
           <TextField
             label={t('iface.allowed', 'Allowed VLANs')}
+            term={term('allowedVlans')}
             mono
             value={iface.allowedVlans}
             placeholder={t('iface.all', 'all')}
@@ -167,6 +172,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
           />
           <NumberField
             label={t('iface.native', 'Native VLAN')}
+            term={term('nativeVlan')}
             value={iface.nativeVlan}
             min={1}
             max={4094}
@@ -219,12 +225,14 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
       />
       <NumberField
         label={t('iface.speed', 'Speed (Mb/s)')}
+        term={term('speed')}
         value={iface.speedMbps}
         min={1}
         onCommit={(v) => set({ speedMbps: v })}
       />
       <SelectField
         label={t('iface.duplex', 'Duplex')}
+        term={term('duplex')}
         value={iface.duplex}
         options={[
           { value: 'auto', label: t('duplex.auto', 'Auto') },
@@ -249,6 +257,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
       />
       <SelectField
         label={t('iface.media', 'Media')}
+        term={term('media')}
         value={iface.media}
         options={[
           { value: 'any', label: t('media.any', 'Any') },
@@ -267,6 +276,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
       <BoolField label="PoE" value={iface.poe} onCommit={(v) => set({ poe: v })} />
       <SelectField
         label={t('iface.fhrp', 'FHRP')}
+        term={term('fhrp')}
         value={iface.fhrp?.protocol}
         allowNone={t('field.none', 'None')}
         options={[
@@ -292,6 +302,7 @@ function InterfaceEditor({ device, iface }: { device: Device; iface: Interface }
           />
           <TextField
             label={t('iface.vip', 'Virtual IP')}
+            term={term('vip')}
             mono
             value={iface.fhrp.vip}
             validate={(v) => (isValidIp(v) ? null : t('field.ipInvalid', 'Not a valid IPv4 or IPv6 address'))}
@@ -457,33 +468,97 @@ export function InterfaceTable({ device }: { device: Device }) {
                     />
                   </td>
                   <td className="py-1">
-                    <button
-                      type="button"
-                      aria-expanded={isOpen}
-                      aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
-                      onClick={() => setOpen(isOpen ? null : i.id)}
-                      className="flex w-full items-center gap-1 text-left font-mono"
+                    <HoverCard
+                      side="left"
+                      delay={500}
+                      content={
+                        // The interface card (FR-UX-09): everything the row abbreviates.
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-mono font-semibold">{i.name}</span>
+                            <span className={cx(!i.enabled ? 'text-danger' : 'text-muted')}>
+                              {!i.enabled
+                                ? t('iface.shutdown', 'shut down')
+                                : peer
+                                  ? t('iface.up', 'connected')
+                                  : t('iface.free', 'free')}
+                            </span>
+                          </div>
+                          <CardRows
+                            rows={[
+                              [
+                                t('iface.mode', 'Mode'),
+                                i.mode === 'unset' ? t('linkCard.unset', 'not set') : i.mode,
+                              ],
+                              ...(i.mode === 'access'
+                                ? [
+                                    [t('iface.accessVlan', 'Access VLAN'), String(i.accessVlan ?? 1)] as [
+                                      string,
+                                      string,
+                                    ],
+                                  ]
+                                : []),
+                              ...(i.mode === 'trunk'
+                                ? [
+                                    [
+                                      t('iface.allowed', 'Allowed VLANs'),
+                                      i.allowedVlans || t('linkCard.all', 'all'),
+                                    ] as [string, string],
+                                    [t('iface.native', 'Native VLAN'), String(i.nativeVlan ?? 1)] as [
+                                      string,
+                                      string,
+                                    ],
+                                  ]
+                                : []),
+                              ...(formatIp(i.ipv4) || formatIp(i.ipv6)
+                                ? [
+                                    [
+                                      t('iface.addresses', 'Addresses'),
+                                      [formatIp(i.ipv4), formatIp(i.ipv6)].filter(Boolean).join(', '),
+                                    ] as [string, string],
+                                  ]
+                                : []),
+                              [
+                                t('linkCard.speed', 'Speed'),
+                                `${i.speedMbps ? fmtBandwidth(i.speedMbps) : t('linkCard.auto', 'auto')} · ${i.duplex}`,
+                              ],
+                              ...(pc
+                                ? [[t('iface.portChannel', 'Port-channel'), `Po${pc.number}`] as [string, string]]
+                                : []),
+                              ...(peer
+                                ? [[t('iface.peer', 'Connected to'), peer.text] as [string, string]]
+                                : []),
+                              ...(i.description
+                                ? [[t('iface.description', 'Description'), i.description] as [string, string]]
+                                : []),
+                            ]}
+                          />
+                        </div>
+                      }
                     >
-                      <ChevronRight
-                        size={11}
-                        className={cx('shrink-0 text-subtle transition-transform', isOpen && 'rotate-90')}
-                      />
-                      <span
-                        className={cx(
-                          'h-1.5 w-1.5 shrink-0 rounded-full',
-                          !i.enabled ? 'bg-danger' : peer ? 'bg-accent-fill' : 'bg-line-strong',
-                        )}
-                        aria-hidden="true"
-                      />
-                      <span className="truncate" title={i.name}>
-                        {i.shortName}
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
+                        onClick={() => setOpen(isOpen ? null : i.id)}
+                        className="flex w-full items-center gap-1 text-left font-mono"
+                      >
+                        <ChevronRight
+                          size={11}
+                          className={cx('shrink-0 text-subtle transition-transform', isOpen && 'rotate-90')}
+                        />
+                        <span
+                          className={cx(
+                            'h-1.5 w-1.5 shrink-0 rounded-full',
+                            !i.enabled ? 'bg-danger' : peer ? 'bg-accent-fill' : 'bg-line-strong',
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="truncate">{i.shortName}</span>
+                      </button>
+                    </HoverCard>
                   </td>
-                  <td
-                    className="truncate py-1 font-mono text-muted"
-                    title={`${summary(i)}${pc ? ` · Po${pc.number}` : ''}`}
-                  >
+                  <td className="truncate py-1 font-mono text-muted">
                     {summary(i)}
                     {pc && (
                       <span className="ml-1 rounded bg-accent-soft px-1 text-accent-ink">Po{pc.number}</span>
@@ -491,15 +566,16 @@ export function InterfaceTable({ device }: { device: Device }) {
                   </td>
                   <td className="truncate py-1 pr-3">
                     {peer ? (
-                      <button
-                        type="button"
-                        className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent-ink"
-                        onClick={() => setSelection({ links: [peer.linkId] })}
-                        title={peer.text}
-                      >
-                        <Link2 size={11} className="shrink-0" />
-                        <span className="truncate">{peer.text}</span>
-                      </button>
+                      <Tooltip text={peer.text} description={t('iface.peerHint', 'Select this link')}>
+                        <button
+                          type="button"
+                          className="inline-flex max-w-full items-center gap-1 truncate text-ink hover:text-accent-ink"
+                          onClick={() => setSelection({ links: [peer.linkId] })}
+                        >
+                          <Link2 size={11} className="shrink-0" />
+                          <span className="truncate">{peer.text}</span>
+                        </button>
+                      </Tooltip>
                     ) : (
                       <span className="text-subtle">—</span>
                     )}

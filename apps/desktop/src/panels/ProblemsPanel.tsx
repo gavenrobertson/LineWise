@@ -5,14 +5,15 @@
  * fixes, and suppression with a reason stored in the document.
  */
 import { applyFix, listRules, updateSettings, type Issue, type Severity } from '@linewise/core';
-import { CircleAlert, EyeOff, Info, TriangleAlert, Wand2, X } from 'lucide-react';
+import { CircleAlert, CircleHelp, EyeOff, Info, TriangleAlert, Wand2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
-import { Button, cx, IconButton } from '../components/ui.tsx';
+import { Button, cx, IconButton, Tooltip } from '../components/ui.tsx';
+import { HelpButton } from '../components/HelpButton.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
-import { severityLabel } from '../lib/labels.ts';
+import { ruleText, severityLabel } from '../lib/labels.ts';
 
 const ICON = {
   error: <CircleAlert size={14} className="shrink-0 text-danger" aria-hidden="true" />,
@@ -60,6 +61,7 @@ export function ProblemsPanel() {
   const [rule, setRule] = useState('');
   const [showSuppressed, setShowSuppressed] = useState(false);
   const [suppressing, setSuppressing] = useState<string | null>(null);
+  const [explained, setExplained] = useState<Set<string>>(new Set());
   const [reason, setReason] = useState('');
   const rules = useMemo(() => listRules(), []);
   const counts = { error: 0, warning: 0, info: 0 } as Record<Severity, number>;
@@ -67,7 +69,7 @@ export function ProblemsPanel() {
   const shown = (showSuppressed ? suppressed : issues).filter(
     (i) => sev.has(i.severity) && (!rule || i.ruleId === rule),
   );
-  const ruleTitle = (id: string) => rules.find((r) => r.id === id)?.title ?? id;
+  const ruleTitle = (id: string) => ruleText(id, 'title') || id;
 
   const suppress = (issue: Issue) => {
     execute(
@@ -103,6 +105,7 @@ export function ProblemsPanel() {
     >
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3">
         <h2 className="font-brand text-[13px] font-semibold text-ink">{t('problems.title', 'Problems')}</h2>
+        <HelpButton topic="problems" />
         <div
           className="flex items-center gap-1"
           role="group"
@@ -182,23 +185,39 @@ export function ProblemsPanel() {
                 <span className="mt-0.5">{ICON[issue.severity]}</span>
                 <button type="button" className="min-w-0 flex-1 text-left" onClick={() => revealIssue(issue)}>
                   <span className="text-[12.5px] text-ink">{issue.message}</span>
-                  <span className="ml-2 font-mono text-[10.5px] text-subtle" title={ruleTitle(issue.ruleId)}>
-                    {issue.ruleId}
-                  </span>
+                  <Tooltip text={ruleTitle(issue.ruleId)}>
+                    <span className="ml-2 font-mono text-[10.5px] text-subtle">{issue.ruleId}</span>
+                  </Tooltip>
                 </button>
                 <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-expanded={explained.has(k)}
+                    aria-controls={`lw-why-${idx}`}
+                    onClick={() => {
+                      const next = new Set(explained);
+                      if (next.has(k)) next.delete(k);
+                      else next.add(k);
+                      setExplained(next);
+                    }}
+                  >
+                    <CircleHelp size={12} aria-hidden="true" />
+                    {t('problems.why', 'Why?')}
+                  </Button>
                   {!showSuppressed &&
                     !readOnly &&
                     issue.fixes.map((f, i) => (
-                      <Button
+                      <Tooltip
                         key={i}
-                        size="sm"
-                        onClick={() => execute(applyFix(f))}
-                        title={t('problems.fixHint', 'Apply this fix (undoable)')}
+                        text={f.label}
+                        description={t('problems.fixHint', 'Apply this fix (undoable)')}
                       >
-                        <Wand2 size={12} />
-                        {f.label}
-                      </Button>
+                        <Button size="sm" variant="primary" onClick={() => execute(applyFix(f))}>
+                          <Wand2 size={12} />
+                          {f.label}
+                        </Button>
+                      </Tooltip>
                     ))}
                   {showSuppressed ? (
                     <Button size="sm" variant="ghost" onClick={() => unsuppress(issue)}>
@@ -218,6 +237,25 @@ export function ProblemsPanel() {
                   )}
                 </div>
               </div>
+              {explained.has(k) && (
+                // What is wrong, why it matters and how to fix it (FR-UX-11).
+                <div
+                  id={`lw-why-${idx}`}
+                  className="lw-rise ml-6 mt-1 rounded-md border border-line bg-surface-2 px-2.5 py-2 text-[12px] leading-snug"
+                >
+                  <p className="font-semibold text-ink">{ruleText(issue.ruleId, 'title')}</p>
+                  <p className="mt-0.5 text-ink">{ruleText(issue.ruleId, 'why')}</p>
+                  <p className="mt-1 text-muted">
+                    <span className="font-medium text-ink">{t('problems.howToFix', 'How to fix:')}</span>{' '}
+                    {issue.fixes.length && !readOnly
+                      ? t('problems.useFix', 'Use {{fix}}, or: {{how}}', {
+                          fix: issue.fixes[0]!.label,
+                          how: ruleText(issue.ruleId, 'fix'),
+                        })
+                      : ruleText(issue.ruleId, 'fix')}
+                  </p>
+                </div>
+              )}
               {suppressing === k && (
                 <form
                   className="ml-6 mt-1 flex items-center gap-1"

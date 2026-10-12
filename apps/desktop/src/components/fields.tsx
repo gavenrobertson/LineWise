@@ -7,7 +7,8 @@
  */
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cx } from './ui.tsx';
+import { Info } from 'lucide-react';
+import { cx, Tooltip } from './ui.tsx';
 
 export const MIXED = Symbol('mixed');
 export type Maybe<T> = T | typeof MIXED;
@@ -24,6 +25,8 @@ const inputCls =
 
 interface RowProps {
   label: string;
+  /** A one-sentence explanation of the networking term, shown from a small info button (FR-UX-10). */
+  term?: string;
   error?: string | null;
   hint?: string;
   children: (id: string, describedBy: string | undefined) => ReactNode;
@@ -32,15 +35,18 @@ interface RowProps {
   id?: string;
 }
 
-export function Row({ label, error, hint, children, wide, id: forced }: RowProps) {
+export function Row({ label, term, error, hint, children, wide, id: forced }: RowProps) {
   const auto = useId();
   const id = forced ?? auto;
   const desc = error || hint ? `${id}-d` : undefined;
   return (
     <div className={cx('grid items-start gap-x-2 gap-y-0.5', wide ? 'grid-cols-1' : 'grid-cols-[96px_1fr]')}>
-      <label htmlFor={id} className={cx('text-[11.5px] text-muted', !wide && 'pt-1.5')}>
-        {label}
-      </label>
+      <span className={cx('flex items-start gap-1', !wide && 'pt-1.5')}>
+        <label htmlFor={id} className="text-[11.5px] text-muted">
+          {label}
+        </label>
+        {term && <TermTip label={label} text={term} />}
+      </span>
       <div className="min-w-0">
         {children(id, desc)}
         {(error || hint) && (
@@ -59,6 +65,7 @@ export function Row({ label, error, hint, children, wide, id: forced }: RowProps
 
 export function TextField({
   label,
+  term,
   value,
   onCommit,
   validate,
@@ -70,6 +77,7 @@ export function TextField({
   disabled,
 }: {
   label: string;
+  term?: string;
   value: Maybe<string>;
   onCommit: (v: string) => void;
   validate?: (v: string) => string | null;
@@ -90,7 +98,7 @@ export function TextField({
     if (draft !== initial || (value === MIXED && draft !== '')) onCommit(draft);
   };
   return (
-    <Row label={label} error={error} hint={hint} wide={multiline} id={forcedId}>
+    <Row label={label} term={term} error={error} hint={hint} wide={multiline} id={forcedId}>
       {(id, desc) => {
         const common = {
           id,
@@ -129,6 +137,7 @@ export function TextField({
 
 export function NumberField({
   label,
+  term,
   value,
   onCommit,
   min,
@@ -137,6 +146,7 @@ export function NumberField({
   allowEmpty = true,
 }: {
   label: string;
+  term?: string;
   value: Maybe<number | undefined>;
   onCommit: (v: number | undefined) => void;
   min?: number;
@@ -148,6 +158,7 @@ export function NumberField({
   return (
     <TextField
       label={label}
+      term={term}
       value={value === MIXED ? MIXED : value === undefined ? '' : String(value)}
       placeholder={placeholder}
       mono
@@ -166,12 +177,14 @@ export function NumberField({
 
 export function SelectField<T extends string>({
   label,
+  term,
   value,
   options,
   onCommit,
   allowNone,
 }: {
   label: string;
+  term?: string;
   value: Maybe<T | undefined>;
   options: { value: T; label: string }[];
   onCommit: (v: T | undefined) => void;
@@ -179,7 +192,7 @@ export function SelectField<T extends string>({
 }) {
   const { t } = useTranslation();
   return (
-    <Row label={label}>
+    <Row label={label} term={term}>
       {(id) => (
         <select
           id={id}
@@ -206,19 +219,24 @@ export function SelectField<T extends string>({
 
 export function BoolField({
   label,
+  term,
   value,
   onCommit,
 }: {
   label: string;
+  term?: string;
   value: Maybe<boolean>;
   onCommit: (v: boolean) => void;
 }) {
   const id = useId();
   return (
     <div className="grid grid-cols-[96px_1fr] items-center gap-2">
-      <label htmlFor={id} className="text-[11.5px] text-muted">
-        {label}
-      </label>
+      <span className="flex items-center gap-1">
+        <label htmlFor={id} className="text-[11.5px] text-muted">
+          {label}
+        </label>
+        {term && <TermTip label={label} text={term} />}
+      </span>
       <input
         id={id}
         type="checkbox"
@@ -280,5 +298,21 @@ export function ColorField({
         </div>
       )}
     </Row>
+  );
+}
+
+/** A small info button whose tooltip explains a term (FR-UX-10); focusable, so keyboard users get it. */
+export function TermTip({ label, text }: { label: string; text: string }) {
+  const { t } = useTranslation();
+  return (
+    <Tooltip text={label} description={text} side="left">
+      <button
+        type="button"
+        aria-label={t('help.whatIs', 'What is {{term}}?', { term: label })}
+        className="lw-btn -m-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full p-0.5 text-subtle hover:bg-surface-3 hover:text-accent-ink"
+      >
+        <Info size={11} aria-hidden="true" />
+      </button>
+    </Tooltip>
   );
 }

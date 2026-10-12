@@ -7,6 +7,8 @@ import { canvasApi } from '../canvas/Canvas.tsx';
 import { selectDirty, useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import { layerLabel } from '../lib/labels.ts';
+import { Tooltip } from '../components/ui.tsx';
+import { formatShortcut } from '../lib/actions.ts';
 
 export function StatusBar() {
   const { t } = useTranslation();
@@ -73,14 +75,15 @@ export function StatusBar() {
         </span>
       </button>
       <span>{layerLabel(layer)}</span>
-      <button
-        type="button"
-        className="w-12 rounded px-1 text-right font-mono hover:bg-surface-3 hover:text-ink"
-        onClick={() => canvasApi.fit()}
-        title={t('cmd.zoomFit', 'Zoom to fit')}
-      >
-        {Math.round(zoom * 100)}%
-      </button>
+      <Tooltip text={t('cmd.zoomFit', 'Zoom to fit')} shortcut={formatShortcut('mod+0')} side="top">
+        <button
+          type="button"
+          className="w-12 rounded px-1 text-right font-mono hover:bg-surface-3 hover:text-ink"
+          onClick={() => canvasApi.fit()}
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+      </Tooltip>
     </footer>
   );
 }
