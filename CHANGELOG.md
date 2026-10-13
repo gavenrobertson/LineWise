@@ -4,6 +4,18 @@ All notable changes to LineWise are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- A light / dark switch on the toolbar and View → Toggle Dark Mode, which cross-fade between the themes (FR-UX-16).
+- Link labels are readable pills placed where they overlap nothing, with shared facts written once in the middle; hover cards for links, devices, interfaces, subnets and templates; one tooltip style with shortcuts as key caps (FR-UX-04..09).
+- Help in context: "?" popovers on inspector sections, Problems and IPAM, ⓘ explanations on networking fields, a "Why?" for every validation rule, tips, a first-run tour (Help → Take the Tour) and empty states with an action (FR-UX-10..13).
+
+### Changed
+
+- LineWise opens in dark mode. Light and "follow system" are still in Preferences; a theme you already chose is kept (FR-UX-16).
+- Everything that reacts to the pointer shows the hand cursor, including devices, links and connection handles on the canvas, and rows that tint on hover are clickable all over (FR-UX-14).
+- Motion: controls, menus, dialogs, panels and toasts ease in and back out, and canvas hover feedback fades out; nothing animates under reduced motion (FR-UX-01..03, FR-UX-15).
+
 ## [1.0.0] - 2026-10-11
 
 Release engineering and documentation (milestone M6). The first stable release.
