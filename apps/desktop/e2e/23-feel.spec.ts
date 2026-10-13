@@ -57,13 +57,28 @@ test('FR-UX-15 the palette and panels ease out instead of vanishing, and a short
 }) => {
   await openApp(page);
   await startFrom(page, /CCNA lab/);
+  // The exit lasts 140 ms, too short to catch by polling on a slow runner: record in the page
+  // which elements were seen closing (data-state="closed") before they went.
+  await page.evaluate(() => {
+    const seen = new Set<string>();
+    (window as unknown as { lwClosing: Set<string> }).lwClosing = seen;
+    new MutationObserver((records) => {
+      for (const r of records) {
+        const el = r.target as Element;
+        if (el.getAttribute('data-state') === 'closed')
+          for (const c of ['lw-sheet', 'lw-panel-right']) if (el.classList.contains(c)) seen.add(c);
+      }
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-state'] });
+  });
+  const sawClosing = (cls: string) =>
+    page.evaluate((c) => (window as unknown as { lwClosing: Set<string> }).lwClosing.has(c), cls);
   await page.keyboard.press(`${MOD}+k`);
   const palette = page.getByRole('combobox');
   await expect(palette).toBeVisible();
   // Escape plays the exit (the sheet is still there, closing), then it goes.
   await page.keyboard.press('Escape');
-  await expect(page.locator('.lw-sheet[data-state="closed"]')).toHaveCount(1);
   await expect(page.locator('.lw-sheet')).toHaveCount(0);
+  expect(await sawClosing('lw-sheet')).toBe(true);
   // Focus left the closing sheet, so the shortcut opens it again at once.
   const toggle = (await page.getByRole('button', { name: 'Toggle inspector' }).boundingBox())!;
   await page.keyboard.press(`${MOD}+k`);
@@ -78,9 +93,10 @@ test('FR-UX-15 the palette and panels ease out instead of vanishing, and a short
 
   const inspector = page.locator('aside.lw-panel-right');
   await expect(inspector).toHaveAttribute('data-state', 'open');
+  await page.evaluate(() => (window as unknown as { lwClosing: Set<string> }).lwClosing.clear());
   await page.getByRole('button', { name: 'Toggle inspector' }).click();
-  await expect(inspector).toHaveAttribute('data-state', 'closed');
   await expect(inspector).toHaveCount(0);
+  expect(await sawClosing('lw-panel-right')).toBe(true);
   await page.getByRole('button', { name: 'Toggle inspector' }).click();
   await expect(inspector).toHaveAttribute('data-state', 'open');
 });
