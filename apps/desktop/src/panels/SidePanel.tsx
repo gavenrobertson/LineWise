@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { LayersPanel } from './LayersPanel.tsx';
 import { LibraryBody } from './LibraryPanel.tsx';
 import { OutlinePanel } from './OutlinePanel.tsx';
+import { presenceProps, useClosing } from '../components/Presence.tsx';
 
 const tabCls =
   'lw-btn relative h-8 flex-1 text-[12px] font-medium text-muted hover:text-ink data-[state=active]:text-ink';
@@ -13,6 +14,7 @@ const TABS = ['library', 'outline', 'layers'];
 
 export function SidePanel() {
   const { t } = useTranslation();
+  const closing = useClosing();
   const [tab, setTab] = useState(() => {
     try {
       return localStorage.getItem('linewise.sidetab') ?? 'library';
@@ -36,6 +38,7 @@ export function SidePanel() {
   return (
     <aside
       aria-label={t('side.label', 'Sidebar')}
+      {...presenceProps(closing)}
       className="lw-no-print lw-panel-left flex h-full w-64 shrink-0 flex-col border-r border-line bg-surface"
     >
       <Tabs.Root value={tab} onValueChange={change} className="flex min-h-0 flex-1 flex-col">

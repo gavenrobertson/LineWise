@@ -8,6 +8,7 @@ import i18n, { LANGUAGES } from '../i18n/index.ts';
 import { platform } from '../platform/index.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { setTheme } from '../lib/theme.ts';
 
 function IconPacks() {
   const { t } = useTranslation();
@@ -140,7 +141,7 @@ export function PreferencesDialog() {
             <Segmented
               label={t('prefs.theme', 'Theme')}
               value={p.theme}
-              onChange={(theme) => p.set({ theme })}
+              onChange={setTheme}
               options={[
                 { value: 'system', label: t('prefs.system', 'System') },
                 { value: 'light', label: t('prefs.light', 'Light') },

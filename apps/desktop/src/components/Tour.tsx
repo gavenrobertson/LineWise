@@ -10,6 +10,7 @@ import { formatShortcut } from '../lib/actions.ts';
 import { helpQuiet } from '../lib/tips.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
+import { presenceProps, usePresence } from './Presence.tsx';
 import { Button } from './ui.tsx';
 
 interface Step {
@@ -105,21 +106,28 @@ export function Tour() {
     if (target) primary.current?.focus({ preventScroll: true });
   }, [target, step]);
 
-  if (!current || step === null) return null;
+  // When it ends, the last step fades out where it was (FR-UX-02).
+  const [lastStep, setLastStep] = useState(step ?? 0);
+  if (current && step !== null && step !== lastStep) setLastStep(step);
+  const { mounted, closing } = usePresence(!!current);
+  if (!mounted) return null;
+  const shownStep = current && step !== null ? step : lastStep;
+  const shown = steps[shownStep];
+  if (!shown) return null;
   const finish = () => {
     setTour(null);
     usePrefs.getState().set({ tourDone: true });
   };
-  const last = step === steps.length - 1;
+  const last = shownStep === steps.length - 1;
   // Place the card beside its target, kept inside the window.
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   let left = vw / 2 - W / 2;
   let top = vh / 2 - 80;
-  if (rect && current.side === 'right') {
+  if (rect && shown.side === 'right') {
     left = rect.right + 12;
     top = rect.top + Math.min(80, rect.height / 3);
-  } else if (rect && current.side === 'left') {
+  } else if (rect && shown.side === 'left') {
     left = rect.left - W - 12;
     top = rect.top + Math.min(80, rect.height / 3);
   } else if (rect) {
@@ -134,6 +142,7 @@ export function Tour() {
       {rect && (
         <div
           aria-hidden="true"
+          data-state={closing ? 'closed' : 'open'}
           className="lw-tour-ring lw-no-print pointer-events-none fixed z-[75] rounded-xl"
           style={{ left: rect.left - 4, top: rect.top - 4, width: rect.width + 8, height: rect.height + 8 }}
         />
@@ -141,10 +150,10 @@ export function Tour() {
       <section
         aria-label={t('tour.label', 'Quick tour')}
         aria-live="polite"
-        data-lw-tour={step}
-        key={step}
+        data-lw-tour={shownStep}
+        key={shownStep}
         className="lw-pop lw-material lw-no-print fixed z-[76] rounded-xl border border-line p-4 text-[12.5px] leading-snug text-ink shadow-elev-3"
-        data-state="open"
+        {...presenceProps(closing)}
         style={{ left, top, width: W }}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
@@ -154,17 +163,17 @@ export function Tour() {
         }}
       >
         <p className="text-[11px] font-medium text-subtle">
-          {t('tour.step', 'Step {{n}} of {{total}}', { n: step + 1, total: steps.length })}
+          {t('tour.step', 'Step {{n}} of {{total}}', { n: shownStep + 1, total: steps.length })}
         </p>
-        <h2 className="mt-0.5 font-brand text-[14px] font-semibold">{current.title}</h2>
-        <p className="mt-1 text-muted">{current.body}</p>
+        <h2 className="mt-0.5 font-brand text-[14px] font-semibold">{shown.title}</h2>
+        <p className="mt-1 text-muted">{shown.body}</p>
         <div className="mt-3 flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={finish}>
             {t('tour.skip', 'Skip tour')}
           </Button>
           <span className="flex-1" />
-          {step > 0 && (
-            <Button size="sm" onClick={() => setTour(step - 1)}>
+          {shownStep > 0 && (
+            <Button size="sm" onClick={() => setTour(shownStep - 1)}>
               {t('tour.back', 'Back')}
             </Button>
           )}
@@ -172,7 +181,7 @@ export function Tour() {
             ref={primary}
             size="sm"
             variant="primary"
-            onClick={() => (last ? finish() : setTour(step + 1))}
+            onClick={() => (last ? finish() : setTour(shownStep + 1))}
           >
             {last ? t('tour.done', 'Done') : t('tour.next', 'Next')}
           </Button>

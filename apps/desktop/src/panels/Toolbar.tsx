@@ -17,6 +17,7 @@ import {
   FolderOpen,
   ImagePlus,
   LayoutGrid,
+  Moon,
   PanelBottom,
   PanelLeft,
   PanelRight,
@@ -25,6 +26,7 @@ import {
   Save,
   SquareDashed,
   StickyNote,
+  Sun,
   Type,
   Undo2,
   Upload,
@@ -35,6 +37,7 @@ import { useTranslation } from 'react-i18next';
 import { BrandMark } from '../components/BrandMark.tsx';
 import { cx, IconButton, Keys, Segmented, Tooltip } from '../components/ui.tsx';
 import { formatShortcut, runCommand } from '../lib/actions.ts';
+import { toggleTheme, useResolvedTheme } from '../lib/theme.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import type { ViewLayer } from '@linewise/core';
@@ -56,7 +59,7 @@ function MenuItem({
     <Menu.Item
       disabled={disabled}
       onSelect={onSelect}
-      className="lw-row flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
+      className="lw-row flex select-none items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-ink outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent-soft"
     >
       {children}
     </Menu.Item>
@@ -336,6 +339,7 @@ export function Toolbar() {
           <Keys shortcut={sc('mod+K')} />
         </button>
       </Tooltip>
+      <ThemeButton />
       <IconButton
         label={t('toolbar.library', 'Toggle library')}
         active={ui.libraryOpen}
@@ -359,5 +363,24 @@ export function Toolbar() {
         <PanelRight size={16} className={cx()} />
       </IconButton>
     </div>
+  );
+}
+
+/** Light / dark switch (FR-APP-04). The icon shows the mode it switches to, and turns as it swaps. */
+function ThemeButton() {
+  const { t } = useTranslation();
+  const dark = useResolvedTheme() === 'dark';
+  return (
+    <IconButton
+      label={
+        dark ? t('toolbar.lightMode', 'Switch to light mode') : t('toolbar.darkMode', 'Switch to dark mode')
+      }
+      data-lw-theme-toggle=""
+      onClick={toggleTheme}
+    >
+      <span key={dark ? 'sun' : 'moon'} className="lw-theme-icon inline-flex">
+        {dark ? <Sun size={16} /> : <Moon size={16} />}
+      </span>
+    </IconButton>
   );
 }

@@ -7,6 +7,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { applyTheme, usePrefs } from './store/prefs.ts';
+
+// Paint the first frame in the chosen theme (dark by default), not light then dark.
+applyTheme(usePrefs.getState().theme);
 
 // Read-only state access for automated tests in the browser build (never in the desktop app).
 if (!('__TAURI_INTERNALS__' in window) && (import.meta.env.DEV || navigator.webdriver)) {

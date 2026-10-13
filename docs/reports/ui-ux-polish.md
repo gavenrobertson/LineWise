@@ -138,9 +138,30 @@ Views not listed had no overlaps before or after.
 
 - A component test fails if any DOM element in the app uses a `title` attribute.
 
+## Follow-up: cursors, exits and dark by default (FR-UX-14..16)
+
+| Dark, the new default                             | After the toolbar switch                                 |
+| ------------------------------------------------- | -------------------------------------------------------- |
+| ![Dark by default](img/ux-after-dark-default.png) | ![Light after the switch](img/ux-after-light-toggle.png) |
+
+- **Pointer cursor (FR-UX-14)** on every control, tab, option, menu and tree item, and on the
+  canvas on devices, links, connection handles and the minimap. A dragged device shows the closed
+  hand, disabled controls show not-allowed and text fields keep the I-beam. Rows that tint on hover
+  (library templates, problems, interfaces) are clickable all over. `e2e/24-cursor-sweep.spec.ts`
+  checks the cursor of all 1,300-odd hoverable elements on every screen, menu and dialog.
+- **Eased exits (FR-UX-15).** Whatever eases in now eases out, in 140 ms: dialogs and the palette,
+  menus, popovers and tooltips, the side panels, the find bar, toasts, the hover card and the tour.
+  Hover tints fade both ways. On the canvas, the halo, handles and link glow fade out on the one
+  element the pointer left, and are skipped while the view pans. A closing dialog lets go of the
+  page at once, so a shortcut or click during the fade still lands.
+- **Dark by default (FR-UX-16)** from the first frame, with a sun / moon button at the right of the
+  toolbar (and View → Toggle Dark Mode) that cross-fades to the other theme. Preferences still
+  offers System.
+- **Performance.** On this host, alternating main and this branch three times each gave the same
+  edit, drag and pan figures within run-to-run noise. Light and dark differ by about 1 fps when
+  panning 500 devices, in both directions across runs.
+
 ## Known limits
 
 - Below 75% zoom labels are held at a readable size, so in dense diagrams some can touch.
-- Dialogs open with motion but close at once, so a shortcut pressed right after closing is not
-  lost.
 - "Learn more" opens the user guide online. Everything else is bundled.

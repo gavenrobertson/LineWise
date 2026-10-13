@@ -232,7 +232,7 @@ export function BoolField({
   return (
     <div className="grid grid-cols-[96px_1fr] items-center gap-2">
       <span className="flex items-center gap-1">
-        <label htmlFor={id} className="text-[11.5px] text-muted">
+        <label htmlFor={id} className="cursor-pointer text-[11.5px] text-muted">
           {label}
         </label>
         {term && <TermTip label={label} text={term} />}

@@ -28,14 +28,22 @@ export interface TestDoc {
 }
 
 /** Open the app with an optional clean slate. */
-export async function openApp(page: Page, opts: { keepStorage?: boolean } = {}): Promise<void> {
+/**
+ * Opens the app on a clean profile. The app opens dark; `theme` starts it in another theme
+ * preference, such as 'system' for tests that emulate the OS color scheme.
+ */
+export async function openApp(
+  page: Page,
+  opts: { keepStorage?: boolean; theme?: 'system' | 'light' | 'dark' } = {},
+): Promise<void> {
   if (!opts.keepStorage) {
-    await page.addInitScript(() => {
+    await page.addInitScript((theme) => {
       if (!sessionStorage.getItem('lw-e2e-init')) {
         localStorage.clear();
+        if (theme) localStorage.setItem('linewise.prefs', JSON.stringify({ theme }));
         sessionStorage.setItem('lw-e2e-init', '1');
       }
-    });
+    }, opts.theme);
   }
   await page.goto('/');
   await expect(page.getByRole('dialog', { name: 'Welcome to LineWise' })).toBeVisible();

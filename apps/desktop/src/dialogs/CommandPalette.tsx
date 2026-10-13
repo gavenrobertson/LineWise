@@ -10,6 +10,7 @@ import { searchDocument } from '../lib/search.ts';
 import { revealHit } from './FindPanel.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { useReleaseOnClose, usePresence } from '../components/Presence.tsx';
 
 type Item = {
   key: string;
@@ -27,8 +28,19 @@ export function CommandPalette() {
   const doc = useEditor((s) => s.doc);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
+  // The list keeps its results while the palette fades out; a fresh opening starts empty.
+  const { mounted } = usePresence(open);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setQ('');
+      setActive(0);
+    }
+  }
+  const content = useReleaseOnClose(open);
   const items: Item[] = useMemo(() => {
-    if (!open) return [];
+    if (!mounted) return [];
     const query = q.trim().toLowerCase();
     const cmds = commandList()
       .filter((c) => !query || `${c.group} ${c.label}`.toLowerCase().includes(query))
@@ -53,25 +65,18 @@ export function CommandPalette() {
           }))
       : [];
     return [...devices, ...cmds].slice(0, 60);
-  }, [open, q, doc]);
+  }, [mounted, q, doc]);
   const run = (i: Item | undefined) => {
     if (!i) return;
     setPalette(false);
-    setQ('');
     i.run();
   };
   return (
-    <RDialog.Root
-      open={open}
-      onOpenChange={(o) => {
-        setPalette(o);
-        if (!o) setQ('');
-        setActive(0);
-      }}
-    >
+    <RDialog.Root open={open} onOpenChange={setPalette}>
       <RDialog.Portal>
         <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.24)]" />
         <RDialog.Content
+          ref={content}
           className="lw-sheet lw-material fixed left-1/2 top-[14vh] z-50 w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-line shadow-elev-3"
           aria-describedby={undefined}
         >
@@ -121,7 +126,7 @@ export function CommandPalette() {
                 onMouseMove={() => setActive(n)}
                 onClick={() => run(i)}
                 className={cx(
-                  'lw-row flex cursor-default items-center gap-2 rounded-md px-2 py-1.5',
+                  'lw-row flex items-center gap-2 rounded-md px-2 py-1.5',
                   n === active && 'bg-accent-soft',
                 )}
               >

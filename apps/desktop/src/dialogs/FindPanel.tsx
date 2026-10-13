@@ -9,6 +9,7 @@ import { cx, IconButton } from '../components/ui.tsx';
 import { searchDocument, type Hit } from '../lib/search.ts';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
+import { presenceProps, useClosing } from '../components/Presence.tsx';
 
 export function revealHit(h: Hit): void {
   const ed = useEditor.getState();
@@ -48,6 +49,7 @@ function kindLabel(t: TFunction, kind: Hit['kind']): string {
 
 export function FindPanel() {
   const { t } = useTranslation();
+  const closing = useClosing();
   const setFind = useUi((s) => s.setFind);
   const doc = useEditor((s) => s.doc);
   const [q, setQ] = useState('');
@@ -68,8 +70,8 @@ export function FindPanel() {
   return (
     <div
       role="search"
+      {...presenceProps(closing)}
       className="lw-no-print lw-pop lw-material absolute right-3 top-3 z-20 flex w-80 origin-top-right flex-col overflow-hidden rounded-lg border border-line shadow-elev-2 focus-within:border-accent"
-      data-state="open"
     >
       <div className="flex items-center gap-1 px-2">
         <Search size={14} className="text-subtle" />

@@ -47,6 +47,10 @@ The starter templates are:
 The three toolbar buttons at the right end show and hide the sidebar, the Problems panel and the
 Inspector.
 
+LineWise opens in dark mode. The sun button just before them switches to light mode, and the moon
+switches back; LineWise remembers your choice. **View → Toggle Dark Mode** does the same, and
+**Preferences → Theme → System** follows your computer's setting instead.
+
 ## Your first diagram
 
 1. **Start a diagram.** Choose **New blank diagram** or a starter template.

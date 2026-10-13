@@ -73,6 +73,7 @@ export type MenuCommand =
   | 'view.l2'
   | 'view.l3'
   | 'view.minimap'
+  | 'view.theme'
   | 'view.problemBadges'
   | 'view.problems'
   | 'view.commandPalette'

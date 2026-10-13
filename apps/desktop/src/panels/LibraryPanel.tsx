@@ -11,7 +11,7 @@ import { useMemo, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi, TEMPLATE_MIME } from '../canvas/Canvas.tsx';
 import { DeviceIcon } from '../canvas/nodes.tsx';
-import { cx, EmptyState, HoverCard, IconButton } from '../components/ui.tsx';
+import { clickRowPrimary, cx, EmptyState, HoverCard, IconButton } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { usePrefs } from '../store/prefs.ts';
 import { useUi } from '../store/ui.ts';
@@ -29,11 +29,14 @@ const CATEGORY_ORDER: RoleCategory[] = [
 ];
 
 /** Focus a canvas node once React Flow has rendered it. */
-export function focusNode(id: string, tries = 30): void {
+export function focusNode(id: string, tries = 30, from: Element | null = document.activeElement): void {
+  // The user moved on (clicked into a field, say) while the node was still appearing: leave focus
+  // there, or the next key (Delete, Backspace) would act on the canvas instead.
+  if (document.activeElement !== from) return;
   const el = document.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`);
   // React Flow keeps new nodes hidden until measured; focus only sticks once visible.
   el?.focus({ preventScroll: true });
-  if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1));
+  if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1, from));
 }
 
 export function placeTemplate(tpl: DeviceTemplate): void {
@@ -81,7 +84,10 @@ function Item({
     .filter(Boolean)
     .join(' · ');
   return (
-    <li className="lw-row group flex items-center gap-1 rounded-lg pr-1 hover:bg-surface-3">
+    <li
+      className="lw-row group flex cursor-pointer items-center gap-1 rounded-lg pr-1 hover:bg-surface-3"
+      onClick={clickRowPrimary}
+    >
       <HoverCard
         side="right"
         delay={600}
@@ -102,6 +108,7 @@ function Item({
           type="button"
           draggable
           data-lw-library-item=""
+          data-lw-row-primary=""
           onDragStart={onDragStart}
           onClick={() => placeTemplate(tpl)}
           className="lw-btn relative flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1.5 py-1 text-left"

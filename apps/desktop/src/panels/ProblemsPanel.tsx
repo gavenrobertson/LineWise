@@ -9,11 +9,12 @@ import { CircleAlert, CircleHelp, EyeOff, Info, TriangleAlert, Wand2, X } from '
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { canvasApi } from '../canvas/Canvas.tsx';
-import { Button, cx, EmptyState, IconButton, Tooltip } from '../components/ui.tsx';
+import { Button, clickRowPrimary, cx, EmptyState, IconButton, Tooltip } from '../components/ui.tsx';
 import { HelpButton } from '../components/HelpButton.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import { ruleText, severityLabel } from '../lib/labels.ts';
+import { presenceProps, useClosing } from '../components/Presence.tsx';
 
 const ICON = {
   error: <CircleAlert size={14} className="shrink-0 text-danger" aria-hidden="true" />,
@@ -51,6 +52,7 @@ function issueKey(i: Issue): string {
 
 export function ProblemsPanel() {
   const { t } = useTranslation();
+  const closing = useClosing();
   const issues = useEditor((s) => s.issues);
   const suppressed = useEditor((s) => s.suppressed);
   const settings = useEditor((s) => s.doc.settings);
@@ -101,6 +103,7 @@ export function ProblemsPanel() {
   return (
     <section
       aria-label={t('problems.title', 'Problems')}
+      {...presenceProps(closing)}
       className="lw-no-print lw-panel-bottom flex h-56 shrink-0 flex-col border-t border-line bg-surface"
     >
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3">
@@ -197,10 +200,19 @@ export function ProblemsPanel() {
         {shown.map((issue, idx) => {
           const k = issueKey(issue);
           return (
-            <li key={`${k}-${idx}`} className="group border-b border-line px-3 py-1.5 hover:bg-surface-2">
+            <li
+              key={`${k}-${idx}`}
+              className="group cursor-pointer border-b border-line px-3 py-1.5 hover:bg-surface-2"
+              onClick={clickRowPrimary}
+            >
               <div className="flex items-start gap-2">
                 <span className="mt-0.5">{ICON[issue.severity]}</span>
-                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => revealIssue(issue)}>
+                <button
+                  type="button"
+                  data-lw-row-primary=""
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => revealIssue(issue)}
+                >
                   <span className="text-[12.5px] text-ink">{issue.message}</span>
                   <Tooltip text={ruleTitle(issue.ruleId)}>
                     <span className="ml-2 font-mono text-[10.5px] text-subtle">{issue.ruleId}</span>

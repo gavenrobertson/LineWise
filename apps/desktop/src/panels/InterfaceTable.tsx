@@ -26,7 +26,7 @@ import { ChevronRight, Link2, Plus, Trash2 } from 'lucide-react';
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoolField, NumberField, SelectField, TextField } from '../components/fields.tsx';
-import { Button, CardRows, cx, HoverCard, Tooltip } from '../components/ui.tsx';
+import { Button, CardRows, clickRowPrimary, cx, HoverCard, Tooltip } from '../components/ui.tsx';
 import { useEditor } from '../store/editor.ts';
 import { useUi } from '../store/ui.ts';
 import { fmtBandwidth } from '../canvas/model.ts';
@@ -341,7 +341,10 @@ const IfaceRow = memo(function IfaceRow({
 }) {
   const { t } = useTranslation();
   return (
-    <tr className={cx('border-b border-line hover:bg-surface-2', isOpen && 'bg-surface-2')}>
+    <tr
+      className={cx('cursor-pointer border-b border-line hover:bg-surface-2', isOpen && 'bg-surface-2')}
+      onClick={clickRowPrimary}
+    >
       <td className="py-1 pl-3">
         <input
           type="checkbox"
@@ -410,6 +413,7 @@ const IfaceRow = memo(function IfaceRow({
           <button
             type="button"
             aria-expanded={isOpen}
+            data-lw-row-primary=""
             aria-label={`${i.shortName}, ${!i.enabled ? t('iface.shutdown', 'shut down') : peer ? t('iface.up', 'connected') : t('iface.free', 'free')}`}
             onClick={() => onOpen(isOpen ? null : i.id)}
             className="flex w-full items-center gap-1 text-left font-mono"

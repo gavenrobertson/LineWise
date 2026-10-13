@@ -8,6 +8,7 @@ import * as RPopover from '@radix-ui/react-popover';
 import * as RTooltip from '@radix-ui/react-tooltip';
 import { CircleHelp, ExternalLink, X } from 'lucide-react';
 import i18n from '../i18n/index.ts';
+import { useReleaseOnClose } from './Presence.tsx';
 import {
   forwardRef,
   useEffect,
@@ -16,6 +17,7 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -53,6 +55,21 @@ export const Button = forwardRef<
     />
   );
 });
+
+/**
+ * A row that tints on hover is clickable all over (FR-UX-14): a click on its padding runs the
+ * row's main button, marked `data-lw-row-primary`. Clicks on its own controls are left alone.
+ */
+export function clickRowPrimary(e: ReactMouseEvent<HTMLElement>): void {
+  const target = e.target as Element;
+  if (
+    target.closest(
+      'button, a, input, select, textarea, label, [role="button"], [role="checkbox"], [role="combobox"]',
+    )
+  )
+    return;
+  e.currentTarget.querySelector<HTMLElement>('[data-lw-row-primary]')?.click();
+}
 
 export const IconButton = forwardRef<
   HTMLButtonElement,
@@ -424,11 +441,13 @@ export function Dialog({
   /** A help button beside the title (FR-UX-10). */
   help?: ReactNode;
 }) {
+  const content = useReleaseOnClose(open);
   return (
     <RDialog.Root open={open} onOpenChange={onOpenChange}>
       <RDialog.Portal>
         <RDialog.Overlay className="lw-overlay fixed inset-0 z-40 bg-[rgba(14,23,38,0.32)]" />
         <RDialog.Content
+          ref={content}
           // Open on the first real control, not on a help button in the title (whose tooltip
           // would take the first Escape).
           onOpenAutoFocus={(e) => {

@@ -35,6 +35,7 @@ import { roleLabel } from '../lib/labels.ts';
 import { mediumLabel } from '../lib/labels.ts';
 import { HelpButton } from '../components/HelpButton.tsx';
 import { term, type HelpId } from '../lib/help.ts';
+import { presenceProps, useClosing } from '../components/Presence.tsx';
 
 function Group({
   title,
@@ -788,6 +789,7 @@ function DocumentFields() {
 
 export function Inspector() {
   const { t } = useTranslation();
+  const closing = useClosing();
   const doc = useEditor((s) => s.doc);
   const sel = useEditor((s) => s.selection);
   const page = useEditor(selectPage);
@@ -805,6 +807,7 @@ export function Inspector() {
   return (
     <aside
       aria-label={t('inspector.title', 'Inspector')}
+      {...presenceProps(closing)}
       className="lw-no-print lw-panel-right flex h-full w-[320px] shrink-0 flex-col border-l border-line bg-surface"
     >
       <div className="flex h-10 shrink-0 items-center border-b border-line px-3">

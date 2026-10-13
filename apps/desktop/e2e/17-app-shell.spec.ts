@@ -40,7 +40,7 @@ test('FR-APP-03 library left, canvas center, inspector right, problems below, to
 
 test('FR-APP-04 light, dark and follow-system themes; the canvas follows', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
-  await openApp(page);
+  await openApp(page, { theme: 'system' });
   await startFrom(page, /Small office/);
   const light = await canvasBackground(page);
 

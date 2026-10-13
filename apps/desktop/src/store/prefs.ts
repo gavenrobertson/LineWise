@@ -34,7 +34,8 @@ export interface Prefs {
 }
 
 export const DEFAULT_PREFS: Prefs = {
-  theme: 'system',
+  // Dark by default; light and "follow system" are in Preferences and on the toolbar (FR-APP-04).
+  theme: 'dark',
   gridSize: 16,
   snapToGrid: true,
   showGrid: true,

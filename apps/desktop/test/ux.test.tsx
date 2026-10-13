@@ -3,7 +3,7 @@
 import { listRules, type NetworkDocument, type ViewLayer } from '@linewise/core';
 import * as RTooltip from '@radix-ui/react-tooltip';
 import { STARTERS } from '@linewise/device-library';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import ts from 'typescript';
@@ -27,7 +27,11 @@ import { ruleText } from '../src/lib/labels.ts';
 import { EmptyState, keyParts } from '../src/components/ui.tsx';
 import { Tour } from '../src/components/Tour.tsx';
 import { noteDrop, noteManualLink, offerTip, resetTips } from '../src/lib/tips.ts';
-import { usePrefs } from '../src/store/prefs.ts';
+import { DEFAULT_PREFS, usePrefs } from '../src/store/prefs.ts';
+import { Presence, presenceProps, useClosing, useLeavingList } from '../src/components/Presence.tsx';
+import { resolvedTheme, toggleTheme } from '../src/lib/theme.ts';
+import { commandList } from '../src/lib/actions.ts';
+import { focusNode } from '../src/panels/LibraryPanel.tsx';
 import { cubicBezier, easeStandard, motionMs } from '../src/lib/motion.ts';
 import { useUi } from '../src/store/ui.ts';
 
@@ -305,7 +309,7 @@ describe('FR-UX-06 link label wording', () => {
 });
 
 describe('FR-UX-07 link hover card', () => {
-  it('shows both ends, the medium, the mode and the VLANs', () => {
+  it('shows both ends, the medium, the mode and the VLANs, and fades out when it closes', async () => {
     const m = pageModel(doc2(), 'l2');
     const l = m.links.find((x) => x.a.device.hostname === 'DIST1' && x.b.device.hostname === 'ACC1')!;
     useCanvasHover.setState({ id: l.link.id, x: 400, y: 400, open: true });
@@ -316,7 +320,11 @@ describe('FR-UX-07 link hover card', () => {
     expect(card).toHaveTextContent(l.a.iface.name);
     expect(card).toHaveTextContent('trunk, VLANs 10,20,99, native');
     act(() => useCanvasHover.getState().hide());
-    expect(screen.queryByRole('tooltip')).toBeNull();
+    // It keeps its content for the exit (FR-UX-02), inert, then goes.
+    expect(card).toHaveAttribute('data-state', 'closed');
+    expect(card).toHaveAttribute('inert');
+    expect(card).toHaveTextContent('DIST1');
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
   });
 });
 
@@ -483,7 +491,7 @@ describe('FR-UX-12 smart tips and the first-run tour', () => {
     await act(async () => screen.getByRole('button', { name: 'Back' }).click());
     expect(screen.getByText('Step 1 of 4')).toBeInTheDocument();
     await act(async () => screen.getByRole('button', { name: 'Skip tour' }).click());
-    expect(screen.queryByText(/Step \d of 4/)).toBeNull();
+    await waitFor(() => expect(screen.queryByText(/Step \d of 4/)).toBeNull());
     expect(usePrefs.getState().tourDone).toBe(true);
     canvas.remove();
   });
@@ -505,5 +513,198 @@ describe('FR-UX-13 empty states', () => {
     const brand = readFileSync(resolve(import.meta.dirname, '../../../docs/brand.md'), 'utf8');
     expect(brand).toContain('## Voice and glossary');
     for (const w of ['| link ', '| interface ', '| port ', '| problem ']) expect(brand).toContain(w);
+  });
+});
+
+describe('FR-UX-14 pointer cursor on everything that reacts to the pointer', () => {
+  it('gives controls, tabs, options, menu and tree items the hand, and disabled ones not-allowed', () => {
+    const base = block('@layer base');
+    const rule = base.slice(0, base.indexOf('cursor: pointer;'));
+    for (const sel of [
+      'button,',
+      'select,',
+      'summary,',
+      'a[href],',
+      "[role='tab'],",
+      "[role='option'],",
+      "[role='menuitem'],",
+      "[role='radio'],",
+      "[role='checkbox'],",
+      "[role='treeitem'],",
+      "input[type='checkbox'],",
+    ])
+      expect(rule, sel).toContain(sel);
+    expect(base).toMatch(
+      /:disabled,\s*\[aria-disabled='true'\],\s*\[data-disabled\] \{\s*cursor: not-allowed;/,
+    );
+  });
+  it('and on the canvas: devices, links, connection handles and the minimap', () => {
+    const start = css.indexOf('.react-flow__node.selectable,');
+    expect(start).toBeGreaterThan(0);
+    const rule = css.slice(start, css.indexOf('}', start));
+    for (const sel of [
+      '.react-flow__edge',
+      '.react-flow__handle.connectionindicator',
+      '.react-flow__minimap',
+    ])
+      expect(rule).toContain(sel);
+    expect(rule).toContain('cursor: pointer');
+  });
+});
+
+describe('FR-UX-15 eased exits', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('gives everything that animates in an exit too', () => {
+    for (const cls of [
+      '.lw-pop',
+      '.lw-overlay',
+      '.lw-sheet',
+      '.lw-panel-left',
+      '.lw-panel-right',
+      '.lw-panel-bottom',
+      '.lw-toast',
+      '.lw-tour-ring',
+    ])
+      expect(block(`${cls}[data-state='closed']`), cls).toMatch(
+        /animation: lw-[\w-]*-out[\w-]* var\(--dur-fast\) var\(--ease-exit\) forwards/,
+      );
+    // A closing overlay or sheet lets clicks through to the page at once (over Radix's inline style).
+    for (const cls of ['.lw-pop', '.lw-overlay', '.lw-sheet', '.lw-toast'])
+      expect(block(`${cls}[data-state='closed']`), cls).toContain('pointer-events: none !important');
+    // Hover feedback on the canvas fades back out on the element the pointer left.
+    expect(block('.react-flow__node-device.lw-unhover:not(:hover) .lw-device-icon::before')).toContain(
+      'lw-fade-out',
+    );
+    expect(block('.react-flow__edge.lw-unhover:not(:hover) .react-flow__edge-interaction')).toContain(
+      'lw-fade-out',
+    );
+    // Hover tints fade both ways.
+    expect(block('@layer base')).toContain('background-color var(--dur-fast) var(--ease-standard)');
+  });
+
+  it('keeps a closing element mounted, closed and inert for the exit, then removes it', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    function Panel() {
+      return <aside aria-label="Panel" {...presenceProps(useClosing())} />;
+    }
+    const { rerender, container } = render(
+      <Presence present>
+        <Panel />
+      </Presence>,
+    );
+    expect(container.querySelector('aside')).toHaveAttribute('data-state', 'open');
+    rerender(
+      <Presence present={false}>
+        <Panel />
+      </Presence>,
+    );
+    const aside = container.querySelector('aside');
+    expect(aside).toHaveAttribute('data-state', 'closed');
+    expect(aside).toHaveAttribute('inert');
+    act(() => vi.advanceTimersByTime(200));
+    expect(container.querySelector('aside')).toBeNull();
+  });
+
+  it('removes it at once under reduced motion', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce') }));
+    const { rerender, container } = render(
+      <Presence present>
+        <aside />
+      </Presence>,
+    );
+    rerender(
+      <Presence present={false}>
+        <aside />
+      </Presence>,
+    );
+    expect(container.querySelector('aside')).toBeNull();
+  });
+
+  it('lets a removed toast linger as leaving, in order', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    function List({ items }: { items: { id: number }[] }) {
+      const shown = useLeavingList(items);
+      return <p>{shown.map((i) => `${i.id}${i.leaving ? '-' : ''}`).join(' ')}</p>;
+    }
+    const { rerender } = render(<List items={[{ id: 1 }, { id: 2 }, { id: 3 }]} />);
+    rerender(<List items={[{ id: 1 }, { id: 3 }]} />);
+    expect(screen.getByText('1 2- 3')).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByText('1 3')).toBeInTheDocument();
+  });
+});
+
+describe('FR-UX-16 dark by default, with a light / dark switch', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    usePrefs.getState().set({ theme: DEFAULT_PREFS.theme });
+  });
+
+  it('opens dark, from the first frame', () => {
+    expect(DEFAULT_PREFS.theme).toBe('dark');
+    const html = readFileSync(resolve(import.meta.dirname, '../index.html'), 'utf8');
+    expect(html).toContain('<html lang="en" data-theme="dark">');
+    const conf = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, '../src-tauri/tauri.conf.json'), 'utf8'),
+    ) as { app: { windows: { backgroundColor?: string }[] } };
+    expect(conf.app.windows[0]?.backgroundColor).toBe('#0e1726');
+  });
+
+  it('swaps between light and dark, from a set theme or from the OS setting', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('dark') }));
+    usePrefs.getState().set({ theme: 'dark' });
+    toggleTheme();
+    expect(usePrefs.getState().theme).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    toggleTheme();
+    expect(usePrefs.getState().theme).toBe('dark');
+    // Following a dark OS: the switch goes to light.
+    usePrefs.getState().set({ theme: 'system' });
+    expect(resolvedTheme()).toBe('dark');
+    toggleTheme();
+    expect(usePrefs.getState().theme).toBe('light');
+  });
+
+  it('is on the toolbar and in the View menu', () => {
+    expect(commandList().some((c) => c.id === 'view.theme' && c.label === 'Toggle dark mode')).toBe(true);
+    const menu = readFileSync(resolve(import.meta.dirname, '../src-tauri/src/menu.rs'), 'utf8');
+    expect(menu).toContain('"view.theme", "Toggle Dark Mode"');
+    const toolbar = readFileSync(resolve(import.meta.dirname, '../src/panels/Toolbar.tsx'), 'utf8');
+    expect(toolbar).toContain('<ThemeButton />');
+  });
+});
+
+describe('placing a device moves focus to it, unless the user has moved on', () => {
+  it('stops trying once focus went elsewhere while the new device was still appearing', async () => {
+    const button = document.createElement('button');
+    const field = document.createElement('input');
+    document.body.append(button, field);
+    button.focus();
+    // The node is not on the canvas yet, so focusNode retries on the next frame.
+    focusNode('n1');
+    field.focus();
+    const node = document.createElement('div');
+    node.className = 'react-flow__node';
+    node.dataset.id = 'n1';
+    node.tabIndex = 0;
+    document.body.append(node);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    expect(document.activeElement).toBe(field);
+    // Left alone, it lands on the node as soon as the node appears.
+    button.focus();
+    node.remove();
+    focusNode('n1');
+    document.body.append(node);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    expect(document.activeElement).toBe(node);
+    button.remove();
+    field.remove();
+    node.remove();
   });
 });
