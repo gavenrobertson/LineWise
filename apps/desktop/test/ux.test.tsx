@@ -31,6 +31,7 @@ import { DEFAULT_PREFS, usePrefs } from '../src/store/prefs.ts';
 import { Presence, presenceProps, useClosing, useLeavingList } from '../src/components/Presence.tsx';
 import { resolvedTheme, toggleTheme } from '../src/lib/theme.ts';
 import { commandList } from '../src/lib/actions.ts';
+import { focusNode } from '../src/panels/LibraryPanel.tsx';
 import { cubicBezier, easeStandard, motionMs } from '../src/lib/motion.ts';
 import { useUi } from '../src/store/ui.ts';
 
@@ -676,5 +677,34 @@ describe('FR-UX-16 dark by default, with a light / dark switch', () => {
     expect(menu).toContain('"view.theme", "Toggle Dark Mode"');
     const toolbar = readFileSync(resolve(import.meta.dirname, '../src/panels/Toolbar.tsx'), 'utf8');
     expect(toolbar).toContain('<ThemeButton />');
+  });
+});
+
+describe('placing a device moves focus to it, unless the user has moved on', () => {
+  it('stops trying once focus went elsewhere while the new device was still appearing', async () => {
+    const button = document.createElement('button');
+    const field = document.createElement('input');
+    document.body.append(button, field);
+    button.focus();
+    // The node is not on the canvas yet, so focusNode retries on the next frame.
+    focusNode('n1');
+    field.focus();
+    const node = document.createElement('div');
+    node.className = 'react-flow__node';
+    node.dataset.id = 'n1';
+    node.tabIndex = 0;
+    document.body.append(node);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    expect(document.activeElement).toBe(field);
+    // Left alone, it lands on the node as soon as the node appears.
+    button.focus();
+    node.remove();
+    focusNode('n1');
+    document.body.append(node);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    expect(document.activeElement).toBe(node);
+    button.remove();
+    field.remove();
+    node.remove();
   });
 });

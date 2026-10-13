@@ -48,7 +48,8 @@ test('FR-UX-14 everything that reacts to the pointer shows the hand', async ({ p
   await expect(opener).toHaveAttribute('aria-expanded', 'true');
   // Disabled controls say so; text fields keep the I-beam.
   expect(await cursor(toolbar.getByRole('button', { name: 'Redo' }))).toBe('not-allowed');
-  expect(await cursor(page.getByRole('searchbox').first())).toBe('text');
+  // (WebKit reports a text field's I-beam as `auto`.)
+  expect(['text', 'auto']).toContain(await cursor(page.getByRole('searchbox').first()));
 });
 
 test('FR-UX-15 the palette and panels ease out instead of vanishing, and a shortcut right after still works', async ({

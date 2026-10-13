@@ -29,11 +29,14 @@ const CATEGORY_ORDER: RoleCategory[] = [
 ];
 
 /** Focus a canvas node once React Flow has rendered it. */
-export function focusNode(id: string, tries = 30): void {
+export function focusNode(id: string, tries = 30, from: Element | null = document.activeElement): void {
+  // The user moved on (clicked into a field, say) while the node was still appearing: leave focus
+  // there, or the next key (Delete, Backspace) would act on the canvas instead.
+  if (document.activeElement !== from) return;
   const el = document.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`);
   // React Flow keeps new nodes hidden until measured; focus only sticks once visible.
   el?.focus({ preventScroll: true });
-  if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1));
+  if (document.activeElement !== el && tries > 0) requestAnimationFrame(() => focusNode(id, tries - 1, from));
 }
 
 export function placeTemplate(tpl: DeviceTemplate): void {
