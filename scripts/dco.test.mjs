@@ -27,10 +27,11 @@ test('a commit passes only with a Signed-off-by line for its author', () => {
   assert.match(r[1].reason, /does not match the author/);
 });
 
-test('the DCO workflow runs on pull requests from contributors who are not maintainers', () => {
+test('the DCO workflow runs on pull requests from contributors who are not maintainers or bots', () => {
   const wf = readFileSync(join(import.meta.dirname, '../.github/workflows/dco.yml'), 'utf8');
   assert.match(wf, /pull_request/);
   assert.match(wf, /author_association/);
+  assert.match(wf, /github\.event\.pull_request\.user\.type != 'Bot'/);
   assert.match(wf, /node scripts\/dco\.mjs/);
   assert.match(readFileSync(join(import.meta.dirname, '../CONTRIBUTING.md'), 'utf8'), /git commit -s|`-s`/);
 });
