@@ -16,6 +16,7 @@ const base = domain ? '/' : '/LineWise/';
 
 export const guide = [
   { text: 'Overview', link: '/user/' },
+  { text: 'Installing', link: '/user/install' },
   { text: 'Getting started', link: '/user/getting-started' },
   { text: 'Drawing basics', link: '/user/drawing' },
   { text: 'Devices and interfaces', link: '/user/devices' },

@@ -1,5 +1,12 @@
 # FAQ
 
+## Why does Windows or macOS warn me when I install LineWise?
+
+LineWise isn't code-signed yet, so Windows SmartScreen and macOS Gatekeeper can't name its
+publisher and ask you to confirm. The warning doesn't mean a virus was found. To open LineWise
+safely, and to check that your download is the file that was built, see
+[Installing](install.md).
+
 ## Does LineWise need an internet connection?
 
 No. LineWise works fully offline. The only network request it makes is the update check, at most
