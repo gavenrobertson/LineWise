@@ -184,6 +184,8 @@ jobs:
       # BRD-03, FR-APP-09: the installers register the .lwise document icon.
       - name: Document icon registered (Windows NSIS and MSI)
         if: runner.os == 'Windows'
+        # A silent install normally takes well under a minute; a hung installer must not hold the job for hours.
+        timeout-minutes: 5
         shell: pwsh
         run: |
           $bundle = "apps/desktop/src-tauri/target/debug/bundle"
