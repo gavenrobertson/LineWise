@@ -26,6 +26,7 @@ const pageFile = (link) => {
 
 describe('DOC-01 user guide', () => {
   const topics = [
+    ['installing', '/user/install'],
     ['getting started', '/user/getting-started'],
     ['drawing basics', '/user/drawing'],
     ['devices and interfaces', '/user/devices'],
@@ -150,6 +151,19 @@ describe('docs site look and feel', () => {
     const layout = read('docs/.vitepress/theme/Layout.vue');
     const animate = layout.slice(layout.indexOf('.animate('));
     assert.match(animate.slice(0, animate.indexOf(');')), /fill: 'forwards'/);
+  });
+  it('explains the unsigned-installer warnings, and the download section links to it', () => {
+    const install = read('docs/user/install.md');
+    for (const part of [
+      'Run anyway',
+      'Open Anyway',
+      'SHA256SUMS.txt',
+      'com.apple.quarantine',
+      '## When to stop',
+    ])
+      assert.ok(install.includes(part), part);
+    assert.match(landing, /withBase\('\/user\/install'\)/);
+    assert.match(read('docs/user/faq.md'), /\]\(install\.md\)/);
   });
   it('follows the theme on the landing page, down to the screenshot', () => {
     assert.match(landing, /screenshot-dark\.png/);

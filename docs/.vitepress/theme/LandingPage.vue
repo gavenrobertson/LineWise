@@ -324,6 +324,7 @@ const promises = [
         <p>
           LineWise isn't code-signed yet, so Windows and macOS ask you to confirm the first time you open it.
           Your files never leave your computer, and every download has a published checksum.
+          <a :href="withBase('/user/install')">Why does my computer warn me?</a>
         </p>
         <div class="steps">
           <div>
@@ -745,6 +746,7 @@ html:not(.dark) .shot-light {
 }
 /* Text links: an underline that fills in from the left. */
 .section-lede a,
+.firstrun > p a,
 .alt a {
   color: var(--vp-c-brand-1);
   text-decoration: none;
@@ -753,10 +755,12 @@ html:not(.dark) .shot-light {
     background-size 0.3s var(--ease),
     color 0.2s var(--ease);
 }
-.section-lede a {
+.section-lede a,
+.firstrun > p a {
   background-size: 100% 1px;
 }
 .section-lede a:hover,
+.firstrun > p a:hover,
 .alt a:hover {
   background-size: 100% 1.5px;
   color: var(--vp-c-brand-2);
