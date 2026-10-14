@@ -136,6 +136,34 @@ describe('BRD-04 docs-site logo and favicon', () => {
   });
 });
 
+describe('docs site look and feel', () => {
+  const landing = read('docs/.vitepress/theme/LandingPage.vue');
+  it('opens dark like the app, and the theme switch spreads the new theme from the switch', () => {
+    assert.match(config, /appearance: 'dark'/);
+    const layout = read('docs/.vitepress/theme/Layout.vue');
+    assert.match(layout, /provide\('toggle-appearance'/);
+    assert.match(layout, /startViewTransition/);
+    assert.match(layout, /prefers-reduced-motion: no-preference/);
+    assert.match(read('docs/.vitepress/theme/index.ts'), /Layout,/);
+  });
+  it('follows the theme on the landing page, down to the screenshot', () => {
+    assert.match(landing, /screenshot-dark\.png/);
+    assert.match(landing, /screenshot-light\.png/);
+    assert.match(landing, /html:not\(\.dark\) \.shot-light/);
+    assert.ok(existsSync(join(ROOT, 'docs/img/screenshot-light.png')));
+  });
+  it('makes the feature cards links to the guide, and every one of them exists', () => {
+    const links = [...landing.matchAll(/link: '(\/[^']+)'/g)].map((m) => m[1]);
+    assert.equal(links.length, 6);
+    for (const l of links) assert.ok(existsSync(join(ROOT, pageFile(l))), l);
+    assert.match(landing, /<a v-for="f in features"[^>]*class="feature"/);
+  });
+  it('stills every animation under reduced motion', () => {
+    assert.match(landing, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
+    assert.match(read('docs/.vitepress/theme/brand.css'), /@media \(prefers-reduced-motion: reduce\)/);
+  });
+});
+
 describe('download page', () => {
   const v = '1.2.0';
   const asset = (name, size = 8_000_000) => ({
