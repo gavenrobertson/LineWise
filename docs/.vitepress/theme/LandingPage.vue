@@ -5,9 +5,10 @@
   published it says so and links to the releases page. Brand: spec section 15 (BRD-04, BRD-05).
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
-import shot from '../../img/screenshot-dark.png';
+import shotDark from '../../img/screenshot-dark.png';
+import shotLight from '../../img/screenshot-light.png';
 import {
   detectPlatform,
   formatSize,
@@ -31,6 +32,29 @@ const release = ref<GitHubRelease | null>(null);
 const beta = ref<GitHubRelease | null>(null);
 const files = ref<Partial<Record<InstallerKind, Installer>>>({});
 const platform = ref<Platform>('other');
+
+// Sections rise in as they scroll into view. Without JavaScript, or under reduced motion, they are
+// simply there: the hidden state applies only once `ready` is set.
+const root = ref<HTMLElement | null>(null);
+const ready = ref(false);
+let observer: IntersectionObserver | null = null;
+onMounted(() => {
+  if (!root.value || !('IntersectionObserver' in window)) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries)
+        if (e.isIntersecting) {
+          e.target.classList.add('shown');
+          observer?.unobserve(e.target);
+        }
+    },
+    { rootMargin: '0px 0px -8% 0px' },
+  );
+  for (const el of root.value.querySelectorAll('.reveal')) observer.observe(el);
+  ready.value = true;
+});
+onBeforeUnmount(() => observer?.disconnect());
 
 onMounted(async () => {
   const nav = navigator as Navigator & {
@@ -107,31 +131,37 @@ const available = computed(() => status.value === 'ready');
 const features = [
   {
     title: 'Devices with real interfaces',
+    link: '/user/devices',
     text: 'Connect Gi0/1 on a router to Gi1/0/24 on a switch, assign 10.0.12.1/30, and LineWise knows the link, the subnet and the VLANs.',
     icon: 'M4 7h16v10H4zM8 11h2M12 11h2M16 11h0',
   },
   {
     title: 'Three views, one model',
+    link: '/user/views',
     text: 'Switch between the physical (L1), data link (L2) and network (L3) view of the same diagram, and highlight a VLAN or the path between two devices.',
     icon: 'M12 3 3 8l9 5 9-5zM3 13l9 5 9-5',
   },
   {
     title: 'Checks as you draw',
+    link: '/user/validation',
     text: 'Duplicate IPs, subnet and native-VLAN mismatches, trunk and speed problems and more, each with a one-click fix where there is one.',
     icon: 'M9 12l2 2 4-4M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7z',
   },
   {
     title: 'Import from Cisco CLI',
+    link: '/user/import',
     text: 'Paste show cdp neighbors, show lldp neighbors or a running-config and review the result before it lands. Passwords and secrets are stripped.',
     icon: 'M4 17l6-5-6-5M12 19h8',
   },
   {
     title: 'Export to anything',
+    link: '/user/export',
     text: 'PNG, SVG and PDF with a title block, CSV inventories and IP plans, HTML and Markdown reports, draw.io, Containerlab, Mermaid and DOT.',
     icon: 'M12 3v12M7 10l5 5 5-5M5 21h14',
   },
   {
     title: 'Files you can diff',
+    link: '/file-format',
     text: 'A .lwise file is stable, sorted, readable JSON with a published schema, so diagrams live happily in Git next to your configs.',
     icon: 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9',
   },
@@ -146,7 +176,7 @@ const promises = [
 </script>
 
 <template>
-  <div class="lw-landing">
+  <div ref="root" class="lw-landing" :class="{ ready }">
     <!-- Hero -->
     <section class="hero" aria-labelledby="lw-hero-title">
       <div class="hero-inner">
@@ -156,7 +186,7 @@ const promises = [
           <template v-if="available">LineWise {{ version }} is out</template>
           <template v-else>Free and open source for Windows and macOS</template>
         </p>
-        <h1 id="lw-hero-title">Network diagrams that <span class="accent">know the network.</span></h1>
+        <h1 id="lw-hero-title">Network diagrams that <span class="accent neon">know the network.</span></h1>
         <p class="lede">
           Draw Cisco-style topologies where every icon is a real device with interfaces, IP addresses and
           VLANs. LineWise checks your design as you draw, works offline and is free.
@@ -175,8 +205,17 @@ const promises = [
       <div class="shot">
         <div class="window">
           <div class="window-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <!-- The screenshot matches the site's theme. -->
           <img
-            :src="shot"
+            class="shot-dark"
+            :src="shotDark"
+            width="1600"
+            height="1000"
+            alt="LineWise showing a collapsed-core campus in the data link view, with the device library on the left and the inspector on the right"
+          />
+          <img
+            class="shot-light"
+            :src="shotLight"
             width="1600"
             height="1000"
             alt="LineWise showing a collapsed-core campus in the data link view, with the device library on the left and the inspector on the right"
@@ -187,7 +226,7 @@ const promises = [
 
     <!-- Downloads -->
     <section id="download" class="section" aria-labelledby="lw-download-title">
-      <h2 id="lw-download-title">Download LineWise</h2>
+      <h2 id="lw-download-title" class="neon-title reveal">Download LineWise</h2>
       <p class="section-lede">
         <template v-if="available">
           <strong>{{ isBeta ? 'Beta' : 'Version' }} {{ version }}</strong>
@@ -207,7 +246,7 @@ const promises = [
         <template v-else>Checking the latest release…</template>
       </p>
 
-      <div class="cards">
+      <div class="cards reveal">
         <article class="card" :class="{ yours: yours === 'windows' }" aria-labelledby="lw-win">
           <p v-if="yours === 'windows'" class="badge">Your system</p>
           <svg class="os" aria-hidden="true" viewBox="0 0 24 24" width="32" height="32">
@@ -217,7 +256,7 @@ const promises = [
           <h3 id="lw-win">Windows</h3>
           <p class="req">Windows 10 and 11</p>
           <a
-            class="btn btn-solid"
+            class="btn btn-solid primary-action"
             :class="{ disabled: !available }"
             :aria-disabled="!available"
             :href="href('windows-x64')"
@@ -247,7 +286,7 @@ const promises = [
           <h3 id="lw-mac">macOS</h3>
           <p class="req">macOS 12 or later</p>
           <a
-            class="btn btn-solid"
+            class="btn btn-solid primary-action"
             :class="{ disabled: !available }"
             :aria-disabled="!available"
             :href="href('macos')"
@@ -269,7 +308,9 @@ const promises = [
           </svg>
           <h3 id="lw-linux">Linux</h3>
           <p class="req">Best effort · Ubuntu 22.04+, Fedora 39+</p>
-          <a class="btn btn-outline" :href="`${REPO_URL}#build-from-source`">Build from source</a>
+          <a class="btn btn-outline primary-action" :href="`${REPO_URL}#build-from-source`"
+            >Build from source</a
+          >
           <ul class="alt">
             <li class="text">Needs Node.js 22, pnpm and Rust; then run <code>pnpm tauri build</code>.</li>
           </ul>
@@ -278,7 +319,7 @@ const promises = [
       </div>
 
       <!-- First launch of an unsigned build -->
-      <div class="firstrun" aria-labelledby="lw-firstrun">
+      <div class="firstrun reveal" aria-labelledby="lw-firstrun">
         <h3 id="lw-firstrun">Opening LineWise the first time</h3>
         <p>
           LineWise isn't code-signed yet, so Windows and macOS ask you to confirm the first time you open it.
@@ -320,23 +361,26 @@ const promises = [
 
     <!-- Features -->
     <section class="section alt-bg" aria-labelledby="lw-features">
-      <h2 id="lw-features">Diagrams that understand what they show</h2>
-      <p class="section-lede">
+      <h2 id="lw-features" class="neon-title reveal">Diagrams that understand what they show</h2>
+      <p class="section-lede reveal">
         Not just boxes and lines: LineWise models the network, so it can check it and export it.
       </p>
-      <div class="features">
-        <article v-for="f in features" :key="f.title" class="feature">
-          <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path :d="f.icon" /></svg>
+      <div class="features reveal">
+        <a v-for="f in features" :key="f.title" class="feature" :href="withBase(f.link)">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path :d="f.icon" /></svg>
+          </span>
           <h3>{{ f.title }}</h3>
           <p>{{ f.text }}</p>
-        </article>
+          <span class="more">Learn more <span class="arrow" aria-hidden="true">→</span></span>
+        </a>
       </div>
     </section>
 
     <!-- Promises -->
     <section class="section" aria-labelledby="lw-private">
-      <h2 id="lw-private">Private by default</h2>
-      <ul class="promises">
+      <h2 id="lw-private" class="neon-title reveal">Private by default</h2>
+      <ul class="promises reveal">
         <li v-for="p in promises" :key="p.title">
           <strong>{{ p.title }}</strong>
           <span>{{ p.text }}</span>
@@ -346,7 +390,7 @@ const promises = [
 
     <!-- Closing call to action -->
     <section class="closing" aria-labelledby="lw-closing">
-      <h2 id="lw-closing">Ready to draw your network?</h2>
+      <h2 id="lw-closing" class="neon-title">Ready to draw your <span class="neon">network?</span></h2>
       <div class="cta">
         <a class="btn btn-primary" :href="primaryHref">{{ primaryLabel }}</a>
         <a class="btn btn-ghost" :href="withBase('/user/getting-started')">Read the guide</a>
@@ -360,27 +404,91 @@ const promises = [
 </template>
 
 <style scoped>
+/* Palette. Light theme first; the dark theme (the default) is Ink with Link teal (BRD-05). */
 .lw-landing {
   --ink: #0e1726;
-  --ink-raised: #1a2436;
-  --ink-line: #2c3a52;
   --teal: #0d9488;
   --teal-bright: #2dd4bf;
   --teal-text: #0f766e;
-  --on-ink: #e6eaf0;
-  --on-ink-muted: #a3aebf;
+  --glow: 45, 212, 191;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-pop: cubic-bezier(0.3, 0, 0, 1.25);
+
+  --hero-bg: #f4f6f8;
+  --hero-text: #0e1726;
+  --hero-muted: #4b5563;
+  --hero-line: #d5dbe3;
+  --hero-raised: #ffffff;
+  --hero-dot: rgba(14, 23, 38, 0.08);
+  --hero-glow: rgba(13, 148, 136, 0.18);
+  --accent-from: #0f766e;
+  --accent-to: #0d9488;
+  --neon-strength: 0.35;
+  --primary-bg: #0f766e;
+  --primary-hover: #115e59;
+  --primary-text: #ffffff;
+}
+.dark .lw-landing {
+  --hero-bg: #0e1726;
+  --hero-text: #ffffff;
+  --hero-muted: #a3aebf;
+  --hero-line: #2c3a52;
+  --hero-raised: #1a2436;
+  --hero-dot: rgba(255, 255, 255, 0.07);
+  --hero-glow: rgba(13, 148, 136, 0.38);
+  --accent-from: #2dd4bf;
+  --accent-to: #5eead4;
+  --neon-strength: 1;
+  --primary-bg: #2dd4bf;
+  --primary-hover: #5eead4;
+  --primary-text: #0e1726;
 }
 
-/* Hero: always Ink, with the canvas dot grid and a teal glow. */
+/* ------------------------------------------------------------------ neon titles
+   A soft teal glow around the glyphs: strong on Ink, a gentle halo on the light theme. It breathes
+   slowly unless motion is reduced. `drop-shadow` follows the painted gradient text. */
+.neon {
+  filter: drop-shadow(0 0 6px rgba(var(--glow), calc(0.55 * var(--neon-strength))))
+    drop-shadow(0 0 18px rgba(var(--glow), calc(0.4 * var(--neon-strength))));
+  animation: neon-breathe 4.5s ease-in-out infinite;
+}
+@keyframes neon-breathe {
+  50% {
+    filter: drop-shadow(0 0 8px rgba(var(--glow), calc(0.75 * var(--neon-strength))))
+      drop-shadow(0 0 28px rgba(var(--glow), calc(0.55 * var(--neon-strength))));
+  }
+}
+.dark .neon-title {
+  text-shadow:
+    0 0 10px rgba(var(--glow), 0.35),
+    0 0 32px rgba(var(--glow), 0.25),
+    0 0 64px rgba(13, 148, 136, 0.2);
+}
+/* A glowing bar under section titles. */
+.section h2.neon-title::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin: 16px auto 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--teal-bright), transparent);
+  box-shadow: 0 0 12px rgba(var(--glow), calc(0.8 * var(--neon-strength)));
+}
+
+/* ------------------------------------------------------------------ hero */
 .hero {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(60rem 30rem at 50% -10%, rgba(13, 148, 136, 0.35), transparent 70%),
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0) 0 0 / 24px 24px,
-    var(--ink);
-  color: var(--on-ink);
+    radial-gradient(60rem 30rem at 50% -10%, var(--hero-glow), transparent 70%),
+    radial-gradient(circle at 1px 1px, var(--hero-dot) 1px, transparent 0) 0 0 / 24px 24px,
+    var(--hero-bg);
+  color: var(--hero-text);
   padding: 72px 24px 0;
+  transition:
+    background-color 0.3s var(--ease),
+    color 0.3s var(--ease);
 }
 .hero-inner {
   max-width: 820px;
@@ -391,6 +499,13 @@ const promises = [
   margin: 0 auto 20px;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(13, 148, 136, 0.35);
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 48px rgba(var(--glow), 0.45);
+  }
 }
 .pill {
   display: inline-flex;
@@ -398,18 +513,28 @@ const promises = [
   gap: 8px;
   margin: 0 0 20px;
   padding: 6px 14px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--hero-line);
   border-radius: 999px;
-  background: rgba(26, 36, 54, 0.7);
+  background: color-mix(in srgb, var(--hero-raised) 70%, transparent);
   font-size: 14px;
-  color: var(--on-ink-muted);
+  color: var(--hero-muted);
 }
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--teal-bright);
-  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.18);
+  box-shadow: 0 0 0 4px rgba(var(--glow), 0.18);
+  animation: ping 2.4s var(--ease) infinite;
+}
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--glow), 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px rgba(var(--glow), 0);
+  }
 }
 .hero h1 {
   margin: 0;
@@ -417,21 +542,30 @@ const promises = [
   line-height: 1.05;
   letter-spacing: -0.035em;
   font-weight: 700;
-  color: #fff;
+  color: var(--hero-text);
   border: 0;
 }
 .accent {
-  background: linear-gradient(90deg, #2dd4bf, #5eead4);
+  background: linear-gradient(90deg, var(--accent-from), var(--accent-to), var(--accent-from));
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  animation:
+    neon-breathe 4.5s ease-in-out infinite,
+    shimmer 8s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 .lede {
   margin: 20px auto 0;
   max-width: 640px;
   font-size: 1.15rem;
   line-height: 1.6;
-  color: var(--on-ink-muted);
+  color: var(--hero-muted);
 }
 .cta {
   display: flex;
@@ -443,10 +577,14 @@ const promises = [
 .meta {
   margin: 14px 0 0;
   font-size: 14px;
-  color: var(--on-ink-muted);
+  color: var(--hero-muted);
 }
 
+/* ------------------------------------------------------------------ buttons
+   Hover lifts and brightens, the glow grows; pressing sinks; a light sweep crosses the primary. */
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -455,11 +593,14 @@ const promises = [
   border-radius: 12px;
   font-weight: 600;
   font-size: 16px;
+  cursor: pointer;
   text-decoration: none !important;
   transition:
-    transform 0.15s ease,
-    background-color 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.2s var(--ease-pop),
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    box-shadow 0.25s var(--ease),
+    color 0.2s var(--ease);
 }
 .btn svg {
   fill: none;
@@ -467,65 +608,110 @@ const promises = [
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition: transform 0.25s var(--ease-pop);
 }
 .btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+.btn:hover svg {
+  transform: translateY(2px);
+}
+.btn:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.08s;
 }
 .btn:focus-visible {
   outline: 3px solid var(--teal-bright);
   outline-offset: 3px;
 }
 .btn-primary {
-  background: var(--teal-bright);
-  color: var(--ink) !important;
-  box-shadow: 0 8px 30px rgba(45, 212, 191, 0.3);
+  background: var(--primary-bg);
+  color: var(--primary-text) !important;
+  box-shadow: 0 8px 30px rgba(var(--glow), calc(0.3 * var(--neon-strength) + 0.15));
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s var(--ease);
+  pointer-events: none;
 }
 .btn-primary:hover {
-  background: #5eead4;
+  background: var(--primary-hover);
+  box-shadow:
+    0 12px 36px rgba(var(--glow), calc(0.35 * var(--neon-strength) + 0.2)),
+    0 0 0 4px rgba(var(--glow), 0.18);
+}
+.btn-primary:hover::after {
+  transform: translateX(120%);
 }
 .btn-ghost {
-  border: 1px solid var(--ink-line);
-  background: rgba(26, 36, 54, 0.6);
-  color: var(--on-ink) !important;
+  border: 1px solid var(--hero-line);
+  background: color-mix(in srgb, var(--hero-raised) 60%, transparent);
+  color: var(--hero-text) !important;
 }
 .btn-ghost:hover {
-  background: var(--ink-raised);
+  border-color: var(--teal);
+  background: var(--hero-raised);
+  box-shadow:
+    0 0 0 4px rgba(var(--glow), 0.12),
+    0 0 22px rgba(var(--glow), calc(0.25 * var(--neon-strength)));
 }
 
+/* ------------------------------------------------------------------ screenshot */
 .shot {
   max-width: 1120px;
   margin: 56px auto 0;
-  perspective: 2000px;
 }
 .window {
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--hero-line);
   border-bottom: 0;
   border-radius: 14px 14px 0 0;
   overflow: hidden;
-  background: var(--ink-raised);
+  background: var(--hero-raised);
   box-shadow:
     0 -10px 80px rgba(13, 148, 136, 0.25),
-    0 30px 80px rgba(0, 0, 0, 0.5);
+    0 30px 80px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.5s var(--ease),
+    box-shadow 0.5s var(--ease);
+}
+.window:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 -14px 100px rgba(var(--glow), 0.38),
+    0 30px 80px rgba(0, 0, 0, 0.4);
 }
 .window-bar {
   display: flex;
   gap: 8px;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--hero-line);
 }
 .window-bar span {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--ink-line);
+  background: var(--hero-line);
 }
 .window img {
   display: block;
   width: 100%;
   height: auto;
 }
+.shot-light {
+  display: none !important;
+}
+html:not(.dark) .shot-dark {
+  display: none !important;
+}
+html:not(.dark) .shot-light {
+  display: block !important;
+}
 
-/* Sections follow the site theme. */
+/* ------------------------------------------------------------------ sections */
 .section {
   max-width: 1120px;
   margin: 0 auto;
@@ -557,12 +743,41 @@ const promises = [
   color: var(--vp-c-text-2);
   font-size: 1.05rem;
 }
-.section-lede a {
+/* Text links: an underline that fills in from the left. */
+.section-lede a,
+.alt a {
   color: var(--vp-c-brand-1);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1.5px no-repeat;
+  transition:
+    background-size 0.3s var(--ease),
+    color 0.2s var(--ease);
+}
+.section-lede a {
+  background-size: 100% 1px;
+}
+.section-lede a:hover,
+.alt a:hover {
+  background-size: 100% 1.5px;
+  color: var(--vp-c-brand-2);
 }
 
+/* Scroll reveal, only once the page has run (`ready`) and motion is allowed. */
+.ready .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s var(--ease),
+    transform 0.6s var(--ease);
+}
+.ready .reveal.shown {
+  opacity: 1;
+  transform: none;
+}
+
+/* ------------------------------------------------------------------ download cards
+   The whole card is the main button's target (the button's ::before covers it); the other links
+   sit above it. */
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -579,15 +794,40 @@ const promises = [
   border-radius: 18px;
   background: var(--vp-c-bg-soft);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.3s var(--ease-pop),
+    border-color 0.25s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.card:has(.primary-action:hover),
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--vp-c-brand-3);
+  box-shadow:
+    0 0 0 1px var(--vp-c-brand-3),
+    0 16px 40px rgba(var(--glow), calc(0.12 + 0.18 * var(--neon-strength)));
 }
 .card.yours {
   border-color: var(--vp-c-brand-3);
   box-shadow: 0 0 0 4px var(--vp-c-brand-soft);
 }
-.badge {
+.primary-action {
+  position: static !important;
+}
+.primary-action::before {
+  content: '';
   position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 18px;
+}
+.card .alt,
+.card .alt a,
+.card .badge {
+  position: relative;
+  z-index: 2;
+}
+.badge {
+  position: absolute !important;
   top: 18px;
   right: 18px;
   margin: 0;
@@ -597,6 +837,7 @@ const promises = [
   color: var(--vp-c-brand-2);
   font-size: 12px;
   font-weight: 600;
+  box-shadow: 0 0 14px rgba(var(--glow), calc(0.35 * var(--neon-strength)));
 }
 .os {
   fill: none;
@@ -604,6 +845,13 @@ const promises = [
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition:
+    transform 0.35s var(--ease-pop),
+    filter 0.3s var(--ease);
+}
+.card:hover .os {
+  transform: scale(1.12) rotate(-4deg);
+  filter: drop-shadow(0 0 6px rgba(var(--glow), 0.6));
 }
 .card h3 {
   margin: 14px 0 2px;
@@ -619,16 +867,21 @@ const promises = [
   background: var(--teal-text);
   color: #fff !important;
 }
-.btn-solid:hover {
+.card:hover .btn-solid {
   background: #115e59;
+  box-shadow: 0 8px 22px rgba(var(--glow), 0.3);
 }
 .btn-outline {
   justify-content: center;
   border: 1px solid var(--vp-c-divider);
   color: var(--vp-c-text-1) !important;
 }
-.btn-outline:hover {
+.card:hover .btn-outline {
   border-color: var(--vp-c-brand-3);
+  color: var(--vp-c-brand-1) !important;
+}
+.card:hover .btn {
+  transform: none;
 }
 .btn.disabled {
   opacity: 0.55;
@@ -656,7 +909,6 @@ const promises = [
   border-top: 1px solid var(--vp-c-divider);
 }
 .alt a {
-  color: var(--vp-c-brand-1);
   font-weight: 500;
 }
 .note {
@@ -720,6 +972,7 @@ const promises = [
   overflow-x: auto;
 }
 
+/* ------------------------------------------------------------------ features (links to the guide) */
 .features {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -728,21 +981,61 @@ const promises = [
   text-align: left;
 }
 .feature {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   padding: 24px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 16px;
   background: var(--vp-c-bg);
+  color: inherit !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition:
+    transform 0.3s var(--ease-pop),
+    border-color 0.25s var(--ease),
+    box-shadow 0.3s var(--ease);
 }
-.feature svg {
+.feature:hover {
+  transform: translateY(-4px);
+  border-color: var(--vp-c-brand-3);
+  box-shadow:
+    0 0 0 1px var(--vp-c-brand-3),
+    0 16px 40px rgba(var(--glow), calc(0.12 + 0.18 * var(--neon-strength)));
+}
+.feature:focus-visible {
+  outline: 3px solid var(--teal-bright);
+  outline-offset: 3px;
+}
+.feature-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--vp-c-brand-soft);
+  transition:
+    transform 0.35s var(--ease-pop),
+    box-shadow 0.3s var(--ease);
+}
+.feature-icon svg {
   fill: none;
   stroke: var(--vp-c-brand-1);
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.feature:hover .feature-icon {
+  transform: scale(1.1) rotate(-6deg);
+  box-shadow: 0 0 22px rgba(var(--glow), calc(0.2 + 0.35 * var(--neon-strength)));
+}
 .feature h3 {
-  margin: 12px 0 6px;
+  margin: 14px 0 6px;
   font-size: 1.05rem;
+  transition: color 0.2s var(--ease);
+}
+.feature:hover h3 {
+  color: var(--vp-c-brand-1);
 }
 .feature p {
   margin: 0;
@@ -750,7 +1043,22 @@ const promises = [
   line-height: 1.6;
   color: var(--vp-c-text-2);
 }
+.more {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+}
+.arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-pop);
+}
+.feature:hover .arrow {
+  transform: translateX(5px);
+}
 
+/* ------------------------------------------------------------------ promises (statements, not links) */
 .promises {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -763,6 +1071,7 @@ const promises = [
   margin: 0;
   padding: 20px;
   border-radius: 14px;
+  border-top: 2px solid var(--vp-c-brand-3);
   background: var(--vp-c-bg-soft);
   text-align: left;
 }
@@ -775,20 +1084,30 @@ const promises = [
   color: var(--vp-c-text-2);
 }
 
+/* ------------------------------------------------------------------ closing */
 .closing {
   padding: 88px 24px 72px;
   text-align: center;
-  background: radial-gradient(40rem 20rem at 50% 120%, rgba(13, 148, 136, 0.35), transparent 70%), var(--ink);
-  color: var(--on-ink);
+  background:
+    radial-gradient(40rem 20rem at 50% 120%, var(--hero-glow), transparent 70%),
+    radial-gradient(circle at 1px 1px, var(--hero-dot) 1px, transparent 0) 0 0 / 24px 24px,
+    var(--hero-bg);
+  color: var(--hero-text);
 }
 .closing h2 {
-  color: #fff;
+  color: var(--hero-text);
+}
+.closing .neon {
+  background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .fineprint {
   max-width: 640px;
   margin: 28px auto 0;
   font-size: 13px;
-  color: var(--on-ink-muted);
+  color: var(--hero-muted);
 }
 
 @media (max-width: 960px) {
@@ -816,13 +1135,39 @@ const promises = [
     justify-content: center;
   }
 }
+/* Reduced motion: no lifts, sweeps, breathing, floating or reveals; colors still change. */
 @media (prefers-reduced-motion: reduce) {
-  .btn,
-  .card {
-    transition: none;
+  .neon,
+  .accent,
+  .hero-mark,
+  .dot {
+    animation: none;
   }
-  .btn:hover {
+  .btn,
+  .btn svg,
+  .card,
+  .os,
+  .feature,
+  .feature-icon,
+  .arrow,
+  .window,
+  .btn-primary::after {
+    transition-property: color, background-color, border-color, box-shadow;
+  }
+  .btn:hover,
+  .btn:hover svg,
+  .btn:active,
+  .card:hover,
+  .card:has(.primary-action:hover),
+  .card:hover .os,
+  .feature:hover,
+  .feature:hover .feature-icon,
+  .feature:hover .arrow,
+  .window:hover {
     transform: none;
+  }
+  .btn-primary::after {
+    display: none;
   }
 }
 </style>

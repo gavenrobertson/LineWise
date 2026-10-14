@@ -6,6 +6,10 @@
   --vp-c-brand-3: #0d9488;
   --vp-c-brand-soft: rgba(13, 148, 136, 0.14);
   --vp-home-hero-name-color: #0e1726;
+  /* Motion, as in the app: enter with the standard curve, the emphasized one overshoots a little. */
+  --lw-ease: cubic-bezier(0.2, 0, 0, 1);
+  --lw-ease-pop: cubic-bezier(0.3, 0, 0, 1.25);
+  --lw-glow: 45, 212, 191;
 }
 .dark {
   --vp-c-bg: #0e1726;
@@ -16,4 +20,166 @@
   --vp-c-brand-2: #14b8a6;
   --vp-c-brand-3: #0d9488;
   --vp-home-hero-name-color: #ffffff;
+}
+
+/* ---------------------------------------------------------------- theme switch
+   The new theme spreads from the switch in a circle (Layout.vue). The two snapshots must not
+   cross-fade, and the one being revealed sits on top. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root),
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+::view-transition-new(root),
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+/* The switch is a round icon button: the sun turns into the moon. */
+.VPSwitchAppearance {
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid var(--vp-c-divider) !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  transition:
+    border-color 0.2s var(--lw-ease),
+    box-shadow 0.2s var(--lw-ease),
+    transform 0.2s var(--lw-ease-pop) !important;
+}
+.VPSwitchAppearance:hover {
+  border-color: var(--vp-c-brand-3) !important;
+  box-shadow:
+    0 0 0 4px var(--vp-c-brand-soft),
+    0 0 18px rgba(var(--lw-glow), 0.35);
+  transform: rotate(-12deg);
+}
+.VPSwitchAppearance:active {
+  transform: scale(0.92);
+}
+.VPSwitchAppearance .check {
+  top: 50% !important;
+  left: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: -10px 0 0 -10px;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.VPSwitchAppearance .icon {
+  width: 20px !important;
+  height: 20px !important;
+  overflow: visible !important;
+}
+.VPSwitchAppearance .icon .vpi-sun,
+.VPSwitchAppearance .icon .vpi-moon {
+  top: 1px !important;
+  left: 1px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--vp-c-text-1) !important;
+  transition:
+    opacity 0.3s var(--lw-ease),
+    transform 0.4s var(--lw-ease-pop),
+    color 0.2s var(--lw-ease) !important;
+}
+/* The icon that is hidden is turned away, so it turns in as it fades in. */
+html:not(.dark) .VPSwitchAppearance .icon .moon,
+.dark .VPSwitchAppearance .icon .sun {
+  transform: rotate(-90deg) scale(0.5);
+}
+.VPSwitchAppearance:hover .icon .sun,
+.dark .VPSwitchAppearance:hover .icon .moon {
+  transform: rotate(40deg) scale(1.1);
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ---------------------------------------------------------------- pointer and hover
+   Everything that reacts to the pointer shows the hand; disabled controls say so. */
+button,
+summary,
+select,
+[role='button'],
+[role='tab'],
+[role='switch'],
+[role='menuitem'],
+[role='option'],
+label:has(> input[type='checkbox'], > input[type='radio']),
+.VPSwitch,
+.VPNavBarSearchButton,
+.DocSearch-Button,
+.VPSidebarItem .item.is-link,
+.VPSidebarItem .caret {
+  cursor: pointer;
+}
+:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+/* Nav and sidebar links fade to the accent and the nav link underline grows from the middle. */
+.VPNavBarMenuLink,
+.VPSidebarItem .link,
+.VPDocAsideOutline .outline-link,
+.VPFooter a,
+.vp-doc a {
+  transition:
+    color 0.2s var(--lw-ease),
+    background-size 0.25s var(--lw-ease) !important;
+}
+.VPNavBarMenuLink {
+  position: relative;
+}
+.VPNavBarMenuLink::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--vp-c-brand-1);
+  box-shadow: 0 0 8px rgba(var(--lw-glow), 0.6);
+  transform: scaleX(0);
+  transition: transform 0.25s var(--lw-ease);
+}
+.VPNavBarMenuLink:hover::after,
+.VPNavBarMenuLink.active::after {
+  transform: scaleX(1);
+}
+.VPSocialLink {
+  transition:
+    color 0.2s var(--lw-ease),
+    transform 0.2s var(--lw-ease-pop) !important;
+}
+.VPSocialLink:hover {
+  transform: translateY(-2px);
+}
+
+/* Docs pages: the page title glows softly in the dark theme. */
+.dark .vp-doc h1 {
+  text-shadow:
+    0 0 18px rgba(var(--lw-glow), 0.25),
+    0 0 42px rgba(var(--lw-glow), 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .VPSwitchAppearance,
+  .VPSwitchAppearance .icon .vpi-sun,
+  .VPSwitchAppearance .icon .vpi-moon,
+  .VPNavBarMenuLink::after,
+  .VPSocialLink {
+    transition: none !important;
+  }
+  .VPSwitchAppearance:hover,
+  .VPSwitchAppearance:hover .icon .sun,
+  .dark .VPSwitchAppearance:hover .icon .moon,
+  .VPSocialLink:hover {
+    transform: none;
+  }
 }

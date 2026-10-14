@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Developer Certificate of Origin (OSS-05): contributors sign off each commit (`git commit -s`).
-# Maintainers (owner, members, collaborators) are exempt, like the DCO app's `require.members: false`.
+# Maintainers (owner, members, collaborators) are exempt, like the DCO app's `require.members: false`,
+# and so are bots (Renovate's dependency updates), which have no one to certify the origin of a change.
 # Branch protection should require this check (docs/HUMAN-TODO.md).
 name: dco
 
@@ -19,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Every commit is signed off by its author
-        if: ${{ !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) }}
+        if: ${{ github.event.pull_request.user.type != 'Bot' && !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) }}
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
