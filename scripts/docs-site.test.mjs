@@ -146,6 +146,11 @@ describe('docs site look and feel', () => {
     assert.match(layout, /prefers-reduced-motion: no-preference/);
     assert.match(read('docs/.vitepress/theme/index.ts'), /Layout,/);
   });
+  it('holds the reveal on its last frame, so switching to dark does not flash the light page', () => {
+    const layout = read('docs/.vitepress/theme/Layout.vue');
+    const animate = layout.slice(layout.indexOf('.animate('));
+    assert.match(animate.slice(0, animate.indexOf(');')), /fill: 'forwards'/);
+  });
   it('follows the theme on the landing page, down to the screenshot', () => {
     assert.match(landing, /screenshot-dark\.png/);
     assert.match(landing, /screenshot-light\.png/);

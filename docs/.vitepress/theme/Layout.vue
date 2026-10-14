@@ -37,6 +37,9 @@ provide('toggle-appearance', async ({ clientX: x, clientY: y }: MouseEvent) => {
     {
       duration: 420,
       easing: 'cubic-bezier(0.2, 0, 0, 1)',
+      // Hold the last frame until the transition ends; without it the old snapshot springs back to
+      // full size for one frame, and switching to dark flashes the light page.
+      fill: 'forwards',
       pseudoElement: `::view-transition-${isDark.value ? 'old' : 'new'}(root)`,
     },
   );
