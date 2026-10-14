@@ -54,6 +54,8 @@ export default withMermaid(
     title: 'LineWise',
     description: 'Open-source, offline network diagrams where every icon is a real device.',
     lang: 'en-US',
+    // Dark by default, like the app; the switch in the nav bar remembers a visitor's choice.
+    appearance: 'dark',
     base,
     cleanUrls: true,
     lastUpdated: true,

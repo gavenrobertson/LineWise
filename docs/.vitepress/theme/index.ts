@@ -3,10 +3,12 @@
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import LandingPage from './LandingPage.vue';
+import Layout from './Layout.vue';
 import './brand.css';
 
 export default {
   extends: DefaultTheme,
+  Layout,
   enhanceApp({ app }) {
     app.component('LandingPage', LandingPage);
   },
