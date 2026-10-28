@@ -4,8 +4,9 @@
 name: nightly
 
 on:
-  schedule:
-    - cron: '17 6 * * *'
+  # Paused while LineWise is on hold (docs/decisions-log.md, 2026-10-28). To resume, restore:
+  # schedule:
+  #   - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
       update_baseline:
