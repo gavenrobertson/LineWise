@@ -2,6 +2,21 @@
 
 All notable changes to LineWise are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/). Requirement IDs refer to [docs/SPEC.md](docs/SPEC.md).
 
+## [1.1.0](https://github.com/gavenrobertson/LineWise/compare/v1.0.0...v1.1.0) (2026-10-28)
+
+
+### Features
+
+* **ui:** Apple-style UI/UX polish, readable link labels, help everywhere ([#9](https://github.com/gavenrobertson/LineWise/issues/9)) ([7647f26](https://github.com/gavenrobertson/LineWise/commit/7647f265bfcccb4c65684e1b51ad9567d5c6e730))
+* **ui:** pointer cursors, eased exits, dark by default with a theme switch ([#10](https://github.com/gavenrobertson/LineWise/issues/10)) ([d990758](https://github.com/gavenrobertson/LineWise/commit/d990758734555d6f9f8383f797570494c67d12fa))
+
+
+### Bug Fixes
+
+* **ci:** check historical releases with current size checker ([#4](https://github.com/gavenrobertson/LineWise/issues/4)) ([fc5a25d](https://github.com/gavenrobertson/LineWise/commit/fc5a25d37349ac6732e524c833bf84caf2d0d42b))
+* correct docs paths and updater release setup ([#2](https://github.com/gavenrobertson/LineWise/issues/2)) ([f9ea855](https://github.com/gavenrobertson/LineWise/commit/f9ea855970b37f0a855df00697916309d258166d))
+* **site:** stop the theme-switch flash, and explain the unsigned-installer warnings ([#13](https://github.com/gavenrobertson/LineWise/issues/13)) ([0da51fa](https://github.com/gavenrobertson/LineWise/commit/0da51fa339ce4d5a704b77c33f041ec9fc6dda0a))
+
 ## [Unreleased]
 
 ### Added
