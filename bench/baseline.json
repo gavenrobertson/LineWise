@@ -1,15 +1,15 @@
 {
   "machine": "github-ubuntu-latest",
   "results": {
-    "coldStartMs": 537,
-    "open500Ms": 424.8000000000029,
-    "pan500Fps": 59.79381443298969,
-    "drag500FrameP95Ms": 16.700000000000728,
-    "edit500Ms": 19.10000000000582,
-    "layout500Ms": 800,
-    "heap500Mb": 65,
-    "open2000Ms": 1374.300000000003,
-    "pan2000Fps": 58.95756194816291,
-    "open5000Ms": 2825.0999999999913
+    "coldStartMs": 588,
+    "open500Ms": 526.9,
+    "pan500Fps": 59.04,
+    "drag500FrameP95Ms": 16.7,
+    "edit500Ms": 21.4,
+    "layout500Ms": 830,
+    "heap500Mb": 61,
+    "open2000Ms": 1635.5,
+    "pan2000Fps": 58.0,
+    "open5000Ms": 3486.2
   }
 }

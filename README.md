@@ -8,7 +8,7 @@
   <img src="docs/img/screenshot-l2.png" alt="A three-tier campus diagram in LineWise, in the Data link (L2) view with VLAN-colored links" width="900">
 </p>
 
-> **Status: pre-release.** Milestones are tracked in [`docs/PLAN.md`](docs/PLAN.md) and [`TRACEABILITY.md`](TRACEABILITY.md). Builds published before maintainer code-signing is set up are unsigned; see [Install](#install).
+> **Status: on hold.** Development is paused: dependency updates and the nightly run are turned off, and nothing new is planned for now. The app and website still work as they are. Milestones are tracked in [`docs/PLAN.md`](docs/PLAN.md) and [`TRACEABILITY.md`](TRACEABILITY.md). Builds published before maintainer code-signing is set up are unsigned; see [Install](#install).
 
 ## Download
 

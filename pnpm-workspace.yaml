@@ -4,3 +4,6 @@ packages:
   - bench
 onlyBuiltDependencies:
   - esbuild
+# VitePress 1.6 asks for Vite 5, which no longer gets security fixes; it runs on Vite 6.
+overrides:
+  vitepress>vite: ^6.4.4
